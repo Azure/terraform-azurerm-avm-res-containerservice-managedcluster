@@ -572,28 +572,6 @@ variable "service_mesh_profile" {
   description = "The service mesh profile for the Kubernetes cluster."
 }
 
-variable "flux_extension" {
-  type = object({
-    name                   = string
-    type                   = string
-    configuration_settings = optional(map(string))
-    protected_settings     = optional(map(string))
-    plan = optional(object({
-      name      = string
-      version   = string
-      publisher = string
-      product   = string
-    }))
-    release_train     = optional(string)
-    target_namespace  = optional(string)
-    release_namespace = optional(string)
-    version           = optional(string)
-  })
-
-  default     = null
-  description = "The flux extension for the Kubernetes cluster."
-}
-
 variable "node_pools" {
   type = list(object({
     name                          = string
