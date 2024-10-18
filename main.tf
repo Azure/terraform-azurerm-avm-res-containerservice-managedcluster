@@ -2,9 +2,9 @@ resource "azurerm_kubernetes_cluster" "this" {
   location            = var.location
   name                = var.name
   resource_group_name = var.resource_group_name
-  // Upgrade Configuration
+  # Upgrade Configuration
   automatic_upgrade_channel = var.automatic_upgrade_channel
-  // Additional Features
+  # Additional Features
   azure_policy_enabled             = var.azure_policy_enabled
   cost_analysis_enabled            = var.sku_tier == "Free" ? false : var.cost_analysis_enabled
   disk_encryption_set_id           = var.disk_encryption_set_id
@@ -13,14 +13,14 @@ resource "azurerm_kubernetes_cluster" "this" {
   http_application_routing_enabled = var.http_application_routing_enabled
   image_cleaner_enabled            = var.image_cleaner_enabled
   kubernetes_version               = var.kubernetes_version
-  // Access Control Configuration
+  # Access Control Configuration
   local_account_disabled  = var.local_account_disabled
   node_os_upgrade_channel = var.node_os_channel_upgrade
   node_resource_group     = var.node_resource_group_name != "" ? var.node_resource_group_name : null
   oidc_issuer_enabled     = var.oidc_issuer_enabled
-  // Service Mesh Configuration
+  # Service Mesh Configuration
   open_service_mesh_enabled = var.open_service_mesh_enabled
-  // Private Cluster Configuration
+  # Private Cluster Configuration
   private_cluster_enabled             = var.private_cluster_enabled
   private_cluster_public_fqdn_enabled = var.private_cluster_enabled ? var.private_cluster_public_fqdn_enabled : null
   private_dns_zone_id                 = var.private_cluster_enabled ? var.private_dns_zone_id : null
@@ -31,7 +31,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   tags                                = var.tags
   workload_identity_enabled           = var.workload_identity_enabled
 
-  // Default Nodepool Configuration
+  # Default Nodepool Configuration
   dynamic "default_node_pool" {
     for_each = var.default_node_pool != null ? [var.default_node_pool] : []
     content {
@@ -143,7 +143,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       authorized_ip_ranges = api_server_access_profile.value.authorized_ip_ranges
     }
   }
-  // Auto Scaler Configuration
+  # Auto Scaler Configuration
   dynamic "auto_scaler_profile" {
     for_each = var.auto_scaler_profile != null ? [var.auto_scaler_profile] : []
     content {
@@ -173,7 +173,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       tenant_id              = azure_active_directory.value.tenant_id
     }
   }
-  // Proxy, Ingress and Routing Configuration
+  # Proxy, Ingress and Routing Configuration
   dynamic "http_proxy_config" {
     for_each = var.http_proxy_config != null ? [var.http_proxy_config] : []
     content {
@@ -183,7 +183,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       trusted_ca  = http_proxy_config.value.trusted_ca
     }
   }
-  // Identity Configuration
+  # Identity Configuration
   identity {
     type = var.identity_type
   }
@@ -196,7 +196,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       subnet_id    = ingress_application_gateway.value.subnet_id
     }
   }
-  // KeyVault Configuration
+  # KeyVault Configuration
   dynamic "key_management_service" {
     for_each = var.key_management_service != null ? [var.key_management_service] : []
     content {
@@ -219,7 +219,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       user_assigned_identity_id = kubelet_identity.value.user_assigned_identity_id
     }
   }
-  // OS Configuration 
+  # OS Configuration 
   dynamic "linux_profile" {
     for_each = var.linux_profile != null ? [var.linux_profile] : []
     content {
@@ -230,7 +230,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       }
     }
   }
-  // Maintenance Configurations
+  # Maintenance Configurations
   dynamic "maintenance_window" {
     for_each = var.maintenance_window != null ? [var.maintenance_window] : []
     content {
@@ -250,7 +250,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       }
     }
   }
-  // Monitoring Configuration
+  # Monitoring Configuration
   dynamic "microsoft_defender" {
     for_each = var.defender_log_analytics_workspace_id != null ? [var.defender_log_analytics_workspace_id] : []
     content {
@@ -264,7 +264,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       labels_allowed      = monitor_metrics.value.labels_allowed
     }
   }
-  //Network Configuration
+  #Network Configuration
   network_profile {
     network_plugin      = var.network_profile.network_plugin
     dns_service_ip      = var.network_profile.dns_service_ip
@@ -333,7 +333,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       client_secret = service_principal.value.client_secret
     }
   }
-  // Storage Profile Configuration
+  # Storage Profile Configuration
   dynamic "storage_profile" {
     for_each = var.storage_profile != null ? [var.storage_profile] : []
     content {
