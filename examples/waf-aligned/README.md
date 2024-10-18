@@ -11,10 +11,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">=4.0.0"
     }
-    modtm = {
-      source  = "azure/modtm"
-      version = "~> 0.3"
-    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -86,7 +82,7 @@ resource "azurerm_private_dns_zone" "zone" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "vnetLink" {
+resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
   name                  = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
   private_dns_zone_name = azurerm_private_dns_zone.zone.name
   resource_group_name   = azurerm_resource_group.this.name
@@ -101,7 +97,7 @@ resource "azurerm_log_analytics_workspace" "workspace" {
   sku                 = "PerGB2018"
 }
 
-module "waf-aligned" {
+module "waf_aligned" {
   source                  = "../.."
   name                    = module.naming.kubernetes_cluster.name_unique
   resource_group_name     = azurerm_resource_group.this.name
@@ -197,8 +193,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>=4.0.0)
 
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
 ## Resources
@@ -207,7 +201,7 @@ The following resources are used by this module:
 
 - [azurerm_log_analytics_workspace.workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
 - [azurerm_private_dns_zone.zone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
-- [azurerm_private_dns_zone_virtual_network_link.vnetLink](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
+- [azurerm_private_dns_zone_virtual_network_link.vnet_link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.unp1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
@@ -244,7 +238,7 @@ Source: Azure/avm-utl-regions/azurerm
 
 Version: ~> 0.1
 
-### <a name="module_waf-aligned"></a> [waf-aligned](#module\_waf-aligned)
+### <a name="module_waf_aligned"></a> [waf\_aligned](#module\_waf\_aligned)
 
 Source: ../..
 

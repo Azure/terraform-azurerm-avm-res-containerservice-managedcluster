@@ -5,10 +5,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">=4.0.0"
     }
-    modtm = {
-      source  = "azure/modtm"
-      version = "~> 0.3"
-    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -81,7 +77,7 @@ resource "azurerm_private_dns_zone" "zone" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "vnetLink" {
+resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
   name                  = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
   private_dns_zone_name = azurerm_private_dns_zone.zone.name
   resource_group_name   = azurerm_resource_group.this.name
