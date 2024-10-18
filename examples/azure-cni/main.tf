@@ -96,7 +96,7 @@ resource "azurerm_log_analytics_workspace" "workspace" {
   retention_in_days   = 30
 }
 
-module "kubenet" {
+module "cni" {
   source  = "../.."
   name = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
