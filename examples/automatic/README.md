@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# AKS Automatic example
 
-This deploys the module in its simplest form.
+This deploys the module using only defaults and AKS Automatic Mode.
 
 ```hcl
 terraform {
@@ -53,20 +53,28 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
-module "default" {
+module "automatic" {
   source              = "../.."
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
+
   default_node_pool = {
     name       = "default"
     vm_size    = "Standard_DS2_v2"
     node_count = 3
   }
+
+  maintenance_window_auto_upgrade = {
+    frequency   = "Weekly"
+    interval    = "1"
+    day_of_week = "Sunday"
+    duration    = 4
+    utc_offset  = "+00:00"
+    start_time  = "00:00"
+    start_date  = "2024-10-15"
+  }
+
 }
 ```
 
@@ -97,17 +105,7 @@ No required inputs.
 
 ## Optional Inputs
 
-The following input variables are optional (have default values):
-
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
-
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see <https://aka.ms/avm/telemetryinfo>.  
-If it is set to false, then no telemetry will be collected.
-
-Type: `bool`
-
-Default: `true`
+No optional inputs.
 
 ## Outputs
 
@@ -117,7 +115,7 @@ No outputs.
 
 The following Modules are called:
 
-### <a name="module_default"></a> [default](#module\_default)
+### <a name="module_automatic"></a> [automatic](#module\_automatic)
 
 Source: ../..
 
