@@ -48,25 +48,25 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "automatic" {
-  source  = "../.."
-  name = module.naming.kubernetes_cluster.name_unique
+  source              = "../.."
+  name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location = azurerm_resource_group.this.location
+  location            = azurerm_resource_group.this.location
 
   default_node_pool = {
-    name = "default"
-    vm_size = "Standard_DS2_v2"
+    name       = "default"
+    vm_size    = "Standard_DS2_v2"
     node_count = 3
   }
 
   maintenance_window_auto_upgrade = {
-    frequency = "Weekly"
-    interval = "1"
+    frequency   = "Weekly"
+    interval    = "1"
     day_of_week = "Sunday"
-    duration = 4
-    utc_offset = "+00:00"
-    start_time = "00:00"
-    start_date = "2024-10-15"
+    duration    = 4
+    utc_offset  = "+00:00"
+    start_time  = "00:00"
+    start_date  = "2024-10-15"
   }
-  
+
 }

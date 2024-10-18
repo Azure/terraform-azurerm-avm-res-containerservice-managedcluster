@@ -48,65 +48,65 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  name = "waf-vnet"
+  address_space       = ["10.1.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  name                = "waf-vnet"
   resource_group_name = azurerm_resource_group.this.name
-  location = azurerm_resource_group.this.location
-  address_space = ["10.1.0.0/16"]
 }
 
 resource "azurerm_subnet" "subnet" {
-  name = "default"
-  resource_group_name = azurerm_resource_group.this.name
+  address_prefixes     = ["10.1.0.0/24"]
+  name                 = "default"
+  resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes = ["10.1.0.0/24"]
 }
 
 resource "azurerm_subnet" "unp1" {
-  name = "unp1"
-  resource_group_name = azurerm_resource_group.this.name
+  address_prefixes     = ["10.1.1.0/24"]
+  name                 = "unp1"
+  resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes = ["10.1.1.0/24"]
 }
 
 resource "azurerm_subnet" "unp2" {
-  name = "unp2"
-  resource_group_name = azurerm_resource_group.this.name
+  address_prefixes     = ["10.1.2.0/24"]
+  name                 = "unp2"
+  resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes = ["10.1.2.0/24"]
 }
 
 resource "azurerm_private_dns_zone" "zone" {
-  name = "privatelink.${azurerm_resource_group.this.location}.azmk8s.io"
-  resource_group_name = azurerm_resource_group.this.name  
+  name                = "privatelink.${azurerm_resource_group.this.location}.azmk8s.io"
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "vnetLink" {
-  name = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
+  name                  = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
   private_dns_zone_name = azurerm_private_dns_zone.zone.name
-  resource_group_name = azurerm_resource_group.this.name
-  virtual_network_id = azurerm_virtual_network.vnet.id
+  resource_group_name   = azurerm_resource_group.this.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
 }
 
 resource "azurerm_log_analytics_workspace" "workspace" {
-  name                = "waf-log-analytics"
   location            = azurerm_resource_group.this.location
+  name                = "waf-log-analytics"
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "PerGB2018"
   retention_in_days   = 30
+  sku                 = "PerGB2018"
 }
 
 module "waf-aligned" {
-  source  = "../.."
-  name = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  location = azurerm_resource_group.this.location
-  sku_tier = "Standard"
+  source                  = "../.."
+  name                    = module.naming.kubernetes_cluster.name_unique
+  resource_group_name     = azurerm_resource_group.this.name
+  location                = azurerm_resource_group.this.location
+  sku_tier                = "Standard"
   private_cluster_enabled = true
-  private_dns_zone_id = azurerm_private_dns_zone.zone.id
+  private_dns_zone_id     = azurerm_private_dns_zone.zone.id
 
   network_profile = {
     dns_service_ip = "10.10.200.10"
-    service_cidr = "10.10.200.0/24"
+    service_cidr   = "10.10.200.0/24"
     network_plugin = "azure"
   }
 
@@ -114,69 +114,69 @@ module "waf-aligned" {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   }
 
-  local_account_disabled = true
+  local_account_disabled              = true
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   default_node_pool = {
-    name = "default"
-    vm_size = "Standard_DS2_v2"
-    node_count = 3
-    zones = [ 3 ]
-    auto_scaling_enabled = true
-    max_count = 3
-    max_pods = 50
-    min_count = 3
-    os_disk_size_gb = 0
-    vnet_subnet_id = azurerm_subnet.subnet.id
+    name                         = "default"
+    vm_size                      = "Standard_DS2_v2"
+    node_count                   = 3
+    zones                        = [3]
+    auto_scaling_enabled         = true
+    max_count                    = 3
+    max_pods                     = 50
+    min_count                    = 3
+    os_disk_size_gb              = 0
+    vnet_subnet_id               = azurerm_subnet.subnet.id
     only_critical_addons_enabled = true
   }
 
   node_pools = [
     {
-      name = "userpool1"
-      vm_size = "Standard_DS2_v2"
-      node_count = 3
-      zones = [ 3 ]
+      name                 = "userpool1"
+      vm_size              = "Standard_DS2_v2"
+      node_count           = 3
+      zones                = [3]
       auto_scaling_enabled = true
-      max_count = 3
-      max_pods = 50
-      min_count = 3
-      os_disk_size_gb = 60
-      vnet_subnet_id = azurerm_subnet.unp1.id
+      max_count            = 3
+      max_pods             = 50
+      min_count            = 3
+      os_disk_size_gb      = 60
+      vnet_subnet_id       = azurerm_subnet.unp1.id
     },
     {
-      name = "userpool2"
-      vm_size = "Standard_DS2_v2"
-      node_count = 3
-      zones = [ 3 ]
+      name                 = "userpool2"
+      vm_size              = "Standard_DS2_v2"
+      node_count           = 3
+      zones                = [3]
       auto_scaling_enabled = true
-      max_count = 3
-      max_pods = 50
-      min_count = 3
-      os_disk_size_gb = 60
-      vnet_subnet_id = azurerm_subnet.unp2.id
+      max_count            = 3
+      max_pods             = 50
+      min_count            = 3
+      os_disk_size_gb      = 60
+      vnet_subnet_id       = azurerm_subnet.unp2.id
     }
   ]
-  
+
   automatic_upgrade_channel = "stable"
-  node_os_channel_upgrade = "Unmanaged"
+  node_os_channel_upgrade   = "Unmanaged"
 
   maintenance_window_auto_upgrade = {
-    frequency = "Weeekly"
-    interval = "1"
+    frequency   = "Weeekly"
+    interval    = "1"
     day_of_week = "Sunday"
-    duration = 4
-    utc_offset = "+00:00"
-    start_time = "00:00"
-    start_date = "2024-10-15"
+    duration    = 4
+    utc_offset  = "+00:00"
+    start_time  = "00:00"
+    start_date  = "2024-10-15"
   }
 
   maintenance_window_node_os = {
-    frequency = "Weekly"
-    interval = "1"
+    frequency   = "Weekly"
+    interval    = "1"
     day_of_week = "Sunday"
-    duration = 4
-    utc_offset = "+00:00"
-    start_time = "00:00"
-    start_date = "2024-10-15"
+    duration    = 4
+    utc_offset  = "+00:00"
+    start_time  = "00:00"
+    start_date  = "2024-10-15"
   }
 }

@@ -52,13 +52,13 @@ resource "azurerm_resource_group" "this" {
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "default" {
-  source  = "../.."
-  name = module.naming.kubernetes_cluster.name_unique
+  source              = "../.."
+  name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location = azurerm_resource_group.this.location
+  location            = azurerm_resource_group.this.location
   default_node_pool = {
-    name = "default"
-    vm_size = "Standard_DS2_v2"
+    name       = "default"
+    vm_size    = "Standard_DS2_v2"
     node_count = 3
   }
 }
