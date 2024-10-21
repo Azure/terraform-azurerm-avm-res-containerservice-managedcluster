@@ -5,7 +5,7 @@ This deploys the module in alignment with the best practices of the Well Archite
 
 ```hcl
 terraform {
-  required_version = "~> 1.5"
+  required_version = ">= 1.9.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -45,7 +45,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope"
   name     = module.naming.resource_group.name_unique
 }
 
@@ -127,7 +127,6 @@ module "waf_aligned" {
     max_count                    = 3
     max_pods                     = 50
     min_count                    = 3
-    os_disk_size_gb              = 0
     vnet_subnet_id               = azurerm_subnet.subnet.id
     only_critical_addons_enabled = true
   }
@@ -163,13 +162,13 @@ module "waf_aligned" {
   node_os_channel_upgrade   = "Unmanaged"
 
   maintenance_window_auto_upgrade = {
-    frequency   = "Weeekly"
+    frequency   = "Weekly"
     interval    = "1"
     day_of_week = "Sunday"
     duration    = 4
     utc_offset  = "+00:00"
     start_time  = "00:00"
-    start_date  = "2024-10-15"
+    start_date  = "2024-10-15T00:00:00Z"
   }
 
   maintenance_window_node_os = {
@@ -179,7 +178,7 @@ module "waf_aligned" {
     duration    = 4
     utc_offset  = "+00:00"
     start_time  = "00:00"
-    start_date  = "2024-10-15"
+    start_date  = "2024-10-15T00:00:00Z"
   }
 }
 ```
@@ -189,7 +188,7 @@ module "waf_aligned" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.116.0)
 

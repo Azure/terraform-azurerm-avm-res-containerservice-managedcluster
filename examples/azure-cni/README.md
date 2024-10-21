@@ -5,7 +5,7 @@ This deploys the module using the Azure CNI Network Plugin.
 
 ```hcl
 terraform {
-  required_version = "~> 1.5"
+  required_version = ">= 1.9.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -45,7 +45,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope"
   name     = module.naming.resource_group.name_unique
 }
 
@@ -153,7 +153,7 @@ module "cni" {
     duration    = 4
     utc_offset  = "+00:00"
     start_time  = "00:00"
-    start_date  = "2024-10-15"
+    start_date  = "2024-10-15T00:00:00Z"
   }
 
   maintenance_window_node_os = {
@@ -163,7 +163,7 @@ module "cni" {
     duration    = 4
     utc_offset  = "+00:00"
     start_time  = "00:00"
-    start_date  = "2024-10-15"
+    start_date  = "2024-10-15T00:00:00Z"
   }
 
   workload_identity_enabled = true
@@ -190,7 +190,7 @@ module "cni" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.116.0)
 
