@@ -84,7 +84,7 @@ variable "default_node_pool" {
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
-      max_surge                     = optional(number)
+      max_surge                     = number
     }))
   })
   description = "Required. The default node pool for the Kubernetes cluster."

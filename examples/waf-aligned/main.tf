@@ -104,7 +104,9 @@ resource "azurerm_log_analytics_workspace" "workspace" {
 }
 
 module "waf_aligned" {
-  source                  = "../.."
+  source     = "../.."
+  depends_on = [azurerm_role_assignment.privateDNSZoneContributor]
+
   name                    = module.naming.kubernetes_cluster.name_unique
   resource_group_name     = azurerm_resource_group.this.name
   location                = azurerm_resource_group.this.location

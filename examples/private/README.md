@@ -103,6 +103,7 @@ resource "azurerm_role_assignment" "privateDNSZoneContributor" {
 
 module "private" {
   source                  = "../.."
+  depends_on              = [azurerm_role_assignment.privateDNSZoneContributor]
   name                    = module.naming.kubernetes_cluster.name_unique
   resource_group_name     = azurerm_resource_group.this.name
   location                = azurerm_resource_group.this.location

@@ -101,12 +101,14 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   }
   dynamic "node_network_profile" {
     for_each = each.value.node_network_profile != null ? [each.value.node_network_profile] : []
+
     content {
       application_security_group_ids = each.value.node_network_profile.application_security_group_ids
       node_public_ip_tags            = each.value.node_network_profile.node_public_ip_tags
 
       dynamic "allowed_host_ports" {
         for_each = each.value.node_network_profile.allowed_host_ports != null ? [each.value.node_network_profile.allowed_host_ports] : []
+
         content {
           port_end   = allowed_host_ports.value.port_end
           port_start = allowed_host_ports.value.port_start
@@ -117,6 +119,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   }
   dynamic "upgrade_settings" {
     for_each = each.value.upgrade_settings != null ? [each.value.upgrade_settings] : []
+
     content {
       max_surge                     = upgrade_settings.value.max_surge
       drain_timeout_in_minutes      = upgrade_settings.value.drain_timeout_in_minutes
@@ -125,6 +128,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   }
   dynamic "windows_profile" {
     for_each = each.value.windows_profile != null ? [each.value.windows_profile] : []
+
     content {
       outbound_nat_enabled = windows_profile.value.outbound_nat_enabled
     }
