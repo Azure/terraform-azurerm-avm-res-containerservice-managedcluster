@@ -4,12 +4,13 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   kubernetes_cluster_id         = azurerm_kubernetes_cluster.this.id
   name                          = each.value.name
   vm_size                       = each.value.vm_size
-  auto_scaling_enabled          = each.value.auto_scaling_enabled
   capacity_reservation_group_id = each.value.capacity_reservation_group_id
+  enable_auto_scaling           = each.value.auto_scaling_enabled
+  enable_host_encryption        = each.value.host_encryption_enabled
+  enable_node_public_ip         = each.value.node_public_ip_enabled
   eviction_policy               = each.value.eviction_policy
   fips_enabled                  = each.value.fips_enabled
   gpu_instance                  = each.value.gpu_instance
-  host_encryption_enabled       = each.value.host_encryption_enabled
   host_group_id                 = each.value.host_group_id
   kubelet_disk_type             = each.value.kubelet_disk_type
   max_count                     = each.value.max_count
@@ -18,7 +19,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   mode                          = each.value.mode
   node_count                    = each.value.node_count
   node_labels                   = each.value.node_labels
-  node_public_ip_enabled        = each.value.node_public_ip_enabled
   node_public_ip_prefix_id      = each.value.node_public_ip_prefix_id
   node_taints                   = each.value.node_taints
   orchestrator_version          = each.value.orchestrator_version

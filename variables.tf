@@ -801,7 +801,6 @@ variable "run_command_enabled" {
 variable "service_mesh_profile" {
   type = object({
     mode                             = string
-    revisions                        = optional(list(string), [])
     internal_ingress_gateway_enabled = optional(bool)
     external_ingress_gateway_enabled = optional(bool)
     certificate_authority = optional(object({
