@@ -83,6 +83,18 @@ resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
   virtual_network_id    = azurerm_virtual_network.vnet.id
 }
 
+resource "azurerm_user_assigned_identity" "identity" {
+  location            = azurerm_resource_group.this.location
+  name                = "aks-identity"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_role_assignment" "privateDNSZoneContributor" {
+  principal_id         = azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_private_dns_zone.zone.id
+  role_definition_name = "Private DNS Zone Contributor"
+}
+
 module "private" {
   source                  = "../.."
   name                    = module.naming.kubernetes_cluster.name_unique

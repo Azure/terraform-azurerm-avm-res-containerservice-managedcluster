@@ -76,6 +76,18 @@ resource "azurerm_private_dns_zone" "zone" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+resource "azurerm_user_assigned_identity" "identity" {
+  location            = azurerm_resource_group.this.location
+  name                = "aks-identity"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_role_assignment" "privateDNSZoneContributor" {
+  principal_id         = azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_private_dns_zone.zone.id
+  role_definition_name = "Private DNS Zone Contributor"
+}
+
 resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
   name                  = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
   private_dns_zone_name = azurerm_private_dns_zone.zone.name
