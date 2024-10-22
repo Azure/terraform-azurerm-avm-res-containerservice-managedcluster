@@ -117,6 +117,8 @@ resource "random_string" "dns_prefix" {
   upper   = false # No uppercase letters
 }
 
+data "azurerm_client_config" "current" {}
+
 module "waf_aligned" {
   source     = "../.."
   depends_on = [azurerm_role_assignment.privateDNSZoneContributor]
@@ -144,7 +146,12 @@ module "waf_aligned" {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   }
 
-  local_account_disabled              = true
+  local_account_disabled = true
+
+  azure_active_directory_role_based_access_control = {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+  }
+
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   default_node_pool = {
     name                         = "default"
@@ -238,6 +245,7 @@ The following resources are used by this module:
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

@@ -235,9 +235,9 @@ Type:
 
 ```hcl
 object({
-    tenant_id              = string
-    admin_group_object_ids = list(string)
-    azure_rbac_enabled     = bool
+    tenant_id              = optional(string)
+    admin_group_object_ids = optional(list(string))
+    azure_rbac_enabled     = optional(bool)
   })
 ```
 

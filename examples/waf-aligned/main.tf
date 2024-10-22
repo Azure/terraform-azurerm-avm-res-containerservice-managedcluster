@@ -111,6 +111,8 @@ resource "random_string" "dns_prefix" {
   upper   = false # No uppercase letters
 }
 
+data "azurerm_client_config" "current" {}
+
 module "waf_aligned" {
   source     = "../.."
   depends_on = [azurerm_role_assignment.privateDNSZoneContributor]
@@ -138,7 +140,12 @@ module "waf_aligned" {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   }
 
-  local_account_disabled              = true
+  local_account_disabled = true
+
+  azure_active_directory_role_based_access_control = {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+  }
+
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   default_node_pool = {
     name                         = "default"
