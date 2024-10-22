@@ -86,6 +86,7 @@ variable "default_node_pool" {
       node_soak_duration_in_minutes = optional(number)
       max_surge                     = number
     }))
+
   })
   description = "Required. The default node pool for the Kubernetes cluster."
 }
@@ -312,10 +313,15 @@ variable "http_proxy_config" {
   description = "The HTTP proxy configuration for the Kubernetes cluster."
 }
 
-variable "identity_type" {
-  type        = string
-  default     = "SystemAssigned"
-  description = "The type of identity to use for the Kubernetes cluster."
+variable "identity" {
+  type = object({
+    type         = string
+    identity_ids = optional(list(string))
+  })
+  default = {
+    type = "SystemAssigned"
+  }
+  description = "The type and id of identities to use for the Kubernetes cluster."
 }
 
 variable "image_cleaner_enabled" {

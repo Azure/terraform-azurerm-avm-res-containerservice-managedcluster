@@ -200,8 +200,10 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   # Identity Configuration
   identity {
-    type = var.identity_type
+    type         = var.identity.type
+    identity_ids = var.identity.identity_ids != null ? var.identity.identity_ids : []
   }
+  # Ingress Configuration
   dynamic "ingress_application_gateway" {
     for_each = var.ingress_application_gateway != null ? [var.ingress_application_gateway] : []
 

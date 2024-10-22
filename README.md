@@ -148,6 +148,7 @@ object({
       node_soak_duration_in_minutes = optional(number)
       max_surge                     = number
     }))
+
   })
 ```
 
@@ -383,13 +384,26 @@ object({
 
 Default: `null`
 
-### <a name="input_identity_type"></a> [identity\_type](#input\_identity\_type)
+### <a name="input_identity"></a> [identity](#input\_identity)
 
-Description: The type of identity to use for the Kubernetes cluster.
+Description: The type and id of identities to use for the Kubernetes cluster.
 
-Type: `string`
+Type:
 
-Default: `"SystemAssigned"`
+```hcl
+object({
+    type         = string
+    identity_ids = optional(list(string))
+  })
+```
+
+Default:
+
+```json
+{
+  "type": "SystemAssigned"
+}
+```
 
 ### <a name="input_image_cleaner_enabled"></a> [image\_cleaner\_enabled](#input\_image\_cleaner\_enabled)
 

@@ -72,16 +72,22 @@ resource "azurerm_subnet" "unp2_subnet" {
   virtual_network_name = azurerm_virtual_network.vnet.name
 }
 
-resource "azurerm_private_dns_zone" "zone" {
-  name                = "privatelink.${azurerm_resource_group.this.location}.azmk8s.io"
+resource "azurerm_user_assigned_identity" "identity" {
+  location            = azurerm_resource_group.this.location
+  name                = "aks-identity"
   resource_group_name = azurerm_resource_group.this.name
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
-  name                  = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
-  private_dns_zone_name = azurerm_private_dns_zone.zone.name
-  resource_group_name   = azurerm_resource_group.this.name
-  virtual_network_id    = azurerm_virtual_network.vnet.id
+resource "azurerm_user_assigned_identity" "kubelet_identity" {
+  location            = azurerm_resource_group.this.location
+  name                = "kubelet-identity"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_role_assignment" "kubelet_role_assignment" {
+  principal_id         = azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_user_assigned_identity.kubelet_identity.id
+  role_definition_name = "Managed Identity Operator"
 }
 
 resource "azurerm_log_analytics_workspace" "workspace" {
@@ -93,15 +99,28 @@ resource "azurerm_log_analytics_workspace" "workspace" {
 }
 
 module "cni" {
-  source              = "../.."
+  source     = "../.."
+  depends_on = [azurerm_role_assignment.kubelet_role_assignment]
+
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
+
+  identity = {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.identity.id]
+  }
+
   default_node_pool = {
-    name           = "default"
-    vm_size        = "Standard_DS2_v2"
-    node_count     = 1
-    vnet_subnet_id = azurerm_subnet.default_subnet.id
+    name                         = "default"
+    vm_size                      = "Standard_DS2_v2"
+    node_count                   = 1
+    vnet_subnet_id               = azurerm_subnet.default_subnet.id
+    auto_scaling_enabled         = true
+    max_count                    = 3
+    max_pods                     = 30
+    min_count                    = 1
+    only_critical_addons_enabled = true
   }
 
   network_profile = {
@@ -116,12 +135,12 @@ module "cni" {
       vm_size              = "Standard_DS2_v2"
       node_count           = 2
       zones                = [3]
-      auto_scaling_enabled = true
       max_count            = 3
       max_pods             = 30
       min_count            = 1
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp1_subnet.id
+      auto_scaling_enabled = true
     },
     {
       name                 = "userpool2"
@@ -173,6 +192,12 @@ module "cni" {
 
   oms_agent = {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
+  }
+
+  kubelet_identity = {
+    client_id                 = azurerm_user_assigned_identity.kubelet_identity.client_id
+    object_id                 = azurerm_user_assigned_identity.kubelet_identity.principal_id
+    user_assigned_identity_id = azurerm_user_assigned_identity.kubelet_identity.id
   }
 
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id

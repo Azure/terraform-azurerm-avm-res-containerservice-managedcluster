@@ -109,16 +109,30 @@ resource "azurerm_log_analytics_workspace" "workspace" {
   sku                 = "PerGB2018"
 }
 
+resource "random_string" "dns_prefix" {
+  length  = 10    # Set the length of the string
+  lower   = true  # Use lowercase letters
+  numeric = true  # Include numbers
+  special = false # No special characters
+  upper   = false # No uppercase letters
+}
+
 module "waf_aligned" {
   source     = "../.."
   depends_on = [azurerm_role_assignment.privateDNSZoneContributor]
 
-  name                    = module.naming.kubernetes_cluster.name_unique
-  resource_group_name     = azurerm_resource_group.this.name
-  location                = azurerm_resource_group.this.location
-  sku_tier                = "Standard"
-  private_cluster_enabled = true
-  private_dns_zone_id     = azurerm_private_dns_zone.zone.id
+  name                       = module.naming.kubernetes_cluster.name_unique
+  resource_group_name        = azurerm_resource_group.this.name
+  location                   = azurerm_resource_group.this.location
+  sku_tier                   = "Standard"
+  private_cluster_enabled    = true
+  private_dns_zone_id        = azurerm_private_dns_zone.zone.id
+  dns_prefix_private_cluster = random_string.dns_prefix.result
+
+  identity = {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.identity.id]
+  }
 
   network_profile = {
     dns_service_ip = "10.10.200.10"
@@ -223,6 +237,7 @@ The following resources are used by this module:
 - [azurerm_user_assigned_identity.identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

@@ -55,9 +55,14 @@ module "kubenet" {
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
   default_node_pool = {
-    name       = "default"
-    vm_size    = "Standard_DS2_v2"
-    node_count = 1
+    name                         = "default"
+    vm_size                      = "Standard_DS2_v2"
+    node_count                   = 1
+    auto_scaling_enabled         = true
+    max_count                    = 3
+    max_pods                     = 30
+    min_count                    = 1
+    only_critical_addons_enabled = true
   }
 
   network_profile = {
