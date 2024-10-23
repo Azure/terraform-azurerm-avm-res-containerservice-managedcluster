@@ -57,6 +57,9 @@ module "automatic" {
     name       = "default"
     vm_size    = "Standard_DS2_v2"
     node_count = 3
+    upgrade_settings = {
+      max_surge = "10%"
+    }
   }
 
   maintenance_window_auto_upgrade = {
@@ -66,7 +69,7 @@ module "automatic" {
     duration    = 4
     utc_offset  = "+00:00"
     start_time  = "00:00"
-    start_date  = "2024-10-15"
+    start_date  = "2024-10-15T00:00:00Z"
   }
 
 }

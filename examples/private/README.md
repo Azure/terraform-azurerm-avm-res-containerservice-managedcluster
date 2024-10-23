@@ -145,6 +145,10 @@ module "private" {
     min_count                    = 1
     vnet_subnet_id               = azurerm_subnet.subnet.id
     only_critical_addons_enabled = true
+
+    upgrade_settings = {
+      max_surge = "10%"
+    }
   }
 
   node_pools = [
@@ -159,6 +163,10 @@ module "private" {
       min_count            = 1
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp1_subnet.id
+
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     },
     {
       name                 = "userpool2"
@@ -171,6 +179,10 @@ module "private" {
       min_count            = 1
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp2_subnet.id
+
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     }
   ]
 

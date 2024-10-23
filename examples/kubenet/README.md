@@ -67,6 +67,10 @@ module "kubenet" {
     max_pods                     = 30
     min_count                    = 1
     only_critical_addons_enabled = true
+
+    upgrade_settings = {
+      max_surge = "10%"
+    }
   }
 
   network_profile = {
@@ -84,6 +88,9 @@ module "kubenet" {
       max_pods             = 30
       min_count            = 1
       os_disk_size_gb      = 128
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     },
     {
       name                 = "userpool2"
@@ -95,6 +102,9 @@ module "kubenet" {
       max_pods             = 30
       min_count            = 1
       os_disk_size_gb      = 128
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     }
   ]
 }

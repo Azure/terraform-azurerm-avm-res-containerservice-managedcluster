@@ -118,13 +118,16 @@ module "cni" {
   default_node_pool = {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
-    node_count                   = 1
+    node_count                   = 3
     vnet_subnet_id               = azurerm_subnet.default_subnet.id
     auto_scaling_enabled         = true
     max_count                    = 3
     max_pods                     = 30
     min_count                    = 1
     only_critical_addons_enabled = true
+    upgrade_settings = {
+      max_surge = "10%"
+    }
   }
 
   network_profile = {
@@ -145,6 +148,9 @@ module "cni" {
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp1_subnet.id
       auto_scaling_enabled = true
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     },
     {
       name                 = "userpool2"
@@ -157,6 +163,9 @@ module "cni" {
       min_count            = 1
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp2_subnet.id
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     }
   ]
 

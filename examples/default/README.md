@@ -66,6 +66,10 @@ module "default" {
     name       = "default"
     vm_size    = "Standard_DS2_v2"
     node_count = 3
+
+    upgrade_settings = {
+      max_surge = "10%"
+    }
   }
 }
 ```

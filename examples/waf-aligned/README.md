@@ -168,6 +168,10 @@ module "waf_aligned" {
     min_count                    = 3
     vnet_subnet_id               = azurerm_subnet.subnet.id
     only_critical_addons_enabled = true
+
+    upgrade_settings = {
+      max_surge = "10%"
+    }
   }
 
   node_pools = [
@@ -182,6 +186,10 @@ module "waf_aligned" {
       min_count            = 3
       os_disk_size_gb      = 60
       vnet_subnet_id       = azurerm_subnet.unp1.id
+
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     },
     {
       name                 = "userpool2"
@@ -194,6 +202,9 @@ module "waf_aligned" {
       min_count            = 3
       os_disk_size_gb      = 60
       vnet_subnet_id       = azurerm_subnet.unp2.id
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     }
   ]
 

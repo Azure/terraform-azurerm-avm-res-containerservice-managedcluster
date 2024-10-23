@@ -84,7 +84,7 @@ variable "default_node_pool" {
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
-      max_surge                     = number
+      max_surge                     = string
     }))
 
   })
@@ -588,7 +588,7 @@ variable "node_pools" {
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
-      max_surge                     = optional(number)
+      max_surge                     = string
     }))
 
     kubelet_config = optional(object({

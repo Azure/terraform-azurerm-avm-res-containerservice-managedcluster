@@ -146,7 +146,7 @@ object({
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
-      max_surge                     = number
+      max_surge                     = string
     }))
 
   })
@@ -743,7 +743,7 @@ list(object({
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
-      max_surge                     = optional(number)
+      max_surge                     = string
     }))
 
     kubelet_config = optional(object({
