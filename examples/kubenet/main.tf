@@ -47,22 +47,58 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
-module "default" {
+module "kubenet" {
   source              = "../.."
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
   default_node_pool = {
-    name       = "default"
-    vm_size    = "Standard_DS2_v2"
-    node_count = 3
+    name                         = "default"
+    vm_size                      = "Standard_DS2_v2"
+    node_count                   = 1
+    auto_scaling_enabled         = true
+    max_count                    = 3
+    max_pods                     = 30
+    min_count                    = 1
+    only_critical_addons_enabled = true
 
     upgrade_settings = {
       max_surge = "10%"
     }
   }
+
+  network_profile = {
+    network_plugin = "kubenet"
+  }
+
+  node_pools = [
+    {
+      name                 = "userpool1"
+      vm_size              = "Standard_DS2_v2"
+      node_count           = 2
+      zones                = [3]
+      auto_scaling_enabled = true
+      max_count            = 3
+      max_pods             = 30
+      min_count            = 1
+      os_disk_size_gb      = 128
+      upgrade_settings = {
+        max_surge = "10%"
+      }
+    },
+    {
+      name                 = "userpool2"
+      vm_size              = "Standard_DS2_v2"
+      node_count           = 2
+      zones                = [3]
+      auto_scaling_enabled = true
+      max_count            = 3
+      max_pods             = 30
+      min_count            = 1
+      os_disk_size_gb      = 128
+      upgrade_settings = {
+        max_surge = "10%"
+      }
+    }
+  ]
 }
