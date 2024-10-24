@@ -99,7 +99,7 @@ resource "azurerm_user_assigned_identity" "identity" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-resource "azurerm_role_assignment" "privateDNSZoneContributor" {
+resource "azurerm_role_assignment" "private_dns_zone_contributor" {
   principal_id         = azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_private_dns_zone.zone.id
   role_definition_name = "Private DNS Zone Contributor"
@@ -115,7 +115,7 @@ resource "random_string" "dns_prefix" {
 
 module "private" {
   source     = "../.."
-  depends_on = [azurerm_role_assignment.privateDNSZoneContributor]
+  depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
 
   name                       = module.naming.kubernetes_cluster.name_unique
   resource_group_name        = azurerm_resource_group.this.name
@@ -207,7 +207,7 @@ The following resources are used by this module:
 - [azurerm_private_dns_zone.zone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_private_dns_zone_virtual_network_link.vnet_link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_role_assignment.privateDNSZoneContributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.unp1_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.unp2_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)

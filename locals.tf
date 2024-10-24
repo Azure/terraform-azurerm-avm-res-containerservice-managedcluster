@@ -1,5 +1,5 @@
 locals {
-  dns_prefix = var.dns_prefix == "" ? random_string.dns_prefix.result : var.dns_prefix
+  dns_prefix = coalesce(var.dns_prefix, random_string.dns_prefix.result)
   # tflint-ignore: terraform_unused_declarations
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
