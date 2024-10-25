@@ -3,7 +3,7 @@ variable "default_node_pool" {
     name                          = string
     vm_size                       = string
     capacity_reservation_group_id = optional(string)
-    auto_scaling_enabled          = optional(bool)
+    auto_scaling_enabled          = optional(bool, false)
     host_encryption_enabled       = optional(bool)
     node_public_ip_enabled        = optional(bool)
     gpu_instance                  = optional(string)
@@ -541,7 +541,7 @@ variable "node_pools" {
     name                          = string
     vm_size                       = string
     capacity_reservation_group_id = optional(string)
-    auto_scaling_enabled          = optional(bool)
+    auto_scaling_enabled          = optional(bool, false)
     max_count                     = optional(number)
     min_count                     = optional(number)
     node_count                    = optional(number)
@@ -809,6 +809,7 @@ variable "service_mesh_profile" {
     mode                             = string
     internal_ingress_gateway_enabled = optional(bool)
     external_ingress_gateway_enabled = optional(bool)
+    revisions                        = optional(list(string))
     certificate_authority = optional(object({
       key_vault_id           = string
       root_cert_object_name  = string
