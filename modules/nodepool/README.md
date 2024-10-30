@@ -12,9 +12,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0)
 
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+- <a name="requirement_null"></a> [null](#requirement\_null) (>= 3.0)
 
 ## Resources
 
@@ -382,7 +380,7 @@ Description: Optional. A mapping of tags to assign to the resource.
 
 Type: `map(string)`
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_ultra_ssd_enabled"></a> [ultra\_ssd\_enabled](#input\_ultra\_ssd\_enabled)
 

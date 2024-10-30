@@ -86,7 +86,7 @@ resource "azurerm_user_assigned_identity" "identity" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-resource "azurerm_role_assignment" "privateDNSZoneContributor" {
+resource "azurerm_role_assignment" "private_dns_zone_contributor" {
   principal_id         = azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_private_dns_zone.zone.id
   role_definition_name = "Private DNS Zone Contributor"
