@@ -134,10 +134,10 @@ module "private" {
     service_cidr   = "10.10.200.0/24"
     network_plugin = "azure"
   }
+
   default_node_pool = {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
-    node_count                   = 1
     zones                        = [3]
     auto_scaling_enabled         = true
     max_count                    = 3
@@ -151,11 +151,10 @@ module "private" {
     }
   }
 
-  node_pools = [
-    {
+  node_pools = {
+    unp1 = {
       name                 = "userpool1"
       vm_size              = "Standard_DS2_v2"
-      node_count           = 2
       zones                = [3]
       auto_scaling_enabled = true
       max_count            = 3
@@ -167,11 +166,10 @@ module "private" {
       upgrade_settings = {
         max_surge = "10%"
       }
-    },
-    {
+    }
+    unp2 = {
       name                 = "userpool2"
       vm_size              = "Standard_DS2_v2"
-      node_count           = 2
       zones                = [3]
       auto_scaling_enabled = true
       max_count            = 3
@@ -184,7 +182,7 @@ module "private" {
         max_surge = "10%"
       }
     }
-  ]
+  }
 
 }
 ```

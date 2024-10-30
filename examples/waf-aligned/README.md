@@ -174,11 +174,10 @@ module "waf_aligned" {
     }
   }
 
-  node_pools = [
-    {
+  node_pools = {
+    unp1 = {
       name                 = "userpool1"
       vm_size              = "Standard_DS2_v2"
-      node_count           = 3
       zones                = [3]
       auto_scaling_enabled = true
       max_count            = 3
@@ -190,8 +189,8 @@ module "waf_aligned" {
       upgrade_settings = {
         max_surge = "10%"
       }
-    },
-    {
+    }
+    unp2 = {
       name                 = "userpool2"
       vm_size              = "Standard_DS2_v2"
       node_count           = 3
@@ -206,7 +205,7 @@ module "waf_aligned" {
         max_surge = "10%"
       }
     }
-  ]
+  }
 
   automatic_upgrade_channel = "stable"
   node_os_channel_upgrade   = "Unmanaged"

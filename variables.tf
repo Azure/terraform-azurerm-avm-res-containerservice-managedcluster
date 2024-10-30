@@ -23,7 +23,7 @@ variable "default_node_pool" {
     scale_down_mode               = optional(string)
     snapshot_id                   = optional(string)
     temporary_name_for_rotation   = optional(string)
-    type                          = optional(string)
+    type                          = optional(string, "VirtualMachineScaleSets")
     tags                          = optional(map(string))
     ultra_ssd_enabled             = optional(bool)
     vnet_subnet_id                = optional(string)
@@ -150,12 +150,14 @@ variable "auto_scaler_profile" {
 
 variable "automatic_upgrade_channel" {
   type        = string
-  default     = "node-image"
-  description = "The automatic upgrade channel for the Kubernetes cluster."
+  default     = null
+  description = "(Optional) The upgrade channel for this Kubernetes Cluster. Possible values are `patch`, `rapid`, `node-image` and `stable`. By default automatic-upgrades are turned off. Note that you cannot specify the patch version using `kubernetes_version` or `orchestrator_version` when using the `patch` upgrade channel. See [the documentation](https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-cluster) for more information"
 
   validation {
-    condition     = can(index(["rapid", "node-image", "patch", "stable"], var.automatic_upgrade_channel))
-    error_message = "The automatic upgrade channel must be one of: 'rapid', 'node-image', 'stable' or 'patch'."
+    condition = var.automatic_upgrade_channel == null ? true : contains([
+      "patch", "stable", "rapid", "node-image"
+    ], var.automatic_upgrade_channel)
+    error_message = "`automatic_upgrade_channel`'s possible values are `patch`, `stable`, `rapid` or `node-image`."
   }
 }
 
@@ -179,6 +181,12 @@ variable "cost_analysis_enabled" {
   type        = bool
   default     = false
   description = "Whether or not cost analysis is enabled for the Kubernetes cluster. SKU must be Standard or Premium."
+}
+
+variable "create_nodepools_before_destroy" {
+  type        = bool
+  default     = false
+  description = "Whether or not to create node pools before destroying the old ones. This is the opposite of the default behavior. Set this to true if zero downtime is required during nodepool redeployments such as changes to snapshot_id."
 }
 
 # required AVM interfaces
@@ -265,7 +273,7 @@ variable "disk_encryption_set_id" {
 variable "dns_prefix" {
   type        = string
   default     = ""
-  description = "The DNS prefix specified when creating the managed cluster."
+  description = "The DNS prefix specified when creating the managed cluster. If you do not specify one, a random prefix will be generated."
 
   validation {
     condition     = can(regex("^$|^[a-z0-9]([a-z0-9\\-]{0,52}[a-z0-9])?$", var.dns_prefix))
@@ -276,7 +284,7 @@ variable "dns_prefix" {
 variable "dns_prefix_private_cluster" {
   type        = string
   default     = ""
-  description = "The Private Cluster DNS prefix specified when creating the managed cluster."
+  description = "The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster."
 
   validation {
     condition     = can(regex("^$|^[a-z0-9]([a-z0-9\\-]{0,52}[a-z0-9])?$", var.dns_prefix_private_cluster))
@@ -537,7 +545,7 @@ variable "node_os_channel_upgrade" {
 }
 
 variable "node_pools" {
-  type = list(object({
+  type = map(object({
     name                          = string
     vm_size                       = string
     capacity_reservation_group_id = optional(string)
@@ -637,7 +645,7 @@ variable "node_pools" {
       }))
     }))
   }))
-  default     = null
+  default     = {}
   description = "Optional. The additional node pools for the Kubernetes cluster."
 }
 

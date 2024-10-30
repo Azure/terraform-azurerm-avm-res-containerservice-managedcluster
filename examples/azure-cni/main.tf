@@ -118,7 +118,6 @@ module "cni" {
   default_node_pool = {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
-    node_count                   = 3
     vnet_subnet_id               = azurerm_subnet.default_subnet.id
     auto_scaling_enabled         = true
     max_count                    = 3
@@ -136,11 +135,10 @@ module "cni" {
     network_plugin_mode = "overlay"
   }
 
-  node_pools = [
-    {
+  node_pools = {
+    unp1 = {
       name                 = "userpool1"
       vm_size              = "Standard_DS2_v2"
-      node_count           = 2
       zones                = [3]
       max_count            = 3
       max_pods             = 30
@@ -151,11 +149,10 @@ module "cni" {
       upgrade_settings = {
         max_surge = "10%"
       }
-    },
-    {
+    }
+    unp2 = {
       name                 = "userpool2"
       vm_size              = "Standard_DS2_v2"
-      node_count           = 2
       zones                = [3]
       auto_scaling_enabled = true
       max_count            = 3
@@ -167,7 +164,7 @@ module "cni" {
         max_surge = "10%"
       }
     }
-  ]
+  }
 
   automatic_upgrade_channel = "stable"
   node_os_channel_upgrade   = "Unmanaged"

@@ -3,6 +3,15 @@ output "name" {
   value       = azurerm_kubernetes_cluster.this.name
 }
 
+output "nodepool_resource_ids" {
+  description = "A map of nodepool keys to resource ids."
+  value = { for npk, np in module.nodepools : npk => {
+    resource_id = np.resource_id
+    name        = np.name
+    }
+  }
+}
+
 output "private_endpoints" {
   description = <<DESCRIPTION
   A map of the private endpoints created.

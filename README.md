@@ -26,6 +26,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.4.0, < 2.0)
+
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
@@ -36,14 +38,17 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_update_resource.aks_cluster_http_proxy_config_no_proxy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.aks_cluster_post_create](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
-- [azurerm_kubernetes_cluster_node_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
+- [null_resource.http_proxy_config_no_proxy_keeper](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) (resource)
+- [null_resource.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
@@ -85,7 +90,7 @@ object({
     scale_down_mode               = optional(string)
     snapshot_id                   = optional(string)
     temporary_name_for_rotation   = optional(string)
-    type                          = optional(string)
+    type                          = optional(string, "VirtualMachineScaleSets")
     tags                          = optional(map(string))
     ultra_ssd_enabled             = optional(bool)
     vnet_subnet_id                = optional(string)
@@ -221,11 +226,11 @@ Default: `null`
 
 ### <a name="input_automatic_upgrade_channel"></a> [automatic\_upgrade\_channel](#input\_automatic\_upgrade\_channel)
 
-Description: The automatic upgrade channel for the Kubernetes cluster.
+Description: (Optional) The upgrade channel for this Kubernetes Cluster. Possible values are `patch`, `rapid`, `node-image` and `stable`. By default automatic-upgrades are turned off. Note that you cannot specify the patch version using `kubernetes_version` or `orchestrator_version` when using the `patch` upgrade channel. See [the documentation](https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-cluster) for more information
 
 Type: `string`
 
-Default: `"node-image"`
+Default: `null`
 
 ### <a name="input_azure_active_directory_role_based_access_control"></a> [azure\_active\_directory\_role\_based\_access\_control](#input\_azure\_active\_directory\_role\_based\_access\_control)
 
@@ -254,6 +259,14 @@ Default: `true`
 ### <a name="input_cost_analysis_enabled"></a> [cost\_analysis\_enabled](#input\_cost\_analysis\_enabled)
 
 Description: Whether or not cost analysis is enabled for the Kubernetes cluster. SKU must be Standard or Premium.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_create_nodepools_before_destroy"></a> [create\_nodepools\_before\_destroy](#input\_create\_nodepools\_before\_destroy)
+
+Description: Whether or not to create node pools before destroying the old ones. This is the opposite of the default behavior. Set this to true if zero downtime is required during nodepool redeployments such as changes to snapshot\_id.
 
 Type: `bool`
 
@@ -335,7 +348,7 @@ Default: `null`
 
 ### <a name="input_dns_prefix"></a> [dns\_prefix](#input\_dns\_prefix)
 
-Description: The DNS prefix specified when creating the managed cluster.
+Description: The DNS prefix specified when creating the managed cluster. If you do not specify one, a random prefix will be generated.
 
 Type: `string`
 
@@ -343,7 +356,7 @@ Default: `""`
 
 ### <a name="input_dns_prefix_private_cluster"></a> [dns\_prefix\_private\_cluster](#input\_dns\_prefix\_private\_cluster)
 
-Description: The Private Cluster DNS prefix specified when creating the managed cluster.
+Description: The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster.
 
 Type: `string`
 
@@ -692,7 +705,7 @@ Description: Optional. The additional node pools for the Kubernetes cluster.
 Type:
 
 ```hcl
-list(object({
+map(object({
     name                          = string
     vm_size                       = string
     capacity_reservation_group_id = optional(string)
@@ -794,7 +807,7 @@ list(object({
   }))
 ```
 
-Default: `null`
+Default: `{}`
 
 ### <a name="input_node_resource_group_name"></a> [node\_resource\_group\_name](#input\_node\_resource\_group\_name)
 
@@ -1123,6 +1136,10 @@ The following outputs are exported:
 
 Description: Name of the Kubernetes cluster.
 
+### <a name="output_nodepool_resource_ids"></a> [nodepool\_resource\_ids](#output\_nodepool\_resource\_ids)
+
+Description: A map of nodepool keys to resource ids.
+
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
 Description:   A map of the private endpoints created.
@@ -1133,7 +1150,13 @@ Description: Resource ID of the Kubernetes cluster.
 
 ## Modules
 
-No modules.
+The following Modules are called:
+
+### <a name="module_nodepools"></a> [nodepools](#module\_nodepools)
+
+Source: ./modules/nodepool
+
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

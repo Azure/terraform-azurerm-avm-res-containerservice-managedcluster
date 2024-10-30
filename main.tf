@@ -9,7 +9,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   cost_analysis_enabled            = var.sku_tier == "Free" ? false : var.cost_analysis_enabled
   disk_encryption_set_id           = var.disk_encryption_set_id
   dns_prefix                       = var.private_cluster_enabled ? null : local.dns_prefix
-  dns_prefix_private_cluster       = var.private_cluster_enabled ? var.dns_prefix_private_cluster : null
+  dns_prefix_private_cluster       = var.private_cluster_enabled ? local.private_dns_prefix : null
   http_application_routing_enabled = var.http_application_routing_enabled
   image_cleaner_enabled            = var.image_cleaner_enabled
   kubernetes_version               = var.kubernetes_version
@@ -457,6 +457,135 @@ resource "azurerm_kubernetes_cluster" "this" {
       keda_enabled                    = workload_autoscaler_profile.value.keda_enabled
       vertical_pod_autoscaler_enabled = workload_autoscaler_profile.value.vpa_enabled
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      http_application_routing_enabled,
+      http_proxy_config[0].no_proxy,
+      kubernetes_version
+    ]
+
+    precondition {
+      # Why don't use var.identity_ids != null && length(var.identity_ids)>0 ? Because bool expression in Terraform is not short circuit so even var.identity_ids is null Terraform will still invoke length function with null and cause error. https://github.com/hashicorp/terraform/issues/24128
+      condition     = (var.identity.type == "SystemAssigned") || (var.identity.identity_ids == null ? false : length(var.identity.identity_ids) > 0)
+      error_message = "If use identity and `UserAssigned` is set, an `identity_ids` must be set as well."
+    }
+    precondition {
+      condition     = var.cost_analysis_enabled != true || (var.sku_tier == "Standard" || var.sku_tier == "Premium")
+      error_message = "`sku_tier` must be either `Standard` or `Premium` when cost analysis is enabled."
+    }
+    precondition {
+      condition     = !((var.network_profile.load_balancer_profile != null) && var.network_profile.load_balancer_sku != "standard")
+      error_message = "Enabling load_balancer_profile requires that `load_balancer_sku` be set to `standard`"
+    }
+    precondition {
+      condition     = local.automatic_channel_upgrade_check
+      error_message = "Either disable automatic upgrades, or specify `kubernetes_version` or `orchestrator_version` only up to the minor version when using `automatic_channel_upgrade=patch`. You don't need to specify `kubernetes_version` at all when using `automatic_channel_upgrade=stable|rapid|node-image`, where `orchestrator_version` always must be set to `null`."
+    }
+    precondition {
+      condition     = var.role_based_access_control_enabled || !(var.azure_active_directory_role_based_access_control != null)
+      error_message = "Enabling Azure Active Directory integration requires that `role_based_access_control_enabled` be set to true."
+    }
+    precondition {
+      condition     = !((var.key_management_service != null) && var.identity.type != "UserAssigned")
+      error_message = "KMS etcd encryption doesn't work with system-assigned managed identity."
+    }
+    precondition {
+      condition     = !var.workload_identity_enabled || var.oidc_issuer_enabled
+      error_message = "`oidc_issuer_enabled` must be set to `true` to enable Azure AD Workload Identity"
+    }
+    precondition {
+      condition     = var.network_profile.network_mode != "overlay" || var.network_profile.network_plugin == "azure"
+      error_message = "When network_plugin_mode is set to `overlay`, the network_plugin field can only be set to azure."
+    }
+    precondition {
+      condition     = var.network_profile.network_policy != "cilium" || var.network_profile.network_plugin == "azure"
+      error_message = "When the network policy is set to cilium, the network_plugin field can only be set to azure."
+    }
+    precondition {
+      condition     = var.network_profile.network_policy != "cilium" || var.network_profile.network_plugin_mode == "overlay" || var.default_node_pool.pod_subnet_id != null
+      error_message = "When the network policy is set to cilium, one of either network_plugin_mode = `overlay` or pod_subnet_id must be specified."
+    }
+    precondition {
+      condition     = can(coalesce(var.name, var.dns_prefix))
+      error_message = "You must set one of `var.cluster_name` and `var.prefix` to create `azurerm_kubernetes_cluster.main`."
+    }
+    precondition {
+      condition     = !var.private_cluster_enabled || (var.dns_prefix_private_cluster != null && var.dns_prefix_private_cluster != "")
+      error_message = "When `private_cluster_enabled` is set to `true`, `dns_prefix_private_cluster` must be set."
+    }
+    precondition {
+      condition     = !var.private_cluster_enabled || (var.dns_prefix == null || var.dns_prefix == "")
+      error_message = "When `dns_prefix_private_cluster` is set, `dns_prefix` must not be set."
+    }
+    precondition {
+      condition     = var.automatic_upgrade_channel != "node-image" || var.node_os_channel_upgrade == "NodeImage"
+      error_message = "`node_os_channel_upgrade` must be set to `NodeImage` if `automatic_channel_upgrade` has been set to `node-image`."
+    }
+    precondition {
+      condition = (var.kubelet_identity == null) || (
+      var.identity.type == "UserAssigned" && try(length(var.identity.identity_ids), 0) > 0)
+      error_message = "When `kubelet_identity` is enabled - The `type` field in the `identity` block must be set to `UserAssigned` and `identity_ids` must be set."
+    }
+    precondition {
+      condition     = !var.default_node_pool.auto_scaling_enabled || var.default_node_pool.type == "VirtualMachineScaleSets"
+      error_message = "Autoscaling on default node pools is only supported when the Kubernetes Cluster is using Virtual Machine Scale Sets type nodes."
+    }
+    precondition {
+      condition     = var.node_pools == null || var.default_node_pool.type == "VirtualMachineScaleSets"
+      error_message = "The 'type' variable must be set to 'VirtualMachineScaleSets' if 'node_pools' is not null."
+    }
+  }
+}
+
+resource "null_resource" "kubernetes_version_keeper" {
+  triggers = {
+    version = var.kubernetes_version
+  }
+}
+
+resource "azapi_update_resource" "aks_cluster_post_create" {
+  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  body = jsonencode({
+    properties = {
+      kubernetesVersion = var.kubernetes_version
+    }
+  })
+  resource_id = azurerm_kubernetes_cluster.this.id
+
+  lifecycle {
+    ignore_changes       = all
+    replace_triggered_by = [null_resource.kubernetes_version_keeper.id]
+  }
+}
+
+resource "null_resource" "http_proxy_config_no_proxy_keeper" {
+  count = can(var.http_proxy_config.no_proxy[0]) ? 1 : 0
+
+  triggers = {
+    http_proxy_no_proxy = try(join(",", try(sort(var.http_proxy_config.no_proxy), [])), "")
+  }
+}
+
+resource "azapi_update_resource" "aks_cluster_http_proxy_config_no_proxy" {
+  count = can(var.http_proxy_config.no_proxy[0]) ? 1 : 0
+
+  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  body = jsonencode({
+    properties = {
+      httpProxyConfig = {
+        noProxy = var.http_proxy_config.no_proxy
+      }
+    }
+  })
+  resource_id = azurerm_kubernetes_cluster.this.id
+
+  depends_on = [azapi_update_resource.aks_cluster_post_create]
+
+  lifecycle {
+    ignore_changes       = all
+    replace_triggered_by = [null_resource.http_proxy_config_no_proxy_keeper[0].id]
   }
 }
 

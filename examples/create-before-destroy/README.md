@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Kubenet example
+# Nodepools: create before destroy
 
-This deploys the module using the Kubenet Network Plugin.
+This deploys the module with nodepools that have the create\_before\_destroy lifecycle property set to true.
 
 ```hcl
 terraform {
@@ -53,11 +53,12 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-module "kubenet" {
-  source              = "../.."
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+module "create_before_destroy" {
+  source                          = "../.."
+  name                            = module.naming.kubernetes_cluster.name_unique
+  resource_group_name             = azurerm_resource_group.this.name
+  location                        = azurerm_resource_group.this.location
+  create_nodepools_before_destroy = true
   default_node_pool = {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
@@ -78,7 +79,7 @@ module "kubenet" {
 
   node_pools = {
     unp1 = {
-      name                 = "userpool1"
+      name                 = "unp1"
       vm_size              = "Standard_DS2_v2"
       zones                = [3]
       auto_scaling_enabled = true
@@ -91,7 +92,7 @@ module "kubenet" {
       }
     }
     unp2 = {
-      name                 = "userpool2"
+      name                 = "unp2"
       vm_size              = "Standard_DS2_v2"
       zones                = [3]
       auto_scaling_enabled = true
@@ -142,7 +143,7 @@ No outputs.
 
 The following Modules are called:
 
-### <a name="module_kubenet"></a> [kubenet](#module\_kubenet)
+### <a name="module_create_before_destroy"></a> [create\_before\_destroy](#module\_create\_before\_destroy)
 
 Source: ../..
 
