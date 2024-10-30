@@ -119,7 +119,7 @@ data "azurerm_client_config" "current" {}
 
 module "waf_aligned" {
   source     = "../.."
-  depends_on = [azurerm_role_assignment.privateDNSZoneContributor]
+  depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
 
   name                       = module.naming.kubernetes_cluster.name_unique
   resource_group_name        = azurerm_resource_group.this.name
