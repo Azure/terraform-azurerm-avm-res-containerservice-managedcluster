@@ -102,6 +102,8 @@ resource "azurerm_log_analytics_workspace" "workspace" {
   sku                 = "PerGB2018"
 }
 
+data "azurerm_client_config" "current" {}
+
 module "cni" {
   source     = "../.."
   depends_on = [azurerm_role_assignment.kubelet_role_assignment]
@@ -109,6 +111,11 @@ module "cni" {
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
+
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
 
   identity = {
     type         = "UserAssigned"

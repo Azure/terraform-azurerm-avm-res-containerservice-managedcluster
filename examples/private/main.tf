@@ -107,6 +107,8 @@ resource "random_string" "dns_prefix" {
   upper   = false # No uppercase letters
 }
 
+data "azurerm_client_config" "current" {}
+
 module "private" {
   source     = "../.."
   depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
@@ -118,6 +120,11 @@ module "private" {
   private_cluster_enabled    = true
   private_dns_zone_id        = azurerm_private_dns_zone.zone.id
   dns_prefix_private_cluster = random_string.dns_prefix.result
+
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
 
   identity = {
     type         = "UserAssigned"

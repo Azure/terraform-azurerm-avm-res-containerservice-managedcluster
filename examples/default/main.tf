@@ -47,6 +47,8 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
+data "azurerm_client_config" "current" {}
+
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
@@ -56,6 +58,12 @@ module "default" {
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
+
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
+
   default_node_pool = {
     name       = "default"
     vm_size    = "Standard_DS2_v2"

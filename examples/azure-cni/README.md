@@ -108,6 +108,8 @@ resource "azurerm_log_analytics_workspace" "workspace" {
   sku                 = "PerGB2018"
 }
 
+data "azurerm_client_config" "current" {}
+
 module "cni" {
   source     = "../.."
   depends_on = [azurerm_role_assignment.kubelet_role_assignment]
@@ -115,6 +117,11 @@ module "cni" {
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
+
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
 
   identity = {
     type         = "UserAssigned"
@@ -245,6 +252,7 @@ The following resources are used by this module:
 - [azurerm_user_assigned_identity.kubelet_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

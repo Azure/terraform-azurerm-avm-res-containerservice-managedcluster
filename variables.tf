@@ -394,8 +394,8 @@ variable "linux_profile" {
 
 variable "local_account_disabled" {
   type        = bool
-  default     = false
-  description = "Whether or not the local account should be disabled on the Kubernetes cluster."
+  default     = true
+  description = "Defaults to true. Whether or not the local account should be disabled on the Kubernetes cluster. Azure RBAC must be enabled."
 }
 
 variable "lock" {

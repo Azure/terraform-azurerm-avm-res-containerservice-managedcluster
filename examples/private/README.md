@@ -113,6 +113,8 @@ resource "random_string" "dns_prefix" {
   upper   = false # No uppercase letters
 }
 
+data "azurerm_client_config" "current" {}
+
 module "private" {
   source     = "../.."
   depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
@@ -124,6 +126,11 @@ module "private" {
   private_cluster_enabled    = true
   private_dns_zone_id        = azurerm_private_dns_zone.zone.id
   dns_prefix_private_cluster = random_string.dns_prefix.result
+
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
 
   identity = {
     type         = "UserAssigned"
@@ -213,6 +220,7 @@ The following resources are used by this module:
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
