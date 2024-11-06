@@ -426,7 +426,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     }
   }
   dynamic "web_app_routing" {
-    for_each = var.web_app_routing_dns_zone_ids != null ? [var.web_app_routing_dns_zone_ids] : []
+    for_each = var.web_app_routing_dns_zone_ids != null ? var.web_app_routing_dns_zone_ids : []
 
     content {
       dns_zone_ids = web_app_routing.value.dns_zone_ids
@@ -547,11 +547,11 @@ resource "null_resource" "kubernetes_version_keeper" {
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
   type = "Microsoft.ContainerService/managedClusters@2024-02-01"
-  body = jsonencode({
+  body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
     }
-  })
+  }
   resource_id = azurerm_kubernetes_cluster.this.id
 
   lifecycle {
@@ -572,13 +572,13 @@ resource "azapi_update_resource" "aks_cluster_http_proxy_config_no_proxy" {
   count = can(var.http_proxy_config.no_proxy[0]) ? 1 : 0
 
   type = "Microsoft.ContainerService/managedClusters@2024-02-01"
-  body = jsonencode({
+  body = {
     properties = {
       httpProxyConfig = {
         noProxy = var.http_proxy_config.no_proxy
       }
     }
-  })
+  }
   resource_id = azurerm_kubernetes_cluster.this.id
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]

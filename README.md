@@ -26,7 +26,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.4.0, < 2.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>=2.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0)
 
@@ -1083,7 +1083,7 @@ Default: `null`
 
 Description: The web app routing DNS zone IDs for the Kubernetes cluster.
 
-Type: `string`
+Type: `map(list(string))`
 
 Default: `null`
 

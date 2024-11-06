@@ -880,7 +880,7 @@ variable "tags" {
 }
 
 variable "web_app_routing_dns_zone_ids" {
-  type        = string
+  type        = map(list(string))
   default     = null
   description = "The web app routing DNS zone IDs for the Kubernetes cluster."
 }
