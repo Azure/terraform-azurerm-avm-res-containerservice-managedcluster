@@ -1083,7 +1083,7 @@ Default: `null`
 
 Description: The web app routing DNS zone IDs for the Kubernetes cluster.
 
-Type: `string`
+Type: `map(list(string))`
 
 Default: `null`
 
