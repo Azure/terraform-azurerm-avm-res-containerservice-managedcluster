@@ -426,7 +426,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     }
   }
   dynamic "web_app_routing" {
-    for_each = var.web_app_routing_dns_zone_ids != null ? var.web_app_routing_dns_zone_ids : []
+    for_each = var.web_app_routing_dns_zone_ids
 
     content {
       dns_zone_ids = web_app_routing.value.dns_zone_ids

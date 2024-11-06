@@ -1085,7 +1085,7 @@ Description: The web app routing DNS zone IDs for the Kubernetes cluster.
 
 Type: `map(list(string))`
 
-Default: `null`
+Default: `{}`
 
 ### <a name="input_windows_profile"></a> [windows\_profile](#input\_windows\_profile)
 
