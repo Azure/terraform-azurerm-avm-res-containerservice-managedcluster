@@ -429,7 +429,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.web_app_routing_dns_zone_ids
 
     content {
-      dns_zone_ids = web_app_routing.value.dns_zone_ids
+      dns_zone_ids = web_app_routing.value
     }
   }
   dynamic "windows_profile" {
