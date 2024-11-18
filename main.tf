@@ -1,6 +1,6 @@
 resource "azurerm_kubernetes_cluster" "this" {
   location            = var.location
-  name                = var.create_nodepools_before_destroy ? "${var.name}${substr(md5(uuid()), 0, 4)}" : var.name
+  name                = "${var.name}${var.cluster_suffix}"
   resource_group_name = var.resource_group_name
   # Upgrade Configuration
   automatic_channel_upgrade = var.automatic_upgrade_channel

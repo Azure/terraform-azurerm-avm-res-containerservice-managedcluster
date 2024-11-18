@@ -177,6 +177,12 @@ variable "azure_policy_enabled" {
   description = "Whether or not Azure Policy is enabled for the Kubernetes cluster."
 }
 
+variable "cluster_suffix" {
+  type        = string
+  default     = ""
+  description = "Optional. The suffix to append to the Kubernetes cluster name if create_before_destroy is set to true on the nodepools."
+}
+
 variable "cost_analysis_enabled" {
   type        = bool
   default     = false

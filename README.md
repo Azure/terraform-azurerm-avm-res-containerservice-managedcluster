@@ -258,6 +258,14 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_cluster_suffix"></a> [cluster\_suffix](#input\_cluster\_suffix)
+
+Description: Optional. The suffix to append to the Kubernetes cluster name if create\_before\_destroy is set to true on the nodepools.
+
+Type: `string`
+
+Default: `""`
+
 ### <a name="input_cost_analysis_enabled"></a> [cost\_analysis\_enabled](#input\_cost\_analysis\_enabled)
 
 Description: Whether or not cost analysis is enabled for the Kubernetes cluster. SKU must be Standard or Premium.
