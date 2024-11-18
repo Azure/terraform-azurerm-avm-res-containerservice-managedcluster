@@ -28,7 +28,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>=2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (< 4.0.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -1010,7 +1010,6 @@ object({
     mode                             = string
     internal_ingress_gateway_enabled = optional(bool)
     external_ingress_gateway_enabled = optional(bool)
-    revisions                        = optional(list(string))
     certificate_authority = optional(object({
       key_vault_id           = string
       root_cert_object_name  = string
