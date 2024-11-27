@@ -38,6 +38,7 @@ module "nodepools" {
   snapshot_id                    = each.value.snapshot_id
   spot_max_price                 = each.value.spot_max_price
   tags                           = each.value.tags
+  timeouts                       = var.kubernetes_cluster_node_pool_timeouts
   ultra_ssd_enabled              = each.value.ultra_ssd_enabled
   vnet_subnet_id                 = each.value.vnet_subnet_id
   workload_runtime               = each.value.workload_runtime

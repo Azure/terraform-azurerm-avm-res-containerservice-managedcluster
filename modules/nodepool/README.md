@@ -12,15 +12,13 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0, < 5.0.0)
 
-- <a name="requirement_null"></a> [null](#requirement\_null) (>= 3.0)
-
 ## Resources
 
 The following resources are used by this module:
 
 - [azurerm_kubernetes_cluster_node_pool.create_before_destroy_node_pool](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
 - [azurerm_kubernetes_cluster_node_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
-- [null_resource.pool_name_keeper](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) (resource)
+- [terraform_data.pool_name_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -379,6 +377,26 @@ Default: `null`
 Description: Optional. A mapping of tags to assign to the resource.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
+- `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
+- `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+```
 
 Default: `null`
 

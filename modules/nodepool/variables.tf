@@ -281,6 +281,22 @@ variable "tags" {
   description = "Optional. A mapping of tags to assign to the resource."
 }
 
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+ - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
+ - `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
+ - `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
+EOT
+}
+
 variable "ultra_ssd_enabled" {
   type        = bool
   default     = null

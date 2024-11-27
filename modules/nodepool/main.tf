@@ -117,6 +117,16 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
       }
     }
   }
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
   dynamic "upgrade_settings" {
     for_each = var.upgrade_settings != null ? [var.upgrade_settings] : []
 
@@ -135,10 +145,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   }
 
   lifecycle {
-    precondition {
-      condition     = can(regex("[a-z0-9]{1,8}", var.name))
-      error_message = "A Node Pools name must consist of alphanumeric characters and have a maximum lenght of 8 characters (4 random chars added)"
-    }
     precondition {
       condition     = var.network_plugin_mode != "overlay" || !can(regex("^Standard_DC[0-9]+s?_v2$", var.vm_size))
       error_message = "With with Azure CNI Overlay you can't use DCsv2-series virtual machines in node pools. "
@@ -269,6 +275,16 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
       }
     }
   }
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
   dynamic "upgrade_settings" {
     for_each = var.upgrade_settings != null ? [var.upgrade_settings] : []
 
@@ -292,13 +308,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
       name
     ]
     replace_triggered_by = [
-      null_resource.pool_name_keeper,
+      terraform_data.pool_name_keeper,
     ]
 
-    precondition {
-      condition     = can(regex("[a-z0-9]{1,8}", var.name))
-      error_message = "A Node Pools name must consist of alphanumeric characters and have a maximum lenght of 8 characters (4 random chars added)"
-    }
     precondition {
       condition     = var.network_plugin_mode != "overlay" || !can(regex("^Standard_DC[0-9]+s?_v2$", var.vm_size))
       error_message = "With with Azure CNI Overlay you can't use DCsv2-series virtual machines in node pools. "
@@ -318,8 +330,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
   }
 }
 
-resource "null_resource" "pool_name_keeper" {
-  triggers = {
+resource "terraform_data" "pool_name_keeper" {
+  triggers_replace = {
     pool_name = var.name
   }
 }
