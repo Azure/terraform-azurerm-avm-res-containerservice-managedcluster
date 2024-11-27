@@ -47,6 +47,12 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
+resource "azurerm_log_analytics_workspace" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.log_analytics_workspace.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+}
+
 data "azurerm_client_config" "current" {}
 
 # This is the module call
@@ -71,6 +77,12 @@ module "default" {
 
     upgrade_settings = {
       max_surge = "10%"
+    }
+  }
+  diagnostic_settings = {
+    to_la = {
+      name                  = "to-la"
+      workspace_resource_id = azurerm_log_analytics_workspace.this.id
     }
   }
 }
