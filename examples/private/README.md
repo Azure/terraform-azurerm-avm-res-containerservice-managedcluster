@@ -132,9 +132,9 @@ module "private" {
     tenant_id          = data.azurerm_client_config.current.tenant_id
   }
 
-  identity = {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.identity.id]
+  managed_identities = {
+    system_assigned            = false
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
   }
   network_profile = {
     dns_service_ip = "10.10.200.10"
@@ -156,10 +156,6 @@ module "private" {
     upgrade_settings = {
       max_surge = "10%"
     }
-  }
-
-  managed_identities = {
-    system_assigned = true
   }
 
   node_pools = {
