@@ -520,7 +520,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "Enabling Azure Active Directory integration requires that `role_based_access_control_enabled` be set to true."
     }
     precondition {
-      condition     = !((var.key_management_service != null) && var.identity.type != "UserAssigned")
+      condition     = !((var.key_management_service != null) && try(var.managed_identities.type != "UserAssigned", true))
       error_message = "KMS etcd encryption doesn't work with system-assigned managed identity."
     }
     precondition {
@@ -542,11 +542,6 @@ resource "azurerm_kubernetes_cluster" "this" {
     precondition {
       condition     = var.automatic_upgrade_channel != "node-image" || var.node_os_channel_upgrade == "NodeImage"
       error_message = "`node_os_channel_upgrade` must be set to `NodeImage` if `automatic_channel_upgrade` has been set to `node-image`."
-    }
-    precondition {
-      condition = (var.kubelet_identity == null) || (
-      var.identity.type == "UserAssigned" && try(length(var.identity.identity_ids), 0) > 0)
-      error_message = "When `kubelet_identity` is enabled - The `type` field in the `identity` block must be set to `UserAssigned` and `identity_ids` must be set."
     }
     precondition {
       condition     = var.node_pools == null || var.default_node_pool.type == "VirtualMachineScaleSets"
