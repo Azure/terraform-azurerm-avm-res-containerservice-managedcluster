@@ -123,9 +123,9 @@ module "cni" {
     tenant_id          = data.azurerm_client_config.current.tenant_id
   }
 
-  identity = {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.identity.id]
+  managed_identities = {
+    system_assigned            = false
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
   }
 
   default_node_pool = {

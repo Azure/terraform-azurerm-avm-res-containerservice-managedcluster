@@ -135,9 +135,9 @@ module "waf_aligned" {
   private_dns_zone_id        = azurerm_private_dns_zone.zone.id
   dns_prefix_private_cluster = random_string.dns_prefix.result
 
-  identity = {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.identity.id]
+  managed_identities = {
+    system_assigned            = false
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
   }
 
   network_profile = {
