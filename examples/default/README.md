@@ -85,6 +85,9 @@ module "default" {
       max_surge = "10%"
     }
   }
+  managed_identities = {
+    system_assigned = true
+  }
   diagnostic_settings = {
     to_la = {
       name                  = "to-la"

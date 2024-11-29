@@ -341,23 +341,6 @@ variable "http_proxy_config" {
   description = "The HTTP proxy configuration for the Kubernetes cluster."
 }
 
-variable "identity" {
-  type = object({
-    type         = string
-    identity_ids = optional(list(string))
-  })
-  default = {
-    type = "SystemAssigned"
-  }
-  description = "The type and id of identities to use for the Kubernetes cluster."
-  nullable    = false
-
-  validation {
-    condition     = (var.identity.type == "SystemAssigned") || (var.identity.identity_ids == null ? false : length(var.identity.identity_ids) > 0)
-    error_message = "If use identity and `UserAssigned` is set, an `identity_ids` must be set as well."
-  }
-}
-
 variable "image_cleaner_enabled" {
   type        = bool
   default     = false

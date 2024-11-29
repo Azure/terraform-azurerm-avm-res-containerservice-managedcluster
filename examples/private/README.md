@@ -158,6 +158,10 @@ module "private" {
     }
   }
 
+  managed_identities = {
+    system_assigned = true
+  }
+
   node_pools = {
     unp1 = {
       name                 = "userpool1"

@@ -80,6 +80,10 @@ module "kubenet" {
     }
   }
 
+  managed_identities = {
+    system_assigned = true
+  }
+
   network_profile = {
     network_plugin = "kubenet"
   }

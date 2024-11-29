@@ -176,6 +176,10 @@ module "cni" {
   automatic_upgrade_channel = "stable"
   node_os_channel_upgrade   = "Unmanaged"
 
+  managed_identities = {
+    system_assigned = true
+  }
+
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
     interval    = "1"
