@@ -420,27 +420,6 @@ object({
 
 Default: `null`
 
-### <a name="input_identity"></a> [identity](#input\_identity)
-
-Description: The type and id of identities to use for the Kubernetes cluster.
-
-Type:
-
-```hcl
-object({
-    type         = string
-    identity_ids = optional(list(string))
-  })
-```
-
-Default:
-
-```json
-{
-  "type": "SystemAssigned"
-}
-```
-
 ### <a name="input_image_cleaner_enabled"></a> [image\_cleaner\_enabled](#input\_image\_cleaner\_enabled)
 
 Description: Whether or not the image cleaner is enabled for the Kubernetes cluster.
