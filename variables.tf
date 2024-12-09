@@ -102,7 +102,7 @@ variable "name" {
   description = "The name of this resource."
 
   validation {
-    condition     = can(regex("^[a-z0-9]([a-z0-9\\-]{0,61}[a-z0-9])?$", var.name))
+    condition     = can(regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-_]{0,61}[a-zA-Z0-9])?$", var.name))
     error_message = "The name must be between 1 and 63 characters long and can only contain lowercase letters, numbers and hyphens."
   }
 }
@@ -282,7 +282,7 @@ variable "dns_prefix" {
   description = "The DNS prefix specified when creating the managed cluster. If you do not specify one, a random prefix will be generated."
 
   validation {
-    condition     = can(regex("^$|^[a-z0-9]([a-z0-9\\-]{0,52}[a-z0-9])?$", var.dns_prefix))
+    condition     = can(regex("^$|^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,52}[a-zA-Z0-9])?$", var.dns_prefix))
     error_message = "The DNS prefix must be between 1 and 54 characters long and can only contain letters, numbers and hyphens. Must begin and end with a letter or number."
   }
 }
@@ -293,7 +293,7 @@ variable "dns_prefix_private_cluster" {
   description = "The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster."
 
   validation {
-    condition     = can(regex("^$|^[a-z0-9]([a-z0-9\\-]{0,52}[a-z0-9])?$", var.dns_prefix_private_cluster))
+    condition     = can(regex("^$|^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,52}[a-zA-Z0-9])?$", var.dns_prefix_private_cluster))
     error_message = "The DNS prefix must be between 1 and 54 characters long and can only contain letters, numbers and hyphens. Must begin and end with a letter or number."
   }
 }
