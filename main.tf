@@ -145,7 +145,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.aci_connector_linux_subnet_name != null ? [var.aci_connector_linux_subnet_name] : []
 
     content {
-      subnet_name = aci_connector_linux.value.subnet_name
+      subnet_name = aci_connector_linux.value
     }
   }
   dynamic "api_server_access_profile" {
