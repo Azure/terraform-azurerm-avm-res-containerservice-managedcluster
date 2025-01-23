@@ -78,5 +78,7 @@ module "automatic" {
     start_time  = "00:00"
     start_date  = "2024-10-15T00:00:00Z"
   }
-
+  managed_identities = {
+    system_assigned = true
+  }
 }

@@ -32,9 +32,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
-- <a name="requirement_null"></a> [null](#requirement\_null) (>= 3.0)
-
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
 
 ## Resources
 
@@ -44,15 +42,16 @@ The following resources are used by this module:
 - [azapi_update_resource.aks_cluster_post_create](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
+- [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
-- [null_resource.http_proxy_config_no_proxy_keeper](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) (resource)
-- [null_resource.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [terraform_data.http_proxy_config_no_proxy_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [terraform_data.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
@@ -150,6 +149,15 @@ object({
       transparent_huge_page_defrag  = optional(string)
       swap_file_size_mb             = optional(number)
     }))
+    node_network_profile = optional(object({
+      application_security_group_ids = optional(list(string))
+      node_public_ip_tags            = optional(map(string))
+      allowed_host_ports = optional(list(object({
+        port_end   = optional(number)
+        port_start = optional(number)
+        protocol   = optional(string)
+      })))
+    }))
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
@@ -191,9 +199,15 @@ Default: `null`
 
 ### <a name="input_api_server_access_profile"></a> [api\_server\_access\_profile](#input\_api\_server\_access\_profile)
 
-Description: The API server access profile for the Kubernetes cluster.
+Description: - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
 
-Type: `list(string)`
+Type:
+
+```hcl
+object({
+    authorized_ip_ranges = optional(set(string))
+  })
+```
 
 Default: `null`
 
@@ -218,6 +232,7 @@ object({
     scale_down_unneeded              = optional(string)
     scale_down_unready               = optional(string)
     scale_down_utilization_threshold = optional(string)
+    scan_interval                    = optional(string)
     empty_bulk_delete_max            = optional(string)
     skip_nodes_with_local_storage    = optional(string)
     skip_nodes_with_system_pods      = optional(string)
@@ -266,6 +281,20 @@ Type: `string`
 
 Default: `""`
 
+### <a name="input_confidential_computing"></a> [confidential\_computing](#input\_confidential\_computing)
+
+Description: - `sgx_quote_helper_enabled` - (Required) Should the SGX quote helper be enabled?
+
+Type:
+
+```hcl
+object({
+    sgx_quote_helper_enabled = bool
+  })
+```
+
+Default: `null`
+
 ### <a name="input_cost_analysis_enabled"></a> [cost\_analysis\_enabled](#input\_cost\_analysis\_enabled)
 
 Description: Whether or not cost analysis is enabled for the Kubernetes cluster. SKU must be Standard or Premium.
@@ -282,30 +311,6 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
-
-Description: A map describing customer-managed keys to associate with the resource. This includes the following properties:
-- `key_vault_resource_id` - The resource ID of the Key Vault where the key is stored.
-- `key_name` - The name of the key.
-- `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
-- `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
-  - `resource_id` - The resource ID of the user-assigned identity.
-
-Type:
-
-```hcl
-object({
-    key_vault_resource_id = string
-    key_name              = string
-    key_version           = optional(string, null)
-    user_assigned_identity = optional(object({
-      resource_id = string
-    }), null)
-  })
-```
-
-Default: `null`
-
 ### <a name="input_defender_log_analytics_workspace_id"></a> [defender\_log\_analytics\_workspace\_id](#input\_defender\_log\_analytics\_workspace\_id)
 
 Description: The log analytics workspace ID for the Microsoft Defender.
@@ -316,7 +321,7 @@ Default: `null`
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
-Description: A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description:   A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
 - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
 - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
@@ -372,6 +377,14 @@ Type: `string`
 
 Default: `""`
 
+### <a name="input_edge_zone"></a> [edge\_zone](#input\_edge\_zone)
+
+Description: (Optional) Specifies the Extended Zone (formerly called Edge Zone) within the Azure Region where this Managed Kubernetes Cluster should exist. Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
@@ -400,33 +413,12 @@ Type:
 object({
     http_proxy  = optional(string)
     https_proxy = optional(string)
-    no_proxy    = optional(string)
+    no_proxy    = optional(set(string))
     trusted_ca  = optional(string)
   })
 ```
 
 Default: `null`
-
-### <a name="input_identity"></a> [identity](#input\_identity)
-
-Description: The type and id of identities to use for the Kubernetes cluster.
-
-Type:
-
-```hcl
-object({
-    type         = string
-    identity_ids = optional(list(string))
-  })
-```
-
-Default:
-
-```json
-{
-  "type": "SystemAssigned"
-}
-```
 
 ### <a name="input_image_cleaner_enabled"></a> [image\_cleaner\_enabled](#input\_image\_cleaner\_enabled)
 
@@ -435,6 +427,14 @@ Description: Whether or not the image cleaner is enabled for the Kubernetes clus
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_image_cleaner_interval_hours"></a> [image\_cleaner\_interval\_hours](#input\_image\_cleaner\_interval\_hours)
+
+Description: (Optional) Specifies the interval in hours when images should be cleaned up. Defaults to `0`.
+
+Type: `number`
+
+Default: `null`
 
 ### <a name="input_ingress_application_gateway"></a> [ingress\_application\_gateway](#input\_ingress\_application\_gateway)
 
@@ -494,6 +494,46 @@ object({
     client_id                 = optional(string)
     object_id                 = optional(string)
     user_assigned_identity_id = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_kubernetes_cluster_node_pool_timeouts"></a> [kubernetes\_cluster\_node\_pool\_timeouts](#input\_kubernetes\_cluster\_node\_pool\_timeouts)
+
+Description: - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
+- `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
+- `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_kubernetes_cluster_timeouts"></a> [kubernetes\_cluster\_timeouts](#input\_kubernetes\_cluster\_timeouts)
+
+Description: - `create` - (Defaults to 90 minutes) Used when creating the Kubernetes Cluster.
+- `delete` - (Defaults to 90 minutes) Used when deleting the Kubernetes Cluster.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster.
+- `update` - (Defaults to 90 minutes) Used when updating the Kubernetes Cluster.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
   })
 ```
 
@@ -1104,7 +1144,6 @@ Type:
 ```hcl
 object({
     admin_username = string
-    admin_password = string
     license        = optional(string)
     gmsa = optional(object({
       root_domain = string
@@ -1112,6 +1151,14 @@ object({
     }))
   })
 ```
+
+Default: `null`
+
+### <a name="input_windows_profile_password"></a> [windows\_profile\_password](#input\_windows\_profile\_password)
+
+Description: (Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters.
+
+Type: `string`
 
 Default: `null`
 

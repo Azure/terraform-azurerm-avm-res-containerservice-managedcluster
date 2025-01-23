@@ -10,8 +10,10 @@ resource "azurerm_kubernetes_cluster" "this" {
   disk_encryption_set_id           = var.disk_encryption_set_id
   dns_prefix                       = var.private_cluster_enabled ? null : local.dns_prefix
   dns_prefix_private_cluster       = var.private_cluster_enabled ? local.private_dns_prefix : null
+  edge_zone                        = var.edge_zone
   http_application_routing_enabled = var.http_application_routing_enabled
   image_cleaner_enabled            = var.image_cleaner_enabled
+  image_cleaner_interval_hours     = var.image_cleaner_interval_hours
   kubernetes_version               = var.kubernetes_version
   # Access Control Configuration
   local_account_disabled  = var.local_account_disabled
@@ -130,6 +132,24 @@ resource "azurerm_kubernetes_cluster" "this" {
           }
         }
       }
+      dynamic "node_network_profile" {
+        for_each = var.default_node_pool.node_network_profile == null ? [] : [var.default_node_pool.node_network_profile]
+
+        content {
+          application_security_group_ids = node_network_profile.value.application_security_group_ids
+          node_public_ip_tags            = node_network_profile.value.node_public_ip_tags
+
+          dynamic "allowed_host_ports" {
+            for_each = node_network_profile.value.allowed_host_ports == null ? [] : node_network_profile.value.allowed_host_ports
+
+            content {
+              port_end   = allowed_host_ports.value.port_end
+              port_start = allowed_host_ports.value.port_start
+              protocol   = allowed_host_ports.value.protocol
+            }
+          }
+        }
+      }
       dynamic "upgrade_settings" {
         for_each = default_node_pool.value.upgrade_settings != null ? [default_node_pool.value.upgrade_settings] : []
 
@@ -174,6 +194,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       scale_down_unneeded              = auto_scaler_profile.value.scale_down_unneeded
       scale_down_unready               = auto_scaler_profile.value.scale_down_unready
       scale_down_utilization_threshold = auto_scaler_profile.value.scale_down_utilization_threshold
+      scan_interval                    = auto_scaler_profile.value.scan_interval
       skip_nodes_with_local_storage    = auto_scaler_profile.value.skip_nodes_with_local_storage
       skip_nodes_with_system_pods      = auto_scaler_profile.value.skip_nodes_with_system_pods
     }
@@ -187,6 +208,13 @@ resource "azurerm_kubernetes_cluster" "this" {
       tenant_id              = azure_active_directory_role_based_access_control.value.tenant_id
     }
   }
+  dynamic "confidential_computing" {
+    for_each = var.confidential_computing == null ? [] : [var.confidential_computing]
+
+    content {
+      sgx_quote_helper_enabled = confidential_computing.value.sgx_quote_helper_enabled
+    }
+  }
   # Proxy, Ingress and Routing Configuration
   dynamic "http_proxy_config" {
     for_each = var.http_proxy_config != null ? [var.http_proxy_config] : []
@@ -198,10 +226,13 @@ resource "azurerm_kubernetes_cluster" "this" {
       trusted_ca  = http_proxy_config.value.trusted_ca
     }
   }
-  # Identity Configuration
-  identity {
-    type         = var.identity.type
-    identity_ids = var.identity.identity_ids != null ? var.identity.identity_ids : []
+  dynamic "identity" {
+    for_each = local.managed_identities.system_assigned_user_assigned
+
+    content {
+      type         = identity.value.type
+      identity_ids = identity.value.user_assigned_resource_ids
+    }
   }
   # Ingress Configuration
   dynamic "ingress_application_gateway" {
@@ -425,6 +456,16 @@ resource "azurerm_kubernetes_cluster" "this" {
       snapshot_controller_enabled = storage_profile.value.snapshot_controller_enabled
     }
   }
+  dynamic "timeouts" {
+    for_each = var.kubernetes_cluster_timeouts == null ? [] : [var.kubernetes_cluster_timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
   dynamic "web_app_routing" {
     for_each = var.web_app_routing_dns_zone_ids
 
@@ -437,7 +478,7 @@ resource "azurerm_kubernetes_cluster" "this" {
 
     content {
       admin_username = windows_profile.value.admin_username
-      admin_password = windows_profile.value.admin_password
+      admin_password = var.windows_profile_password
       license        = windows_profile.value.license
 
       dynamic "gmsa" {
@@ -467,17 +508,8 @@ resource "azurerm_kubernetes_cluster" "this" {
     ]
 
     precondition {
-      # Why don't use var.identity_ids != null && length(var.identity_ids)>0 ? Because bool expression in Terraform is not short circuit so even var.identity_ids is null Terraform will still invoke length function with null and cause error. https://github.com/hashicorp/terraform/issues/24128
-      condition     = (var.identity.type == "SystemAssigned") || (var.identity.identity_ids == null ? false : length(var.identity.identity_ids) > 0)
-      error_message = "If use identity and `UserAssigned` is set, an `identity_ids` must be set as well."
-    }
-    precondition {
       condition     = var.cost_analysis_enabled != true || (var.sku_tier == "Standard" || var.sku_tier == "Premium")
       error_message = "`sku_tier` must be either `Standard` or `Premium` when cost analysis is enabled."
-    }
-    precondition {
-      condition     = !((var.network_profile.load_balancer_profile != null) && var.network_profile.load_balancer_sku != "standard")
-      error_message = "Enabling load_balancer_profile requires that `load_balancer_sku` be set to `standard`"
     }
     precondition {
       condition     = local.automatic_channel_upgrade_check
@@ -488,7 +520,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "Enabling Azure Active Directory integration requires that `role_based_access_control_enabled` be set to true."
     }
     precondition {
-      condition     = !((var.key_management_service != null) && var.identity.type != "UserAssigned")
+      condition     = !((var.key_management_service != null) && try(var.managed_identities.type != "UserAssigned", true))
       error_message = "KMS etcd encryption doesn't work with system-assigned managed identity."
     }
     precondition {
@@ -496,20 +528,8 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "`oidc_issuer_enabled` must be set to `true` to enable Azure AD Workload Identity"
     }
     precondition {
-      condition     = var.network_profile.network_mode != "overlay" || var.network_profile.network_plugin == "azure"
-      error_message = "When network_plugin_mode is set to `overlay`, the network_plugin field can only be set to azure."
-    }
-    precondition {
-      condition     = var.network_profile.network_policy != "cilium" || var.network_profile.network_plugin == "azure"
-      error_message = "When the network policy is set to cilium, the network_plugin field can only be set to azure."
-    }
-    precondition {
-      condition     = var.network_profile.network_policy != "cilium" || var.network_profile.network_plugin_mode == "overlay" || var.default_node_pool.pod_subnet_id != null
-      error_message = "When the network policy is set to cilium, one of either network_plugin_mode = `overlay` or pod_subnet_id must be specified."
-    }
-    precondition {
       condition     = can(coalesce(var.name, var.dns_prefix))
-      error_message = "You must set one of `var.cluster_name` and `var.prefix` to create `azurerm_kubernetes_cluster.main`."
+      error_message = "You must set one of `var.dns_prefix` and `var.prefix` to create `azurerm_kubernetes_cluster.main`."
     }
     precondition {
       condition     = !var.private_cluster_enabled || (var.dns_prefix_private_cluster != null && var.dns_prefix_private_cluster != "")
@@ -524,23 +544,14 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "`node_os_channel_upgrade` must be set to `NodeImage` if `automatic_channel_upgrade` has been set to `node-image`."
     }
     precondition {
-      condition = (var.kubelet_identity == null) || (
-      var.identity.type == "UserAssigned" && try(length(var.identity.identity_ids), 0) > 0)
-      error_message = "When `kubelet_identity` is enabled - The `type` field in the `identity` block must be set to `UserAssigned` and `identity_ids` must be set."
-    }
-    precondition {
-      condition     = !var.default_node_pool.auto_scaling_enabled || var.default_node_pool.type == "VirtualMachineScaleSets"
-      error_message = "Autoscaling on default node pools is only supported when the Kubernetes Cluster is using Virtual Machine Scale Sets type nodes."
-    }
-    precondition {
       condition     = var.node_pools == null || var.default_node_pool.type == "VirtualMachineScaleSets"
       error_message = "The 'type' variable must be set to 'VirtualMachineScaleSets' if 'node_pools' is not null."
     }
   }
 }
 
-resource "null_resource" "kubernetes_version_keeper" {
-  triggers = {
+resource "terraform_data" "kubernetes_version_keeper" {
+  triggers_replace = {
     version = var.kubernetes_version
   }
 }
@@ -556,20 +567,20 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
 
   lifecycle {
     ignore_changes       = all
-    replace_triggered_by = [null_resource.kubernetes_version_keeper.id]
+    replace_triggered_by = [terraform_data.kubernetes_version_keeper.id]
   }
 }
 
-resource "null_resource" "http_proxy_config_no_proxy_keeper" {
-  count = can(var.http_proxy_config.no_proxy[0]) ? 1 : 0
+resource "terraform_data" "http_proxy_config_no_proxy_keeper" {
+  count = try(var.http_proxy_config.no_proxy != null, false) ? 1 : 0
 
-  triggers = {
+  triggers_replace = {
     http_proxy_no_proxy = try(join(",", try(sort(var.http_proxy_config.no_proxy), [])), "")
   }
 }
 
 resource "azapi_update_resource" "aks_cluster_http_proxy_config_no_proxy" {
-  count = can(var.http_proxy_config.no_proxy[0]) ? 1 : 0
+  count = try(var.http_proxy_config.no_proxy != null, false) ? 1 : 0
 
   type = "Microsoft.ContainerService/managedClusters@2024-02-01"
   body = {
@@ -585,7 +596,7 @@ resource "azapi_update_resource" "aks_cluster_http_proxy_config_no_proxy" {
 
   lifecycle {
     ignore_changes       = all
-    replace_triggered_by = [null_resource.http_proxy_config_no_proxy_keeper[0].id]
+    replace_triggered_by = [terraform_data.http_proxy_config_no_proxy_keeper[0].id]
   }
 }
 
@@ -613,9 +624,9 @@ resource "azurerm_role_assignment" "this" {
 }
 
 resource "random_string" "dns_prefix" {
-  length  = 10    # Set the length of the string
-  lower   = true  # Use lowercase letters
-  numeric = true  # Include numbers
-  special = false # No special characters
-  upper   = false # No uppercase letters
+  length  = 10
+  lower   = true
+  numeric = true
+  special = false
+  upper   = false
 }

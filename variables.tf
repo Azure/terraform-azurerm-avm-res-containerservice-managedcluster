@@ -81,6 +81,15 @@ variable "default_node_pool" {
       transparent_huge_page_defrag  = optional(string)
       swap_file_size_mb             = optional(number)
     }))
+    node_network_profile = optional(object({
+      application_security_group_ids = optional(list(string))
+      node_public_ip_tags            = optional(map(string))
+      allowed_host_ports = optional(list(object({
+        port_end   = optional(number)
+        port_start = optional(number)
+        protocol   = optional(string)
+      })))
+    }))
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
@@ -89,6 +98,12 @@ variable "default_node_pool" {
 
   })
   description = "Required. The default node pool for the Kubernetes cluster."
+  nullable    = false
+
+  validation {
+    condition     = !var.default_node_pool.auto_scaling_enabled || var.default_node_pool.type == "VirtualMachineScaleSets"
+    error_message = "Autoscaling on default node pools is only supported when the Kubernetes Cluster is using Virtual Machine Scale Sets type nodes."
+  }
 }
 
 variable "location" {
@@ -100,6 +115,7 @@ variable "location" {
 variable "name" {
   type        = string
   description = "The name of this resource."
+  nullable    = false
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-_]{0,61}[a-zA-Z0-9])?$", var.name))
@@ -111,6 +127,7 @@ variable "name" {
 variable "resource_group_name" {
   type        = string
   description = "The resource group where the resources will be deployed."
+  nullable    = false
 }
 
 variable "aci_connector_linux_subnet_name" {
@@ -120,9 +137,13 @@ variable "aci_connector_linux_subnet_name" {
 }
 
 variable "api_server_access_profile" {
-  type        = list(string)
+  type = object({
+    authorized_ip_ranges = optional(set(string))
+  })
   default     = null
-  description = "The API server access profile for the Kubernetes cluster."
+  description = <<-EOT
+ - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
+ EOT
 }
 
 variable "auto_scaler_profile" {
@@ -140,6 +161,7 @@ variable "auto_scaler_profile" {
     scale_down_unneeded              = optional(string)
     scale_down_unready               = optional(string)
     scale_down_utilization_threshold = optional(string)
+    scan_interval                    = optional(string)
     empty_bulk_delete_max            = optional(string)
     skip_nodes_with_local_storage    = optional(string)
     skip_nodes_with_system_pods      = optional(string)
@@ -183,6 +205,16 @@ variable "cluster_suffix" {
   description = "Optional. The suffix to append to the Kubernetes cluster name if create_before_destroy is set to true on the nodepools."
 }
 
+variable "confidential_computing" {
+  type = object({
+    sgx_quote_helper_enabled = bool
+  })
+  default     = null
+  description = <<-EOT
+ - `sgx_quote_helper_enabled` - (Required) Should the SGX quote helper be enabled?
+EOT
+}
+
 variable "cost_analysis_enabled" {
   type        = bool
   default     = false
@@ -193,29 +225,7 @@ variable "create_nodepools_before_destroy" {
   type        = bool
   default     = false
   description = "Whether or not to create node pools before destroying the old ones. This is the opposite of the default behavior. Set this to true if zero downtime is required during nodepool redeployments such as changes to snapshot_id."
-}
-
-# required AVM interfaces
-# remove only if not supported by the resource
-# tflint-ignore: terraform_unused_declarations
-variable "customer_managed_key" {
-  type = object({
-    key_vault_resource_id = string
-    key_name              = string
-    key_version           = optional(string, null)
-    user_assigned_identity = optional(object({
-      resource_id = string
-    }), null)
-  })
-  default     = null
-  description = <<DESCRIPTION
-A map describing customer-managed keys to associate with the resource. This includes the following properties:
-- `key_vault_resource_id` - The resource ID of the Key Vault where the key is stored.
-- `key_name` - The name of the key.
-- `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
-- `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
-  - `resource_id` - The resource ID of the user-assigned identity.
-DESCRIPTION  
+  nullable    = false
 }
 
 variable "defender_log_analytics_workspace_id" {
@@ -224,7 +234,6 @@ variable "defender_log_analytics_workspace_id" {
   description = "The log analytics workspace ID for the Microsoft Defender."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
@@ -239,8 +248,8 @@ variable "diagnostic_settings" {
     marketplace_partner_resource_id          = optional(string, null)
   }))
   default     = {}
-  description = <<DESCRIPTION
-A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  description = <<-DESCRIPTION
+  A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
 - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
 - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
@@ -252,7 +261,7 @@ A map of diagnostic settings to create on the Key Vault. The map key is delibera
 - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
 - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
 - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
-DESCRIPTION  
+DESCRIPTION
   nullable    = false
 
   validation {
@@ -298,7 +307,12 @@ variable "dns_prefix_private_cluster" {
   }
 }
 
-# tflint-ignore: terraform_unused_declarations
+variable "edge_zone" {
+  type        = string
+  default     = null
+  description = "(Optional) Specifies the Extended Zone (formerly called Edge Zone) within the Azure Region where this Managed Kubernetes Cluster should exist. Changing this forces a new resource to be created."
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -320,28 +334,29 @@ variable "http_proxy_config" {
   type = object({
     http_proxy  = optional(string)
     https_proxy = optional(string)
-    no_proxy    = optional(string)
+    no_proxy    = optional(set(string))
     trusted_ca  = optional(string)
   })
   default     = null
   description = "The HTTP proxy configuration for the Kubernetes cluster."
 }
 
-variable "identity" {
-  type = object({
-    type         = string
-    identity_ids = optional(list(string))
-  })
-  default = {
-    type = "SystemAssigned"
-  }
-  description = "The type and id of identities to use for the Kubernetes cluster."
-}
-
 variable "image_cleaner_enabled" {
   type        = bool
   default     = false
   description = "Whether or not the image cleaner is enabled for the Kubernetes cluster."
+}
+
+variable "image_cleaner_interval_hours" {
+  type = number
+  # According to the [schema](https://github.com/hashicorp/terraform-provider-azurerm/blob/v4.0.0/internal/services/containers/kubernetes_cluster_resource.go#L404-L408), the default value should be `null`.
+  default     = null
+  description = "(Optional) Specifies the interval in hours when images should be cleaned up. Defaults to `0`."
+
+  validation {
+    condition     = var.image_cleaner_interval_hours == null ? true : var.image_cleaner_interval_hours >= 24 && var.image_cleaner_interval_hours <= 2160
+    error_message = "The image cleaner interval must be an int between 24 and 2160."
+  }
 }
 
 variable "ingress_application_gateway" {
@@ -381,6 +396,38 @@ variable "kubelet_identity" {
   })
   default     = null
   description = "The kubelet identity for the Kubernetes cluster."
+}
+
+variable "kubernetes_cluster_node_pool_timeouts" {
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+ - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
+ - `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
+ - `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
+EOT
+}
+
+variable "kubernetes_cluster_timeouts" {
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+ - `create` - (Defaults to 90 minutes) Used when creating the Kubernetes Cluster.
+ - `delete` - (Defaults to 90 minutes) Used when deleting the Kubernetes Cluster.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster.
+ - `update` - (Defaults to 90 minutes) Used when updating the Kubernetes Cluster.
+EOT
 }
 
 variable "kubernetes_version" {
@@ -478,7 +525,6 @@ variable "maintenance_window_node_os" {
   description = "values for maintenance window node os"
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "managed_identities" {
   type = object({
     system_assigned            = optional(bool, false)
@@ -537,6 +583,23 @@ variable "network_profile" {
     network_plugin_mode = "overlay"
   }
   description = "The network profile for the Kubernetes cluster."
+
+  validation {
+    condition     = !((var.network_profile.load_balancer_profile != null) && var.network_profile.load_balancer_sku != "standard")
+    error_message = "Enabling load_balancer_profile requires that `load_balancer_sku` be set to `standard`"
+  }
+  validation {
+    condition     = var.network_profile.network_mode != "overlay" || var.network_profile.network_plugin == "azure"
+    error_message = "When network_plugin_mode is set to `overlay`, the network_plugin field can only be set to azure."
+  }
+  validation {
+    condition     = var.network_profile.network_policy != "cilium" || var.network_profile.network_plugin == "azure"
+    error_message = "When the network policy is set to cilium, the network_plugin field can only be set to azure."
+  }
+  validation {
+    condition     = var.network_profile.network_policy != "cilium" || var.network_profile.network_plugin_mode == "overlay" || var.default_node_pool.pod_subnet_id != null
+    error_message = "When the network policy is set to cilium, one of either network_plugin_mode = `overlay` or pod_subnet_id must be specified."
+  }
 }
 
 variable "node_os_channel_upgrade" {
@@ -686,6 +749,7 @@ variable "private_cluster_enabled" {
   type        = bool
   default     = false
   description = "Whether or not the Kubernetes cluster is private."
+  nullable    = false
 }
 
 variable "private_cluster_public_fqdn_enabled" {
@@ -878,7 +942,6 @@ variable "support_plan" {
   }
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "tags" {
   type        = map(string)
   default     = null
@@ -894,7 +957,6 @@ variable "web_app_routing_dns_zone_ids" {
 variable "windows_profile" {
   type = object({
     admin_username = string
-    admin_password = string
     license        = optional(string)
     gmsa = optional(object({
       root_domain = string
@@ -903,6 +965,23 @@ variable "windows_profile" {
   })
   default     = null
   description = "The Windows profile for the Kubernetes cluster."
+
+  validation {
+    condition     = try((var.windows_profile.gmsa.root_domain == "" && var.windows_profile.gmsa.dns_server == "") || (var.windows_profile.gmsa.root_domain != "" && var.windows_profile.gmsa.dns_server != ""), true)
+    error_message = "The properties `dns_server` and `root_domain` in `gmsa` must both either be set or unset, i.e. empty."
+  }
+}
+
+variable "windows_profile_password" {
+  type        = string
+  default     = null
+  description = "(Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters."
+  sensitive   = true
+
+  validation {
+    condition     = var.windows_profile_password == null ? true : length(var.windows_profile_password) >= 14 && length(var.windows_profile_password) <= 123
+    error_message = "The Windows profile password must be between 14 and 123 characters long."
+  }
 }
 
 variable "workload_autoscaler_profile" {

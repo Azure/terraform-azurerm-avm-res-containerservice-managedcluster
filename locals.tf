@@ -4,7 +4,6 @@ locals {
     (contains(["rapid", "stable", "node-image"], var.automatic_upgrade_channel) && var.kubernetes_version == null && var.default_node_pool.orchestrator_version == null)
   )
   dns_prefix = coalesce(var.dns_prefix, random_string.dns_prefix.result)
-  # tflint-ignore: terraform_unused_declarations
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
       this = {
