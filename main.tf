@@ -3,7 +3,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   name                = "${var.name}${var.cluster_suffix}"
   resource_group_name = var.resource_group_name
   # Upgrade Configuration
-  automatic_channel_upgrade = var.automatic_upgrade_channel
+  automatic_upgrade_channel = var.automatic_upgrade_channel
   # Additional Features
   azure_policy_enabled             = var.azure_policy_enabled
   cost_analysis_enabled            = var.sku_tier == "Free" ? false : var.cost_analysis_enabled
@@ -15,7 +15,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   kubernetes_version               = var.kubernetes_version
   # Access Control Configuration
   local_account_disabled  = var.local_account_disabled
-  node_os_channel_upgrade = var.node_os_channel_upgrade
+  node_os_upgrade_channel = var.node_os_channel_upgrade
   node_resource_group     = var.node_resource_group_name != "" ? var.node_resource_group_name : null
   oidc_issuer_enabled     = var.oidc_issuer_enabled
   # Service Mesh Configuration
@@ -38,12 +38,11 @@ resource "azurerm_kubernetes_cluster" "this" {
     content {
       name                          = default_node_pool.value.name
       vm_size                       = default_node_pool.value.vm_size
+      auto_scaling_enabled          = default_node_pool.value.auto_scaling_enabled
       capacity_reservation_group_id = default_node_pool.value.capacity_reservation_group_id
-      enable_auto_scaling           = default_node_pool.value.auto_scaling_enabled
-      enable_host_encryption        = default_node_pool.value.host_encryption_enabled
-      enable_node_public_ip         = default_node_pool.value.node_public_ip_enabled
       fips_enabled                  = default_node_pool.value.fips_enabled
       gpu_instance                  = default_node_pool.value.gpu_instance
+      host_encryption_enabled       = default_node_pool.value.host_encryption_enabled
       host_group_id                 = default_node_pool.value.host_group_id
       kubelet_disk_type             = default_node_pool.value.kubelet_disk_type
       max_count                     = default_node_pool.value.max_count
@@ -51,6 +50,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       min_count                     = default_node_pool.value.min_count
       node_count                    = default_node_pool.value.node_count
       node_labels                   = default_node_pool.value.node_labels
+      node_public_ip_enabled        = default_node_pool.value.node_public_ip_enabled
       node_public_ip_prefix_id      = default_node_pool.value.node_public_ip_prefix_id
       only_critical_addons_enabled  = default_node_pool.value.only_critical_addons_enabled
       orchestrator_version          = default_node_pool.value.orchestrator_version
@@ -184,7 +184,6 @@ resource "azurerm_kubernetes_cluster" "this" {
     content {
       admin_group_object_ids = azure_active_directory_role_based_access_control.value.admin_group_object_ids
       azure_rbac_enabled     = azure_active_directory_role_based_access_control.value.azure_rbac_enabled
-      managed                = true
       tenant_id              = azure_active_directory_role_based_access_control.value.tenant_id
     }
   }
@@ -392,6 +391,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       mode                             = service_mesh_profile.value.mode
       external_ingress_gateway_enabled = service_mesh_profile.value.external_ingress_gateway_enabled
       internal_ingress_gateway_enabled = service_mesh_profile.value.internal_ingress_gateway_enabled
+      revisions                        = service_mesh_profile.value.revisions
 
       dynamic "certificate_authority" {
         for_each = service_mesh_profile.value.certificate_authority != null ? [service_mesh_profile.value.certificate_authority] : []
