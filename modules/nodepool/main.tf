@@ -4,13 +4,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   kubernetes_cluster_id         = var.cluster_resource_id
   name                          = var.name
   vm_size                       = var.vm_size
+  auto_scaling_enabled          = var.auto_scaling_enabled
   capacity_reservation_group_id = var.capacity_reservation_group_id
-  enable_auto_scaling           = var.auto_scaling_enabled
-  enable_host_encryption        = var.host_encryption_enabled
-  enable_node_public_ip         = var.node_public_ip_enabled
   eviction_policy               = var.eviction_policy
   fips_enabled                  = var.fips_enabled
   gpu_instance                  = var.gpu_instance
+  host_encryption_enabled       = var.host_encryption_enabled
   host_group_id                 = var.host_group_id
   kubelet_disk_type             = var.kubelet_disk_type
   max_count                     = var.max_count
@@ -19,6 +18,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   mode                          = var.mode
   node_count                    = var.node_count
   node_labels                   = var.node_labels
+  node_public_ip_enabled        = var.node_public_ip_enabled
   node_public_ip_prefix_id      = var.node_public_ip_prefix_id
   node_taints                   = var.node_taints
   orchestrator_version          = var.orchestrator_version
@@ -156,13 +156,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
   kubernetes_cluster_id         = var.cluster_resource_id
   name                          = "${var.name}${substr(md5(uuid()), 0, 4)}"
   vm_size                       = var.vm_size
+  auto_scaling_enabled          = var.auto_scaling_enabled
   capacity_reservation_group_id = var.capacity_reservation_group_id
-  enable_auto_scaling           = var.auto_scaling_enabled
-  enable_host_encryption        = var.host_encryption_enabled
-  enable_node_public_ip         = var.node_public_ip_enabled
   eviction_policy               = var.eviction_policy
   fips_enabled                  = var.fips_enabled
   gpu_instance                  = var.gpu_instance
+  host_encryption_enabled       = var.host_encryption_enabled
   host_group_id                 = var.host_group_id
   kubelet_disk_type             = var.kubelet_disk_type
   max_count                     = var.max_count
@@ -171,6 +170,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
   mode                          = var.mode
   node_count                    = var.node_count
   node_labels                   = var.node_labels
+  node_public_ip_enabled        = var.node_public_ip_enabled
   node_public_ip_prefix_id      = var.node_public_ip_prefix_id
   node_taints                   = var.node_taints
   orchestrator_version          = var.orchestrator_version
