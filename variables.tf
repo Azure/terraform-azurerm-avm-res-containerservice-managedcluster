@@ -823,7 +823,7 @@ variable "service_mesh_profile" {
     mode                             = string
     internal_ingress_gateway_enabled = optional(bool)
     external_ingress_gateway_enabled = optional(bool)
-    revisions                        = required(list(string), [])
+    revisions                        = optional(list(string), [])
     certificate_authority = optional(object({
       key_vault_id           = string
       root_cert_object_name  = string
