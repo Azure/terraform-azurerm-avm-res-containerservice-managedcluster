@@ -1141,6 +1141,10 @@ Default: `false`
 
 The following outputs are exported:
 
+### <a name="output_kubelet_identity_id"></a> [kubelet\_identity\_id](#output\_kubelet\_identity\_id)
+
+Description: The identity ID of the kubelet identity.
+
 ### <a name="output_name"></a> [name](#output\_name)
 
 Description: Name of the Kubernetes cluster.

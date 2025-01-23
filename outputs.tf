@@ -1,3 +1,8 @@
+output "kubelet_identity_id" {
+  description = "The identity ID of the kubelet identity."
+  value       = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
+}
+
 output "name" {
   description = "Name of the Kubernetes cluster."
   value       = azurerm_kubernetes_cluster.this.name
