@@ -224,7 +224,6 @@ variable "defender_log_analytics_workspace_id" {
   description = "The log analytics workspace ID for the Microsoft Defender."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
