@@ -1142,6 +1142,10 @@ Default: `false`
 
 The following outputs are exported:
 
+### <a name="output_key_vault_secrets_provider_object_id"></a> [key\_vault\_secrets\_provider\_object\_id](#output\_key\_vault\_secrets\_provider\_object\_id)
+
+Description: The object ID of the key vault secrets provider.
+
 ### <a name="output_kubelet_identity_id"></a> [kubelet\_identity\_id](#output\_kubelet\_identity\_id)
 
 Description: The identity ID of the kubelet identity.
