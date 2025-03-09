@@ -47,3 +47,4 @@ avm.tflint_module.merged.hcl
 *.md.tmp
 # MacOS
 .DS_Store
+examples/*/policy
