@@ -156,39 +156,39 @@ Type:
 
 ```hcl
 object({
-    swap_file_size_mb             = number
-    transparent_huge_page_defrag  = string
-    transparent_huge_page_enabled = string
+    swap_file_size_mb             = optional(number)
+    transparent_huge_page_defrag  = optional(string)
+    transparent_huge_page_enabled = optional(string)
     sysctl_config = object({
-      fs_aio_max_nr                      = number
-      fs_file_max                        = number
-      fs_inotify_max_user_watches        = number
-      fs_nr_open                         = number
-      kernel_threads_max                 = number
-      net_core_netdev_max_backlog        = number
-      net_core_optmem_max                = number
-      net_core_rmem_default              = number
-      net_core_rmem_max                  = number
-      net_core_somaxconn                 = number
-      net_core_wmem_default              = number
-      net_core_wmem_max                  = number
-      net_ipv4_ip_local_port_range_min   = number
-      net_ipv4_ip_local_port_range_max   = number
-      net_ipv4_neigh_default_gc_thresh1  = number
-      net_ipv4_neigh_default_gc_thresh2  = number
-      net_ipv4_neigh_default_gc_thresh3  = number
-      net_ipv4_tcp_fin_timeout           = number
-      net_ipv4_tcp_keepalive_intvl       = number
-      net_ipv4_tcp_keepalive_probes      = number
-      net_ipv4_tcp_keepalive_time        = number
-      net_ipv4_tcp_max_syn_backlog       = number
-      net_ipv4_tcp_max_tw_buckets        = number
-      net_ipv4_tcp_tw_reuse              = bool
-      net_netfilter_nf_conntrack_buckets = number
-      net_netfilter_nf_conntrack_max     = number
-      vm_max_map_count                   = number
-      vm_swappiness                      = number
-      vm_vfs_cache_pressure              = number
+      fs_aio_max_nr                      = optional(number)
+      fs_file_max                        = optional(number)
+      fs_inotify_max_user_watches        = optional(number)
+      fs_nr_open                         = optional(number)
+      kernel_threads_max                 = optional(number)
+      net_core_netdev_max_backlog        = optional(number)
+      net_core_optmem_max                = optional(number)
+      net_core_rmem_default              = optional(number)
+      net_core_rmem_max                  = optional(number)
+      net_core_somaxconn                 = optional(number)
+      net_core_wmem_default              = optional(number)
+      net_core_wmem_max                  = optional(number)
+      net_ipv4_ip_local_port_range_min   = optional(number)
+      net_ipv4_ip_local_port_range_max   = optional(number)
+      net_ipv4_neigh_default_gc_thresh1  = optional(number)
+      net_ipv4_neigh_default_gc_thresh2  = optional(number)
+      net_ipv4_neigh_default_gc_thresh3  = optional(number)
+      net_ipv4_tcp_fin_timeout           = optional(number)
+      net_ipv4_tcp_keepalive_intvl       = optional(number)
+      net_ipv4_tcp_keepalive_probes      = optional(number)
+      net_ipv4_tcp_keepalive_time        = optional(number)
+      net_ipv4_tcp_max_syn_backlog       = optional(number)
+      net_ipv4_tcp_max_tw_buckets        = optional(number)
+      net_ipv4_tcp_tw_reuse              = optional(bool)
+      net_netfilter_nf_conntrack_buckets = optional(number)
+      net_netfilter_nf_conntrack_max     = optional(number)
+      vm_max_map_count                   = optional(number)
+      vm_swappiness                      = optional(number)
+      vm_vfs_cache_pressure              = optional(number)
     })
   })
 ```

@@ -91,9 +91,9 @@ resource "azurerm_kubernetes_cluster" "this" {
         for_each = var.default_node_pool.linux_os_config != null ? [var.default_node_pool.linux_os_config] : []
 
         content {
-          swap_file_size_mb             = linux_os_config.value.swap_file_size_mb
-          transparent_huge_page_defrag  = linux_os_config.value.transparent_huge_page_defrag
-          transparent_huge_page_enabled = linux_os_config.value.transparent_huge_page_enabled
+          swap_file_size_mb             = linux_os_config.value.swap_file_size_mb != null ? linux_os_config.value.swap_file_size_mb : null
+          transparent_huge_page_defrag  = linux_os_config.value.transparent_huge_page_defrag != null ? linux_os_config.value.transparent_huge_page_defrag : null
+          transparent_huge_page_enabled = linux_os_config.value.transparent_huge_page_enabled != null ? linux_os_config.value.transparent_huge_page_enabled : null
 
           dynamic "sysctl_config" {
             for_each = var.default_node_pool.linux_os_config.sysctl_config != null ? [var.default_node_pool.linux_os_config.sysctl_config] : []
