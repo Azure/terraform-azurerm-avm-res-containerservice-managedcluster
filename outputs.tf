@@ -13,6 +13,11 @@ output "name" {
   value       = azurerm_kubernetes_cluster.this.name
 }
 
+output "node_resource_group_id" {
+  description = "The resource group ID of the node resource group."
+  value       = azurerm_kubernetes_cluster.this.node_resource_group_id
+}
+
 output "nodepool_resource_ids" {
   description = "A map of nodepool keys to resource ids."
   value = { for npk, np in module.nodepools : npk => {

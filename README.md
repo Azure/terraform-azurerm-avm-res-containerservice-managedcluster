@@ -1201,6 +1201,10 @@ Description: The identity ID of the kubelet identity.
 
 Description: Name of the Kubernetes cluster.
 
+### <a name="output_node_resource_group_id"></a> [node\_resource\_group\_id](#output\_node\_resource\_group\_id)
+
+Description: The resource group ID of the node resource group.
+
 ### <a name="output_nodepool_resource_ids"></a> [nodepool\_resource\_ids](#output\_nodepool\_resource\_ids)
 
 Description: A map of nodepool keys to resource ids.
