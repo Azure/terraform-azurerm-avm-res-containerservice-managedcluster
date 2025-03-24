@@ -103,6 +103,9 @@ variable "kubelet_disk_type" {
 # Linux OS config
 variable "linux_os_config" {
   type = object({
+    swap_file_size_mb             = number
+    transparent_huge_page_defrag  = string
+    transparent_huge_page_enabled = string
     sysctl_config = object({
       fs_aio_max_nr                      = number
       fs_file_max                        = number
