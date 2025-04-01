@@ -43,3 +43,12 @@ output "resource_id" {
   description = "Resource ID of the Kubernetes cluster."
   value       = azurerm_kubernetes_cluster.this.id
 }
+
+output "kube_admin_config" {
+  value = (
+    lookup(var.azure_active_directory_role_based_access_control, "azure_rbac_enabled", false) == true &&
+    !var.local_account_disabled ? azurerm_kubernetes_cluster.this.kube_admin_config : null
+  )
+  description = "The kube_admin_config block of the AKS cluster, only available when Local Accounts & Role-Based Access Control (RBAC) with AAD are enabled."
+  sensitive   = true
+}
