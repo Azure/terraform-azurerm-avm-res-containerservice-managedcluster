@@ -1193,6 +1193,10 @@ The following outputs are exported:
 
 Description: The object ID of the key vault secrets provider.
 
+### <a name="output_kube_admin_config"></a> [kube\_admin\_config](#output\_kube\_admin\_config)
+
+Description: The kube\_admin\_config block of the AKS cluster, only available when Local Accounts & Role-Based Access Control (RBAC) with AAD are enabled.
+
 ### <a name="output_kubelet_identity_id"></a> [kubelet\_identity\_id](#output\_kubelet\_identity\_id)
 
 Description: The identity ID of the kubelet identity.

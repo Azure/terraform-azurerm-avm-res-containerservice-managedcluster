@@ -3,6 +3,15 @@ output "key_vault_secrets_provider_object_id" {
   value       = try(azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0].secret_identity[0].object_id, null)
 }
 
+output "kube_admin_config" {
+  description = "The kube_admin_config block of the AKS cluster, only available when Local Accounts & Role-Based Access Control (RBAC) with AAD are enabled."
+  sensitive   = true
+  value = (
+    lookup(var.azure_active_directory_role_based_access_control, "azure_rbac_enabled", false) == true &&
+    !var.local_account_disabled ? azurerm_kubernetes_cluster.this.kube_admin_config : null
+  )
+}
+
 output "kubelet_identity_id" {
   description = "The identity ID of the kubelet identity."
   value       = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
@@ -42,13 +51,4 @@ output "private_endpoints" {
 output "resource_id" {
   description = "Resource ID of the Kubernetes cluster."
   value       = azurerm_kubernetes_cluster.this.id
-}
-
-output "kube_admin_config" {
-  value = (
-    lookup(var.azure_active_directory_role_based_access_control, "azure_rbac_enabled", false) == true &&
-    !var.local_account_disabled ? azurerm_kubernetes_cluster.this.kube_admin_config : null
-  )
-  description = "The kube_admin_config block of the AKS cluster, only available when Local Accounts & Role-Based Access Control (RBAC) with AAD are enabled."
-  sensitive   = true
 }
