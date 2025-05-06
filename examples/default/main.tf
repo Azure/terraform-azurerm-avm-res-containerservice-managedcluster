@@ -69,15 +69,7 @@ data "azurerm_client_config" "current" {}
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "default" {
-  source              = "../.."
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-  }
+  source = "../.."
 
   default_node_pool = {
     name       = "default"
@@ -88,13 +80,20 @@ module "default" {
       max_surge = "10%"
     }
   }
-  managed_identities = {
-    system_assigned = true
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
   }
   diagnostic_settings = {
     to_la = {
       name                  = "to-la"
       workspace_resource_id = azurerm_log_analytics_workspace.this.id
     }
+  }
+  managed_identities = {
+    system_assigned = true
   }
 }

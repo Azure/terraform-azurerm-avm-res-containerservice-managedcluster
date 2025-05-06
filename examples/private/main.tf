@@ -119,31 +119,7 @@ resource "random_string" "dns_prefix" {
 data "azurerm_client_config" "current" {}
 
 module "private" {
-  source     = "../.."
-  depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
-
-  name                       = module.naming.kubernetes_cluster.name_unique
-  resource_group_name        = azurerm_resource_group.this.name
-  location                   = azurerm_resource_group.this.location
-  sku_tier                   = "Standard"
-  private_cluster_enabled    = true
-  private_dns_zone_id        = azurerm_private_dns_zone.zone.id
-  dns_prefix_private_cluster = random_string.dns_prefix.result
-
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-  }
-
-  managed_identities = {
-    system_assigned            = false
-    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
-  }
-  network_profile = {
-    dns_service_ip = "10.10.200.10"
-    service_cidr   = "10.10.200.0/24"
-    network_plugin = "azure"
-  }
+  source = "../.."
 
   default_node_pool = {
     name                         = "default"
@@ -159,7 +135,23 @@ module "private" {
       max_surge = "10%"
     }
   }
-
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
+  dns_prefix_private_cluster = random_string.dns_prefix.result
+  managed_identities = {
+    system_assigned            = false
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
+  }
+  network_profile = {
+    dns_service_ip = "10.10.200.10"
+    service_cidr   = "10.10.200.0/24"
+    network_plugin = "azure"
+  }
   node_pools = {
     unp1 = {
       name                 = "userpool1"
@@ -190,5 +182,9 @@ module "private" {
       }
     }
   }
+  private_cluster_enabled = true
+  private_dns_zone_id     = azurerm_private_dns_zone.zone.id
+  sku_tier                = "Standard"
 
+  depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
 }

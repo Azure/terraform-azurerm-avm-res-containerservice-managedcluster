@@ -120,22 +120,7 @@ resource "azurerm_log_analytics_workspace" "workspace" {
 data "azurerm_client_config" "current" {}
 
 module "cni" {
-  source     = "../.."
-  depends_on = [azurerm_role_assignment.kubelet_role_assignment]
-
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-  }
-
-  managed_identities = {
-    system_assigned            = false
-    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
-  }
+  source = "../.."
 
   default_node_pool = {
     name                         = "default"
@@ -150,13 +135,48 @@ module "cni" {
       max_surge = "10%"
     }
   }
-
+  location                  = azurerm_resource_group.this.location
+  name                      = module.naming.kubernetes_cluster.name_unique
+  resource_group_name       = azurerm_resource_group.this.name
+  automatic_upgrade_channel = "stable"
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
+  defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
+  kubelet_identity = {
+    client_id                 = azurerm_user_assigned_identity.kubelet_identity.client_id
+    object_id                 = azurerm_user_assigned_identity.kubelet_identity.principal_id
+    user_assigned_identity_id = azurerm_user_assigned_identity.kubelet_identity.id
+  }
+  maintenance_window_auto_upgrade = {
+    frequency   = "Weekly"
+    interval    = "1"
+    day_of_week = "Sunday"
+    duration    = 4
+    utc_offset  = "+00:00"
+    start_time  = "00:00"
+    start_date  = "2024-10-15T00:00:00Z"
+  }
+  maintenance_window_node_os = {
+    frequency   = "Weekly"
+    interval    = "1"
+    day_of_week = "Sunday"
+    duration    = 4
+    utc_offset  = "+00:00"
+    start_time  = "00:00"
+    start_date  = "2024-10-15T00:00:00Z"
+  }
+  managed_identities = {
+    system_assigned            = false
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
+  }
   network_profile = {
     network_plugin      = "azure"
     network_data_plane  = "azure"
     network_plugin_mode = "overlay"
   }
-
+  node_os_channel_upgrade = "Unmanaged"
   node_pools = {
     unp1 = {
       name                 = "userpool1"
@@ -185,33 +205,10 @@ module "cni" {
       }
     }
   }
-
-  automatic_upgrade_channel = "stable"
-  node_os_channel_upgrade   = "Unmanaged"
-
-  maintenance_window_auto_upgrade = {
-    frequency   = "Weekly"
-    interval    = "1"
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2024-10-15T00:00:00Z"
+  oidc_issuer_enabled = true
+  oms_agent = {
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   }
-
-  maintenance_window_node_os = {
-    frequency   = "Weekly"
-    interval    = "1"
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2024-10-15T00:00:00Z"
-  }
-
-  workload_identity_enabled = true
-  oidc_issuer_enabled       = true
-
   open_service_mesh_enabled = true
   storage_profile = {
     blob_driver_enabled         = true
@@ -219,18 +216,9 @@ module "cni" {
     file_driver_enabled         = true
     snapshot_controller_enabled = true
   }
+  workload_identity_enabled = true
 
-  oms_agent = {
-    log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
-  }
-
-  kubelet_identity = {
-    client_id                 = azurerm_user_assigned_identity.kubelet_identity.client_id
-    object_id                 = azurerm_user_assigned_identity.kubelet_identity.principal_id
-    user_assigned_identity_id = azurerm_user_assigned_identity.kubelet_identity.id
-  }
-
-  defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
+  depends_on = [azurerm_role_assignment.kubelet_role_assignment]
 }
 ```
 
