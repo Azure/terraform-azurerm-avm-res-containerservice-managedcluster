@@ -8,8 +8,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   azure_policy_enabled             = var.azure_policy_enabled
   cost_analysis_enabled            = var.sku_tier == "Free" ? false : var.cost_analysis_enabled
   disk_encryption_set_id           = var.disk_encryption_set_id
-  dns_prefix                       = var.private_cluster_enabled ? null : local.dns_prefix
-  dns_prefix_private_cluster       = var.private_cluster_enabled ? local.private_dns_prefix : null
+  dns_prefix                       = length(try(coalesce(var.dns_prefix_private_cluster, ""), "")) == 0 ?  local.dns_prefix : null
+  dns_prefix_private_cluster       = length(try(coalesce(var.dns_prefix, ""), "")) == 0? local.private_dns_prefix : null
   edge_zone                        = var.edge_zone
   http_application_routing_enabled = var.http_application_routing_enabled
   image_cleaner_enabled            = var.image_cleaner_enabled
@@ -24,8 +24,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   open_service_mesh_enabled = var.open_service_mesh_enabled
   # Private Cluster Configuration
   private_cluster_enabled             = var.private_cluster_enabled
-  private_cluster_public_fqdn_enabled = var.private_cluster_enabled ? var.private_cluster_public_fqdn_enabled : null
-  private_dns_zone_id                 = var.private_cluster_enabled ? var.private_dns_zone_id : null
+  private_cluster_public_fqdn_enabled = var.private_cluster_enabled ? try(var.private_cluster_public_fqdn_enabled, false) : null
+  private_dns_zone_id                 = var.private_dns_zone_id
   role_based_access_control_enabled   = var.role_based_access_control_enabled
   run_command_enabled                 = var.run_command_enabled
   sku_tier                            = var.sku_tier
@@ -532,12 +532,8 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "You must set one of `var.dns_prefix` and `var.prefix` to create `azurerm_kubernetes_cluster.main`."
     }
     precondition {
-      condition     = !var.private_cluster_enabled || (var.dns_prefix_private_cluster != null && var.dns_prefix_private_cluster != "")
-      error_message = "When `private_cluster_enabled` is set to `true`, `dns_prefix_private_cluster` must be set."
-    }
-    precondition {
-      condition     = !var.private_cluster_enabled || (var.dns_prefix == null || var.dns_prefix == "")
-      error_message = "When `dns_prefix_private_cluster` is set, `dns_prefix` must not be set."
+      condition     = (var.dns_prefix == null || var.dns_prefix == "") || (var.dns_prefix_private_cluster == null || var.dns_prefix_private_cluster == "")
+      error_message = "Only one of `var.prefix,var.dns_prefix_private_cluster` can be specified."
     }
     precondition {
       condition     = var.automatic_upgrade_channel != "node-image" || var.node_os_channel_upgrade == "NodeImage"
