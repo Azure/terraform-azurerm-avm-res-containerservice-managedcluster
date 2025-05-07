@@ -8,8 +8,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   azure_policy_enabled             = var.azure_policy_enabled
   cost_analysis_enabled            = var.sku_tier == "Free" ? false : var.cost_analysis_enabled
   disk_encryption_set_id           = var.disk_encryption_set_id
-  dns_prefix                       = length(try(coalesce(var.dns_prefix_private_cluster, ""), "")) == 0 ?  local.dns_prefix : null
-  dns_prefix_private_cluster       = length(try(coalesce(var.dns_prefix, ""), "")) == 0? local.private_dns_prefix : null
+  dns_prefix                       = length(try(coalesce(var.dns_prefix_private_cluster, ""), "")) == 0 ? local.dns_prefix : null
+  dns_prefix_private_cluster       = length(try(coalesce(var.dns_prefix, ""), "")) == 0 ? local.private_dns_prefix : null
   edge_zone                        = var.edge_zone
   http_application_routing_enabled = var.http_application_routing_enabled
   image_cleaner_enabled            = var.image_cleaner_enabled
