@@ -536,6 +536,10 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "Only one of `var.prefix,var.dns_prefix_private_cluster` can be specified."
     }
     precondition {
+      condition     = (var.dns_prefix_private_cluster == null || var.dns_prefix_private_cluster == "") || var.private_dns_zone_id != null
+      error_message = "When `dns_prefix_private_cluster` is set, `private_dns_zone_id` must be set."
+    }
+    precondition {
       condition     = var.automatic_upgrade_channel != "node-image" || var.node_os_channel_upgrade == "NodeImage"
       error_message = "`node_os_channel_upgrade` must be set to `NodeImage` if `automatic_channel_upgrade` has been set to `node-image`."
     }
