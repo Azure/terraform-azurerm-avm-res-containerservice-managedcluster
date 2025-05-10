@@ -598,7 +598,7 @@ Type:
 object({
     allowed = object({
       day   = string
-      hours = number
+      hours = set(number)
     })
     not_allowed = object({
       start = string
