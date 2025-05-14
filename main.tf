@@ -8,8 +8,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   azure_policy_enabled             = var.azure_policy_enabled
   cost_analysis_enabled            = var.sku_tier == "Free" ? false : var.cost_analysis_enabled
   disk_encryption_set_id           = var.disk_encryption_set_id
-  dns_prefix                       = length(try(coalesce(var.dns_prefix_private_cluster, ""), "")) == 0 ? local.dns_prefix : null
-  dns_prefix_private_cluster       = length(try(coalesce(var.dns_prefix, ""), "")) == 0 ? local.private_dns_prefix : null
+  dns_prefix                       = (var.dns_prefix != null || var.dns_prefix != "") ? local.dns_prefix : null
+  dns_prefix_private_cluster       = (var.dns_prefix_private_cluster != null || var.dns_prefix_private_cluster != "") ? local.private_dns_prefix : null
   edge_zone                        = var.edge_zone
   http_application_routing_enabled = var.http_application_routing_enabled
   image_cleaner_enabled            = var.image_cleaner_enabled
@@ -420,9 +420,9 @@ resource "azurerm_kubernetes_cluster" "this" {
 
     content {
       mode                             = service_mesh_profile.value.mode
-      revisions                        = service_mesh_profile.value.revisions
       external_ingress_gateway_enabled = service_mesh_profile.value.external_ingress_gateway_enabled
       internal_ingress_gateway_enabled = service_mesh_profile.value.internal_ingress_gateway_enabled
+      revisions                        = service_mesh_profile.value.revisions
 
       dynamic "certificate_authority" {
         for_each = service_mesh_profile.value.certificate_authority != null ? [service_mesh_profile.value.certificate_authority] : []
@@ -477,8 +477,8 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.windows_profile != null ? [var.windows_profile] : []
 
     content {
-      admin_password = var.windows_profile_password
       admin_username = windows_profile.value.admin_username
+      admin_password = var.windows_profile_password
       license        = windows_profile.value.license
 
       dynamic "gmsa" {
