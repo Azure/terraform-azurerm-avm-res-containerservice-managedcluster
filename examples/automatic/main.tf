@@ -63,9 +63,12 @@ module "automatic" {
   source = "../.."
 
   default_node_pool = {
-    name       = "default"
-    vm_size    = "Standard_DS2_v2"
-    node_count = 3
+    name                 = "default"
+    vm_size              = "Standard_DS2_v2"
+    node_count           = 3
+    min_count            = 3
+    max_count            = 3
+    auto_scaling_enabled = true
     upgrade_settings = {
       max_surge = "10%"
     }
