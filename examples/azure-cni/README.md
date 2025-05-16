@@ -127,9 +127,9 @@ module "cni" {
     vm_size                      = "Standard_DS2_v2"
     vnet_subnet_id               = azurerm_subnet.default_subnet.id
     auto_scaling_enabled         = true
-    max_count                    = 3
+    max_count                    = 4
     max_pods                     = 30
-    min_count                    = 1
+    min_count                    = 2
     only_critical_addons_enabled = true
     upgrade_settings = {
       max_surge = "10%"
@@ -181,9 +181,9 @@ module "cni" {
     unp1 = {
       name                 = "userpool1"
       vm_size              = "Standard_DS2_v2"
-      max_count            = 3
+      max_count            = 4
       max_pods             = 30
-      min_count            = 1
+      min_count            = 2
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp1_subnet.id
       auto_scaling_enabled = true
@@ -195,9 +195,9 @@ module "cni" {
       name                 = "userpool2"
       vm_size              = "Standard_DS2_v2"
       auto_scaling_enabled = true
-      max_count            = 3
+      max_count            = 4
       max_pods             = 30
-      min_count            = 1
+      min_count            = 2
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp2_subnet.id
       upgrade_settings = {

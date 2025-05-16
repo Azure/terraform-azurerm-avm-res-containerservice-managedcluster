@@ -71,9 +71,9 @@ module "create_before_destroy" {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
     auto_scaling_enabled         = true
-    max_count                    = 3
+    max_count                    = 4
     max_pods                     = 30
-    min_count                    = 1
+    min_count                    = 2
     only_critical_addons_enabled = true
 
     upgrade_settings = {
@@ -99,9 +99,9 @@ module "create_before_destroy" {
       name                 = "unp1"
       vm_size              = "Standard_DS2_v2"
       auto_scaling_enabled = true
-      max_count            = 3
+      max_count            = 4
       max_pods             = 30
-      min_count            = 1
+      min_count            = 2
       os_disk_size_gb      = 128
       upgrade_settings = {
         max_surge = "10%"
@@ -111,9 +111,9 @@ module "create_before_destroy" {
       name                 = "unp2"
       vm_size              = "Standard_DS2_v2"
       auto_scaling_enabled = true
-      max_count            = 3
+      max_count            = 4
       max_pods             = 30
-      min_count            = 1
+      min_count            = 2
       os_disk_size_gb      = 128
       upgrade_settings = {
         max_surge = "10%"

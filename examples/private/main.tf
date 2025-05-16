@@ -125,9 +125,9 @@ module "private" {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
     auto_scaling_enabled         = true
-    max_count                    = 3
+    max_count                    = 4
     max_pods                     = 30
-    min_count                    = 1
+    min_count                    = 2
     vnet_subnet_id               = azurerm_subnet.subnet.id
     only_critical_addons_enabled = true
 
@@ -157,9 +157,9 @@ module "private" {
       name                 = "userpool1"
       vm_size              = "Standard_DS2_v2"
       auto_scaling_enabled = true
-      max_count            = 3
+      max_count            = 4
       max_pods             = 30
-      min_count            = 1
+      min_count            = 2
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp1_subnet.id
 
@@ -171,9 +171,9 @@ module "private" {
       name                 = "userpool2"
       vm_size              = "Standard_DS2_v2"
       auto_scaling_enabled = true
-      max_count            = 3
+      max_count            = 4
       max_pods             = 30
-      min_count            = 1
+      min_count            = 2
       os_disk_size_gb      = 128
       vnet_subnet_id       = azurerm_subnet.unp2_subnet.id
 
