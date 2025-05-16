@@ -103,38 +103,8 @@ resource "random_string" "dns_prefix" {
 data "azurerm_client_config" "current" {}
 
 module "waf_aligned" {
-  source     = "../.."
-  depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
+  source = "../.."
 
-  name                       = module.naming.kubernetes_cluster.name_unique
-  resource_group_name        = azurerm_resource_group.this.name
-  location                   = azurerm_resource_group.this.location
-  sku_tier                   = "Standard"
-  private_cluster_enabled    = true
-  private_dns_zone_id        = azurerm_private_dns_zone.zone.id
-  dns_prefix_private_cluster = random_string.dns_prefix.result
-
-  managed_identities = {
-    system_assigned            = false
-    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
-  }
-
-  network_profile = {
-    dns_service_ip = "10.10.200.10"
-    service_cidr   = "10.10.200.0/24"
-    network_plugin = "azure"
-  }
-
-  oms_agent = {
-    log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
-  }
-
-  azure_active_directory_role_based_access_control = {
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-    azure_rbac_enabled = true
-  }
-
-  defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   default_node_pool = {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
@@ -151,7 +121,44 @@ module "waf_aligned" {
       max_surge = "10%"
     }
   }
-
+  location                  = azurerm_resource_group.this.location
+  name                      = module.naming.kubernetes_cluster.name_unique
+  resource_group_name       = azurerm_resource_group.this.name
+  automatic_upgrade_channel = "stable"
+  azure_active_directory_role_based_access_control = {
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+    azure_rbac_enabled = true
+  }
+  defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
+  dns_prefix_private_cluster          = random_string.dns_prefix.result
+  maintenance_window_auto_upgrade = {
+    frequency   = "Weekly"
+    interval    = "1"
+    day_of_week = "Sunday"
+    duration    = 4
+    utc_offset  = "+00:00"
+    start_time  = "00:00"
+    start_date  = "2024-10-15T00:00:00Z"
+  }
+  maintenance_window_node_os = {
+    frequency   = "Weekly"
+    interval    = "1"
+    day_of_week = "Sunday"
+    duration    = 4
+    utc_offset  = "+00:00"
+    start_time  = "00:00"
+    start_date  = "2024-10-15T00:00:00Z"
+  }
+  managed_identities = {
+    system_assigned            = false
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
+  }
+  network_profile = {
+    dns_service_ip = "10.10.200.10"
+    service_cidr   = "10.10.200.0/24"
+    network_plugin = "azure"
+  }
+  node_os_channel_upgrade = "Unmanaged"
   node_pools = {
     unp1 = {
       name                 = "userpool1"
@@ -184,27 +191,12 @@ module "waf_aligned" {
       }
     }
   }
-
-  automatic_upgrade_channel = "stable"
-  node_os_channel_upgrade   = "Unmanaged"
-
-  maintenance_window_auto_upgrade = {
-    frequency   = "Weekly"
-    interval    = "1"
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2024-10-15T00:00:00Z"
+  oms_agent = {
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   }
+  private_cluster_enabled = true
+  private_dns_zone_id     = azurerm_private_dns_zone.zone.id
+  sku_tier                = "Standard"
 
-  maintenance_window_node_os = {
-    frequency   = "Weekly"
-    interval    = "1"
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2024-10-15T00:00:00Z"
-  }
+  depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
 }

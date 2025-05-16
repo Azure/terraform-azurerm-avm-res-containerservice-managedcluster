@@ -66,15 +66,7 @@ resource "azurerm_resource_group" "this" {
 data "azurerm_client_config" "current" {}
 
 module "automatic" {
-  source              = "../.."
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-  }
+  source = "../.."
 
   default_node_pool = {
     name       = "default"
@@ -84,7 +76,13 @@ module "automatic" {
       max_surge = "10%"
     }
   }
-
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
     interval    = "1"

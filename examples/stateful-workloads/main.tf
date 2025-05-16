@@ -42,33 +42,35 @@ data "azurerm_client_config" "current" {}
 ######################################################################################################################
 
 module "avm_res_keyvault_vault" {
-  source                         = "Azure/avm-res-keyvault-vault/azurerm"
-  version                        = "0.9.1"
-  location                       = azurerm_resource_group.this.location
-  tenant_id                      = data.azurerm_client_config.current.tenant_id
-  resource_group_name            = azurerm_resource_group.this.name
-  name                           = coalesce(var.keyvault_name, module.naming.key_vault.name_unique)
-  legacy_access_policies_enabled = true
-  public_network_access_enabled  = true
-  network_acls                   = null
+  source  = "Azure/avm-res-keyvault-vault/azurerm"
+  version = "0.9.1"
+
+  location            = azurerm_resource_group.this.location
+  name                = coalesce(var.keyvault_name, module.naming.key_vault.name_unique)
+  resource_group_name = azurerm_resource_group.this.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
   legacy_access_policies = {
     permissions = {
       object_id          = data.azurerm_client_config.current.object_id
       secret_permissions = ["Get", "Set", "List"]
     }
   }
+  legacy_access_policies_enabled = true
+  network_acls                   = null
+  public_network_access_enabled  = true
 }
 
 # ## Section to create the Azure Container Registry
 # ######################################################################################################################
 module "avm_res_containerregistry_registry" {
-  source              = "Azure/avm-res-containerregistry-registry/azurerm"
-  version             = "0.4.0"
-  resource_group_name = azurerm_resource_group.this.name
-  name                = coalesce(var.acr_registry_name, module.naming.container_registry.name_unique)
+  source  = "Azure/avm-res-containerregistry-registry/azurerm"
+  version = "0.4.0"
+
   location            = azurerm_resource_group.this.location
-  sku                 = "Premium"
+  name                = coalesce(var.acr_registry_name, module.naming.container_registry.name_unique)
+  resource_group_name = azurerm_resource_group.this.name
   admin_enabled       = false
+  sku                 = "Premium"
 }
 
 ## Section to create the Azure Container Registry task
@@ -114,17 +116,7 @@ resource "azurerm_container_registry_task_schedule_run_now" "this" {
 ## Section to create the Azure Kubernetes Service
 ######################################################################################################################
 module "default" {
-  source                    = "../.."
-  name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
-  resource_group_name       = azurerm_resource_group.this.name
-  location                  = azurerm_resource_group.this.location
-  sku_tier                  = "Standard"
-  local_account_disabled    = false
-  node_os_channel_upgrade   = "NodeImage"
-  automatic_upgrade_channel = "stable"
-  managed_identities = {
-    system_assigned = true
-  }
+  source = "../.."
 
   default_node_pool = {
     name                    = "systempool"
@@ -144,16 +136,25 @@ module "default" {
       max_surge = "10%"
     }
   }
-
-  node_pools                = var.node_pools
-  oidc_issuer_enabled       = true
-  workload_identity_enabled = true
-  network_profile = {
-    network_plugin = "azure"
-  }
+  location                  = azurerm_resource_group.this.location
+  name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
+  resource_group_name       = azurerm_resource_group.this.name
+  automatic_upgrade_channel = "stable"
   key_vault_secrets_provider = {
     secret_rotation_enabled = true
   }
+  local_account_disabled = false
+  managed_identities = {
+    system_assigned = true
+  }
+  network_profile = {
+    network_plugin = "azure"
+  }
+  node_os_channel_upgrade   = "NodeImage"
+  node_pools                = var.node_pools
+  oidc_issuer_enabled       = true
+  sku_tier                  = "Standard"
+  workload_identity_enabled = true
 }
 
 ## Section to assign the role to the kubelet identity
@@ -169,27 +170,29 @@ resource "azurerm_role_assignment" "acr_role_assignment" {
 ## Section to deploy valkey cluster only when var.valkey_enabled is set to true
 ######################################################################################################################
 module "valkey" {
-  count           = var.valkey_enabled ? 1 : 0
-  source          = "./valkey"
+  source = "./valkey"
+  count  = var.valkey_enabled ? 1 : 0
+
   key_vault_id    = module.avm_res_keyvault_vault.resource_id
-  valkey_password = var.valkey_password
   object_id       = module.default.key_vault_secrets_provider_object_id
   tenant_id       = data.azurerm_client_config.current.tenant_id
+  valkey_password = var.valkey_password
 }
 
 ## Section to deploy MongoDB cluster only when var.mongodb_enabled is set to true
 ######################################################################################################################
 module "mongodb" {
-  count                = var.mongodb_enabled ? 1 : 0
-  source               = "./mongodb"
-  key_vault_id         = module.avm_res_keyvault_vault.resource_id
-  storage_account_name = coalesce(var.aks_mongodb_backup_storage_account_name, module.naming.storage_account.name_unique)
-  resource_group_name  = azurerm_resource_group.this.name
-  location             = azurerm_resource_group.this.location
-  principal_id         = data.azurerm_client_config.current.object_id
-  mongodb_kv_secrets   = var.mongodb_kv_secrets
+  source = "./mongodb"
+  count  = var.mongodb_enabled ? 1 : 0
+
   identity_name        = coalesce(var.identity_name, module.naming.user_assigned_identity.name_unique)
+  key_vault_id         = module.avm_res_keyvault_vault.resource_id
+  location             = azurerm_resource_group.this.location
+  mongodb_kv_secrets   = var.mongodb_kv_secrets
   mongodb_namespace    = var.mongodb_namespace
-  service_account_name = var.service_account_name
   oidc_issuer_url      = module.default.oidc_issuer_url
+  principal_id         = data.azurerm_client_config.current.object_id
+  resource_group_name  = azurerm_resource_group.this.name
+  service_account_name = var.service_account_name
+  storage_account_name = coalesce(var.aks_mongodb_backup_storage_account_name, module.naming.storage_account.name_unique)
 }
