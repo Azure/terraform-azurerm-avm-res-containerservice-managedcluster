@@ -84,8 +84,6 @@ module "default" {
     min_count            = 2
     max_count            = 3
     auto_scaling_enabled = true
-    max_count            = 3
-    min_count            = 3
 
     upgrade_settings = {
       max_surge = "10%"
