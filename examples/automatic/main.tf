@@ -75,12 +75,12 @@ module "automatic" {
   }
   location            = azurerm_resource_group.this.location
   name                = module.naming.kubernetes_cluster.name_unique
-  dns_prefix = "automaticexample"
   resource_group_name = azurerm_resource_group.this.name
   azure_active_directory_role_based_access_control = {
     azure_rbac_enabled = true
     tenant_id          = data.azurerm_client_config.current.tenant_id
   }
+  dns_prefix = "automaticexample"
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
     interval    = "1"

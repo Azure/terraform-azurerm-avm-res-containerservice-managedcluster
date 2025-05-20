@@ -420,9 +420,9 @@ resource "azurerm_kubernetes_cluster" "this" {
 
     content {
       mode                             = service_mesh_profile.value.mode
+      revisions                        = service_mesh_profile.value.revisions
       external_ingress_gateway_enabled = service_mesh_profile.value.external_ingress_gateway_enabled
       internal_ingress_gateway_enabled = service_mesh_profile.value.internal_ingress_gateway_enabled
-      revisions                        = service_mesh_profile.value.revisions
 
       dynamic "certificate_authority" {
         for_each = service_mesh_profile.value.certificate_authority != null ? [service_mesh_profile.value.certificate_authority] : []
@@ -477,8 +477,8 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.windows_profile != null ? [var.windows_profile] : []
 
     content {
-      admin_username = windows_profile.value.admin_username
       admin_password = var.windows_profile_password
+      admin_username = windows_profile.value.admin_username
       license        = windows_profile.value.license
 
       dynamic "gmsa" {
@@ -528,7 +528,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "`oidc_issuer_enabled` must be set to `true` to enable Azure AD Workload Identity"
     }
     precondition {
-      condition = (var.dns_prefix != null) != (var.dns_prefix_private_cluster != null)
+      condition     = (var.dns_prefix != null) != (var.dns_prefix_private_cluster != null)
       error_message = "Exactly one of `dns_prefix` or `dns_prefix_private_cluster` must be specified (non-null and non-empty)."
     }
     precondition {

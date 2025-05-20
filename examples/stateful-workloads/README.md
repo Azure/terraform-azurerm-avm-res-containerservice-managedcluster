@@ -146,6 +146,7 @@ module "stateful-workloads" {
   name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
   resource_group_name       = azurerm_resource_group.this.name
   automatic_upgrade_channel = "stable"
+  dns_prefix                = "statefulworkloads"
   key_vault_secrets_provider = {
     secret_rotation_enabled = true
   }

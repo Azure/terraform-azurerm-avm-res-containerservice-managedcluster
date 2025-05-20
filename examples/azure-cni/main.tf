@@ -131,7 +131,6 @@ module "cni" {
   }
   location                  = azurerm_resource_group.this.location
   name                      = module.naming.kubernetes_cluster.name_unique
-  dns_prefix = "cniexample"
   resource_group_name       = azurerm_resource_group.this.name
   automatic_upgrade_channel = "stable"
   azure_active_directory_role_based_access_control = {
@@ -139,6 +138,7 @@ module "cni" {
     tenant_id          = data.azurerm_client_config.current.tenant_id
   }
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
+  dns_prefix                          = "cniexample"
   kubelet_identity = {
     client_id                 = azurerm_user_assigned_identity.kubelet_identity.client_id
     object_id                 = azurerm_user_assigned_identity.kubelet_identity.principal_id

@@ -367,15 +367,15 @@ Description: The DNS prefix specified when creating the managed cluster. If you 
 
 Type: `string`
 
-Default: `""`
+Default: `null`
 
 ### <a name="input_dns_prefix_private_cluster"></a> [dns\_prefix\_private\_cluster](#input\_dns\_prefix\_private\_cluster)
 
-Description: The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster with custom DNS zones.
+Description: The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster and providing a private dns zone id.
 
 Type: `string`
 
-Default: `""`
+Default: `null`
 
 ### <a name="input_edge_zone"></a> [edge\_zone](#input\_edge\_zone)
 
