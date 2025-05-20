@@ -121,7 +121,7 @@ resource "azurerm_container_registry_task_schedule_run_now" "this" {
 
 ## Section to create the Azure Kubernetes Service
 ######################################################################################################################
-module "stateful-workloads" {
+module "stateful_workloads" {
   source = "../.."
 
   default_node_pool = {
@@ -471,7 +471,7 @@ Source: Azure/naming/azurerm
 
 Version: ~> 0.3
 
-### <a name="module_stateful-workloads"></a> [stateful-workloads](#module\_stateful-workloads)
+### <a name="module_stateful_workloads"></a> [stateful\_workloads](#module\_stateful\_workloads)
 
 Source: ../..
 
