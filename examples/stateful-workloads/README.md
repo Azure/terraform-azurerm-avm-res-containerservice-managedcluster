@@ -121,7 +121,7 @@ resource "azurerm_container_registry_task_schedule_run_now" "this" {
 
 ## Section to create the Azure Kubernetes Service
 ######################################################################################################################
-module "default" {
+module "stateful-workloads" {
   source = "../.."
 
   default_node_pool = {
@@ -458,12 +458,6 @@ Source: Azure/avm-res-keyvault-vault/azurerm
 
 Version: 0.9.1
 
-### <a name="module_default"></a> [default](#module\_default)
-
-Source: ../..
-
-Version:
-
 ### <a name="module_mongodb"></a> [mongodb](#module\_mongodb)
 
 Source: ./mongodb
@@ -475,6 +469,12 @@ Version:
 Source: Azure/naming/azurerm
 
 Version: ~> 0.3
+
+### <a name="module_stateful-workloads"></a> [stateful-workloads](#module\_stateful-workloads)
+
+Source: ../..
+
+Version:
 
 ### <a name="module_valkey"></a> [valkey](#module\_valkey)
 

@@ -76,6 +76,7 @@ module "kubenet" {
   }
   location            = azurerm_resource_group.this.location
   name                = module.naming.kubernetes_cluster.name_unique
+  dns_prefix = "kubenetexample"
   resource_group_name = azurerm_resource_group.this.name
   azure_active_directory_role_based_access_control = {
     azure_rbac_enabled = true

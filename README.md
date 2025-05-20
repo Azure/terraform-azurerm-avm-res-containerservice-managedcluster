@@ -371,7 +371,7 @@ Default: `""`
 
 ### <a name="input_dns_prefix_private_cluster"></a> [dns\_prefix\_private\_cluster](#input\_dns\_prefix\_private\_cluster)
 
-Description: The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster.
+Description: The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster with custom DNS zones.
 
 Type: `string`
 

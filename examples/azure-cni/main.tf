@@ -131,6 +131,7 @@ module "cni" {
   }
   location                  = azurerm_resource_group.this.location
   name                      = module.naming.kubernetes_cluster.name_unique
+  dns_prefix = "cniexample"
   resource_group_name       = azurerm_resource_group.this.name
   automatic_upgrade_channel = "stable"
   azure_active_directory_role_based_access_control = {

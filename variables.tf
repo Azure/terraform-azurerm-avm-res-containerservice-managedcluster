@@ -287,22 +287,22 @@ variable "disk_encryption_set_id" {
 
 variable "dns_prefix" {
   type        = string
-  default     = ""
+  default     = null
   description = "The DNS prefix specified when creating the managed cluster. If you do not specify one, a random prefix will be generated."
 
   validation {
-    condition     = can(regex("^$|^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,52}[a-zA-Z0-9])?$", var.dns_prefix))
+    condition     = var.dns_prefix == null || can(regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,52}[a-zA-Z0-9])?$", var.dns_prefix))
     error_message = "The DNS prefix must be between 1 and 54 characters long and can only contain letters, numbers and hyphens. Must begin and end with a letter or number."
   }
 }
 
 variable "dns_prefix_private_cluster" {
   type        = string
-  default     = ""
-  description = "The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster."
+  default     = null
+  description = "The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster and providing a private dns zone id."
 
   validation {
-    condition     = can(regex("^$|^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,52}[a-zA-Z0-9])?$", var.dns_prefix_private_cluster))
+    condition     = var.dns_prefix_private_cluster == null || can(regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,52}[a-zA-Z0-9])?$", var.dns_prefix_private_cluster))
     error_message = "The DNS prefix must be between 1 and 54 characters long and can only contain letters, numbers and hyphens. Must begin and end with a letter or number."
   }
 }
