@@ -93,6 +93,7 @@ module "default" {
       workspace_resource_id = azurerm_log_analytics_workspace.this.id
     }
   }
+  dns_prefix = "defaultexample"
   managed_identities = {
     system_assigned = true
   }

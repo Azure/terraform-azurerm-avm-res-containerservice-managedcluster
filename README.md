@@ -99,7 +99,7 @@ object({
     zones                         = optional(list(string))
     max_count                     = optional(number)
     min_count                     = optional(number)
-    node_count                    = optional(number)
+    node_count                    = optional(number, 2)
     kubelet_config = optional(object({
       cpu_manager_policy        = optional(string)
       cpu_cfs_quota_enabled     = optional(bool, true)
@@ -367,15 +367,15 @@ Description: The DNS prefix specified when creating the managed cluster. If you 
 
 Type: `string`
 
-Default: `""`
+Default: `null`
 
 ### <a name="input_dns_prefix_private_cluster"></a> [dns\_prefix\_private\_cluster](#input\_dns\_prefix\_private\_cluster)
 
-Description: The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster.
+Description: The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster and providing a private dns zone id.
 
 Type: `string`
 
-Default: `""`
+Default: `null`
 
 ### <a name="input_edge_zone"></a> [edge\_zone](#input\_edge\_zone)
 
