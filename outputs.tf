@@ -1,3 +1,15 @@
+output "cluster_ca_certificate" {
+  description = "The CA certificate of the AKS cluster."
+  sensitive   = true
+  value       = azurerm_kubernetes_cluster.this.kube_config
+}
+
+output "host" {
+  description = "The host of the AKS cluster API server."
+  sensitive   = true
+  value       = azurerm_kubernetes_cluster.this.kube_config[0].host
+}
+
 output "key_vault_secrets_provider_object_id" {
   description = "The object ID of the key vault secrets provider."
   value       = try(azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0].secret_identity[0].object_id, null)
@@ -7,6 +19,12 @@ output "kube_admin_config" {
   description = "The kube_admin_config block of the AKS cluster, only available when Local Accounts & Role-Based Access Control (RBAC) with AAD are enabled."
   sensitive   = true
   value       = local.kube_admin_enabled ? azurerm_kubernetes_cluster.this.kube_admin_config : null
+}
+
+output "kube_config" {
+  description = "The kube_config block of the AKS cluster"
+  sensitive   = true
+  value       = azurerm_kubernetes_cluster.this.kube_config
 }
 
 output "kubelet_identity_id" {
