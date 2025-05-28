@@ -31,7 +31,7 @@ variable "default_node_pool" {
     zones                         = optional(list(string))
     max_count                     = optional(number)
     min_count                     = optional(number)
-    node_count                    = optional(number, 2)
+    node_count                    = optional(number)
     kubelet_config = optional(object({
       cpu_manager_policy        = optional(string)
       cpu_cfs_quota_enabled     = optional(bool, true)
