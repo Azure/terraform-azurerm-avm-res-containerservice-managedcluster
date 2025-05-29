@@ -553,13 +553,13 @@ resource "terraform_data" "kubernetes_version_keeper" {
 }
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  resource_id = azurerm_kubernetes_cluster.this.id
+  type        = "Microsoft.ContainerService/managedClusters@2024-02-01"
   body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
     }
   }
-  resource_id = azurerm_kubernetes_cluster.this.id
 
   lifecycle {
     ignore_changes       = all
@@ -578,7 +578,8 @@ resource "terraform_data" "http_proxy_config_no_proxy_keeper" {
 resource "azapi_update_resource" "aks_cluster_http_proxy_config_no_proxy" {
   count = try(var.http_proxy_config.no_proxy != null, false) ? 1 : 0
 
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  resource_id = azurerm_kubernetes_cluster.this.id
+  type        = "Microsoft.ContainerService/managedClusters@2024-02-01"
   body = {
     properties = {
       httpProxyConfig = {
@@ -586,7 +587,6 @@ resource "azapi_update_resource" "aks_cluster_http_proxy_config_no_proxy" {
       }
     }
   }
-  resource_id = azurerm_kubernetes_cluster.this.id
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 
