@@ -24,8 +24,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   open_service_mesh_enabled = var.open_service_mesh_enabled
   # Private Cluster Configuration
   private_cluster_enabled             = var.private_cluster_enabled
-  private_cluster_public_fqdn_enabled = var.private_cluster_enabled ? try(var.private_cluster_public_fqdn_enabled, false) : null
-  private_dns_zone_id                 = var.private_dns_zone_id
+  private_cluster_public_fqdn_enabled = var.private_cluster_enabled ? var.private_cluster_public_fqdn_enabled : null
+  private_dns_zone_id                 = var.private_cluster_enabled ? var.private_dns_zone_id : null
   role_based_access_control_enabled   = var.role_based_access_control_enabled
   run_command_enabled                 = var.run_command_enabled
   sku_tier                            = var.sku_tier
@@ -532,7 +532,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "Exactly one of `dns_prefix` or `dns_prefix_private_cluster` must be specified (non-null and non-empty)."
     }
     precondition {
-      condition     = (var.dns_prefix_private_cluster == null || var.dns_prefix_private_cluster == "") || var.private_dns_zone_id != null
+      condition     = (var.dns_prefix_private_cluster == null) || (var.private_dns_zone_id != null)
       error_message = "When `dns_prefix_private_cluster` is set, `private_dns_zone_id` must be set."
     }
     precondition {
