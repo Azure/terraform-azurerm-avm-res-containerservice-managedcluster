@@ -1189,6 +1189,14 @@ Default: `false`
 
 The following outputs are exported:
 
+### <a name="output_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#output\_cluster\_ca\_certificate)
+
+Description: The CA certificate of the AKS cluster.
+
+### <a name="output_host"></a> [host](#output\_host)
+
+Description: The host of the AKS cluster API server.
+
 ### <a name="output_key_vault_secrets_provider_object_id"></a> [key\_vault\_secrets\_provider\_object\_id](#output\_key\_vault\_secrets\_provider\_object\_id)
 
 Description: The object ID of the key vault secrets provider.
@@ -1196,6 +1204,10 @@ Description: The object ID of the key vault secrets provider.
 ### <a name="output_kube_admin_config"></a> [kube\_admin\_config](#output\_kube\_admin\_config)
 
 Description: The kube\_admin\_config block of the AKS cluster, only available when Local Accounts & Role-Based Access Control (RBAC) with AAD are enabled.
+
+### <a name="output_kube_config"></a> [kube\_config](#output\_kube\_config)
+
+Description: The kube\_config block of the AKS cluster
 
 ### <a name="output_kubelet_identity_id"></a> [kubelet\_identity\_id](#output\_kubelet\_identity\_id)
 
