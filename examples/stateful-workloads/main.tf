@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.9.2"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -115,7 +115,8 @@ resource "azurerm_container_registry_task_schedule_run_now" "this" {
 
 ## Section to create the Azure Kubernetes Service
 ######################################################################################################################
-module "default" {
+
+module "stateful_workloads" {
   source = "../.."
 
   default_node_pool = {
@@ -140,6 +141,7 @@ module "default" {
   name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
   resource_group_name       = azurerm_resource_group.this.name
   automatic_upgrade_channel = "stable"
+  dns_prefix                = "statefulworkloads"
   key_vault_secrets_provider = {
     secret_rotation_enabled = true
   }
@@ -160,11 +162,11 @@ module "default" {
 ## Section to assign the role to the kubelet identity
 ######################################################################################################################
 resource "azurerm_role_assignment" "acr_role_assignment" {
-  principal_id         = module.default.kubelet_identity_id
+  principal_id         = module.stateful_workloads.kubelet_identity_id
   scope                = module.avm_res_containerregistry_registry.resource_id
   role_definition_name = "AcrPull"
 
-  depends_on = [module.avm_res_containerregistry_registry, module.default]
+  depends_on = [module.avm_res_containerregistry_registry, module.stateful_workloads]
 }
 
 ## Section to deploy valkey cluster only when var.valkey_enabled is set to true
@@ -174,7 +176,7 @@ module "valkey" {
   count  = var.valkey_enabled ? 1 : 0
 
   key_vault_id    = module.avm_res_keyvault_vault.resource_id
-  object_id       = module.default.key_vault_secrets_provider_object_id
+  object_id       = module.stateful_workloads.key_vault_secrets_provider_object_id
   tenant_id       = data.azurerm_client_config.current.tenant_id
   valkey_password = var.valkey_password
 }
@@ -190,7 +192,7 @@ module "mongodb" {
   location             = azurerm_resource_group.this.location
   mongodb_kv_secrets   = var.mongodb_kv_secrets
   mongodb_namespace    = var.mongodb_namespace
-  oidc_issuer_url      = module.default.oidc_issuer_url
+  oidc_issuer_url      = module.stateful_workloads.oidc_issuer_url
   principal_id         = data.azurerm_client_config.current.object_id
   resource_group_name  = azurerm_resource_group.this.name
   service_account_name = var.service_account_name

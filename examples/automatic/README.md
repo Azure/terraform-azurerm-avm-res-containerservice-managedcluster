@@ -5,7 +5,7 @@ This deploys the module using only defaults and AKS Automatic Mode.
 
 ```hcl
 terraform {
-  required_version = ">= 1.9.2"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -69,9 +69,12 @@ module "automatic" {
   source = "../.."
 
   default_node_pool = {
-    name       = "default"
-    vm_size    = "Standard_DS2_v2"
-    node_count = 3
+    name                 = "default"
+    vm_size              = "Standard_DS2_v2"
+    node_count           = 3
+    min_count            = 3
+    max_count            = 3
+    auto_scaling_enabled = true
     upgrade_settings = {
       max_surge = "10%"
     }
@@ -83,6 +86,7 @@ module "automatic" {
     azure_rbac_enabled = true
     tenant_id          = data.azurerm_client_config.current.tenant_id
   }
+  dns_prefix = "automaticexample"
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
     interval    = "1"
@@ -103,7 +107,7 @@ module "automatic" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0, < 5.0.0)
 

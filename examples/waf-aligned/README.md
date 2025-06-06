@@ -5,7 +5,7 @@ This deploys the module in alignment with the best practices of the Well Archite
 
 ```hcl
 terraform {
-  required_version = ">= 1.9.2"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -213,7 +213,7 @@ module "waf_aligned" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0, < 5.0.0)
 

@@ -5,7 +5,7 @@ This deploys the module using the Kubenet Network Plugin.
 
 ```hcl
 terraform {
-  required_version = ">= 1.9.2"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -71,9 +71,9 @@ module "kubenet" {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
     auto_scaling_enabled         = true
-    max_count                    = 3
+    max_count                    = 4
     max_pods                     = 30
-    min_count                    = 1
+    min_count                    = 2
     only_critical_addons_enabled = true
 
     upgrade_settings = {
@@ -87,6 +87,7 @@ module "kubenet" {
     azure_rbac_enabled = true
     tenant_id          = data.azurerm_client_config.current.tenant_id
   }
+  dns_prefix = "kubenetexample"
   managed_identities = {
     system_assigned = true
   }
@@ -98,9 +99,9 @@ module "kubenet" {
       name                 = "userpool1"
       vm_size              = "Standard_DS2_v2"
       auto_scaling_enabled = true
-      max_count            = 3
+      max_count            = 4
       max_pods             = 30
-      min_count            = 1
+      min_count            = 2
       os_disk_size_gb      = 128
       upgrade_settings = {
         max_surge = "10%"
@@ -110,9 +111,9 @@ module "kubenet" {
       name                 = "userpool2"
       vm_size              = "Standard_DS2_v2"
       auto_scaling_enabled = true
-      max_count            = 3
+      max_count            = 4
       max_pods             = 30
-      min_count            = 1
+      min_count            = 2
       os_disk_size_gb      = 128
       upgrade_settings = {
         max_surge = "10%"
@@ -127,7 +128,7 @@ module "kubenet" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0, < 5.0.0)
 

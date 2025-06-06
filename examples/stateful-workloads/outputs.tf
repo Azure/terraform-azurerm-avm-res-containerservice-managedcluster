@@ -7,19 +7,19 @@ output "acr_registry_name" {
 }
 
 output "aks_cluster_name" {
-  value = module.default.name
+  value = module.stateful_workloads.name
 }
 
 output "aks_kubelet_identity_id" {
-  value = module.default.kubelet_identity_id
+  value = module.stateful_workloads.kubelet_identity_id
 }
 
 output "aks_nodepool_resource_ids" {
-  value = module.default.nodepool_resource_ids
+  value = module.stateful_workloads.nodepool_resource_ids
 }
 
 output "aks_oidc_issuer_url" {
-  value = module.default.oidc_issuer_url
+  value = module.stateful_workloads.oidc_issuer_url
 }
 
 output "identity_name" {

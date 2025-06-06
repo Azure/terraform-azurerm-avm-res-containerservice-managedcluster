@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.9.2"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -93,6 +93,7 @@ module "default" {
       workspace_resource_id = azurerm_log_analytics_workspace.this.id
     }
   }
+  dns_prefix = "defaultexample"
   managed_identities = {
     system_assigned = true
   }

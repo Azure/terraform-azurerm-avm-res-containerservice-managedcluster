@@ -11,7 +11,7 @@ output "kube_admin_config" {
 
 output "kubelet_identity_id" {
   description = "The identity ID of the kubelet identity."
-  value       = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
+  value       = try(azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id, null)
 }
 
 output "name" {

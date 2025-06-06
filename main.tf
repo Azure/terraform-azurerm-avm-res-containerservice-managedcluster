@@ -8,8 +8,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   azure_policy_enabled             = var.azure_policy_enabled
   cost_analysis_enabled            = var.sku_tier == "Free" ? false : var.cost_analysis_enabled
   disk_encryption_set_id           = var.disk_encryption_set_id
-  dns_prefix                       = var.private_cluster_enabled ? null : local.dns_prefix
-  dns_prefix_private_cluster       = var.private_cluster_enabled ? local.private_dns_prefix : null
+  dns_prefix                       = var.dns_prefix
+  dns_prefix_private_cluster       = var.dns_prefix_private_cluster
   edge_zone                        = var.edge_zone
   http_application_routing_enabled = var.http_application_routing_enabled
   image_cleaner_enabled            = var.image_cleaner_enabled
@@ -523,7 +523,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "Enabling Azure Active Directory integration requires that `role_based_access_control_enabled` be set to true."
     }
     precondition {
-      condition     = !((var.key_management_service != null) && try(var.managed_identities.type != "UserAssigned", true))
+      condition     = var.key_management_service == null || try(!var.managed_identities.system_assigned, false)
       error_message = "KMS etcd encryption doesn't work with system-assigned managed identity."
     }
     precondition {
@@ -531,16 +531,12 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "`oidc_issuer_enabled` must be set to `true` to enable Azure AD Workload Identity"
     }
     precondition {
-      condition     = can(coalesce(var.name, var.dns_prefix))
-      error_message = "You must set one of `var.dns_prefix` and `var.prefix` to create `azurerm_kubernetes_cluster.main`."
+      condition     = (var.dns_prefix != null) != (var.dns_prefix_private_cluster != null)
+      error_message = "Exactly one of `dns_prefix` or `dns_prefix_private_cluster` must be specified (non-null and non-empty)."
     }
     precondition {
-      condition     = !var.private_cluster_enabled || (var.dns_prefix_private_cluster != null && var.dns_prefix_private_cluster != "")
-      error_message = "When `private_cluster_enabled` is set to `true`, `dns_prefix_private_cluster` must be set."
-    }
-    precondition {
-      condition     = !var.private_cluster_enabled || (var.dns_prefix == null || var.dns_prefix == "")
-      error_message = "When `dns_prefix_private_cluster` is set, `dns_prefix` must not be set."
+      condition     = (var.dns_prefix_private_cluster == null) || (var.private_dns_zone_id != null)
+      error_message = "When `dns_prefix_private_cluster` is set, `private_dns_zone_id` must be set."
     }
     precondition {
       condition     = var.automatic_upgrade_channel != "node-image" || var.node_os_channel_upgrade == "NodeImage"
@@ -560,13 +556,13 @@ resource "terraform_data" "kubernetes_version_keeper" {
 }
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  resource_id = azurerm_kubernetes_cluster.this.id
+  type        = "Microsoft.ContainerService/managedClusters@2024-02-01"
   body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
     }
   }
-  resource_id = azurerm_kubernetes_cluster.this.id
 
   lifecycle {
     ignore_changes       = all
@@ -585,7 +581,8 @@ resource "terraform_data" "http_proxy_config_no_proxy_keeper" {
 resource "azapi_update_resource" "aks_cluster_http_proxy_config_no_proxy" {
   count = try(var.http_proxy_config.no_proxy != null, false) ? 1 : 0
 
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  resource_id = azurerm_kubernetes_cluster.this.id
+  type        = "Microsoft.ContainerService/managedClusters@2024-02-01"
   body = {
     properties = {
       httpProxyConfig = {
@@ -593,7 +590,6 @@ resource "azapi_update_resource" "aks_cluster_http_proxy_config_no_proxy" {
       }
     }
   }
-  resource_id = azurerm_kubernetes_cluster.this.id
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 
