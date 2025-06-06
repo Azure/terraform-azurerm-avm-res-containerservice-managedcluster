@@ -88,7 +88,6 @@ module "create_before_destroy" {
     tenant_id          = data.azurerm_client_config.current.tenant_id
   }
   create_nodepools_before_destroy = true
-
   dns_prefix                      = "createexample"
   managed_identities = {
     system_assigned = true

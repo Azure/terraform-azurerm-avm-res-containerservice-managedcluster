@@ -144,7 +144,6 @@ module "cni" {
     tenant_id          = data.azurerm_client_config.current.tenant_id
   }
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
-
   dns_prefix                          = "cniexample"
   kubelet_identity = {
     client_id                 = azurerm_user_assigned_identity.kubelet_identity.client_id
