@@ -155,7 +155,7 @@ resource "azurerm_kubernetes_cluster" "this" {
 
         content {
           max_surge                     = upgrade_settings.value.max_surge
-          drain_timeout_in_minutes      = upgrade_settings.value.node_soak_duration_in_minutes
+          drain_timeout_in_minutes      = upgrade_settings.value.drain_timeout_in_minutes
           node_soak_duration_in_minutes = upgrade_settings.value.node_soak_duration_in_minutes
         }
       }
@@ -271,7 +271,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       user_assigned_identity_id = kubelet_identity.value.user_assigned_identity_id
     }
   }
-  # OS Configuration 
+  # OS Configuration
   dynamic "linux_profile" {
     for_each = var.linux_profile != null ? [var.linux_profile] : []
 
