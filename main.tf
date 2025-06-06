@@ -180,23 +180,26 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.auto_scaler_profile != null ? [var.auto_scaler_profile] : []
 
     content {
-      balance_similar_node_groups      = auto_scaler_profile.value.balance_similar_node_groups
-      empty_bulk_delete_max            = auto_scaler_profile.value.empty_bulk_delete_max
-      expander                         = auto_scaler_profile.value.expander
-      max_graceful_termination_sec     = auto_scaler_profile.value.max_graceful_termination_sec
-      max_node_provisioning_time       = auto_scaler_profile.value.max_node_provisioning_time
-      max_unready_nodes                = auto_scaler_profile.value.max_unready_nodes
-      max_unready_percentage           = auto_scaler_profile.value.max_unready_percentage
-      new_pod_scale_up_delay           = auto_scaler_profile.value.new_pod_scale_up_delay
-      scale_down_delay_after_add       = auto_scaler_profile.value.scale_down_delay_after_add
-      scale_down_delay_after_delete    = auto_scaler_profile.value.scale_down_delay_after_delete
-      scale_down_delay_after_failure   = auto_scaler_profile.value.scale_down_delay_after_failure
-      scale_down_unneeded              = auto_scaler_profile.value.scale_down_unneeded
-      scale_down_unready               = auto_scaler_profile.value.scale_down_unready
-      scale_down_utilization_threshold = auto_scaler_profile.value.scale_down_utilization_threshold
-      scan_interval                    = auto_scaler_profile.value.scan_interval
-      skip_nodes_with_local_storage    = auto_scaler_profile.value.skip_nodes_with_local_storage
-      skip_nodes_with_system_pods      = auto_scaler_profile.value.skip_nodes_with_system_pods
+      balance_similar_node_groups                   = auto_scaler_profile.value.balance_similar_node_groups
+      daemonset_eviction_for_empty_nodes_enabled    = auto_scaler_profile.value.daemonset_eviction_for_empty_nodes_enabled
+      daemonset_eviction_for_occupied_nodes_enabled = auto_scaler_profile.value.daemonset_eviction_for_occupied_nodes_enabled
+      empty_bulk_delete_max                         = auto_scaler_profile.value.empty_bulk_delete_max
+      expander                                      = auto_scaler_profile.value.expander
+      ignore_daemonsets_utilization_enabled         = auto_scaler_profile.value.ignore_daemonsets_utilization_enabled
+      max_graceful_termination_sec                  = auto_scaler_profile.value.max_graceful_termination_sec
+      max_node_provisioning_time                    = auto_scaler_profile.value.max_node_provisioning_time
+      max_unready_nodes                             = auto_scaler_profile.value.max_unready_nodes
+      max_unready_percentage                        = auto_scaler_profile.value.max_unready_percentage
+      new_pod_scale_up_delay                        = auto_scaler_profile.value.new_pod_scale_up_delay
+      scale_down_delay_after_add                    = auto_scaler_profile.value.scale_down_delay_after_add
+      scale_down_delay_after_delete                 = auto_scaler_profile.value.scale_down_delay_after_delete
+      scale_down_delay_after_failure                = auto_scaler_profile.value.scale_down_delay_after_failure
+      scale_down_unneeded                           = auto_scaler_profile.value.scale_down_unneeded
+      scale_down_unready                            = auto_scaler_profile.value.scale_down_unready
+      scale_down_utilization_threshold              = auto_scaler_profile.value.scale_down_utilization_threshold
+      scan_interval                                 = auto_scaler_profile.value.scan_interval
+      skip_nodes_with_local_storage                 = auto_scaler_profile.value.skip_nodes_with_local_storage
+      skip_nodes_with_system_pods                   = auto_scaler_profile.value.skip_nodes_with_system_pods
     }
   }
   dynamic "azure_active_directory_role_based_access_control" {
