@@ -543,8 +543,8 @@ DESCRIPTION
 
 variable "monitor_metrics" {
   type = object({
-    annotations_allowed = optional(bool)
-    labels_allowed      = optional(bool)
+    annotations_allowed = optional(string)
+    labels_allowed      = optional(string)
   })
   default     = null
   description = "The monitor metrics for the Kubernetes cluster. Both required if enabling Prometheus"
