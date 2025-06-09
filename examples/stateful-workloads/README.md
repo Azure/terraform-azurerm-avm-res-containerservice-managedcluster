@@ -121,6 +121,7 @@ resource "azurerm_container_registry_task_schedule_run_now" "this" {
 
 ## Section to create the Azure Kubernetes Service
 ######################################################################################################################
+
 module "stateful_workloads" {
   source = "../.."
 
