@@ -690,8 +690,8 @@ Type:
 
 ```hcl
 object({
-    annotations_allowed = optional(bool)
-    labels_allowed      = optional(bool)
+    annotations_allowed = optional(string)
+    labels_allowed      = optional(string)
   })
 ```
 
