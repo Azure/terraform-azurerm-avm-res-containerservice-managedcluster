@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
 # Azure CNI example
 
-This deploys the module using the Azure CNI Network Plugin.
+This deploys the module using the Azure CNI Network Plugin.  
 
 ```hcl
 terraform {
