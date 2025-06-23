@@ -469,6 +469,14 @@ resource "azurerm_kubernetes_cluster" "this" {
       update = timeouts.value.update
     }
   }
+  dynamic "upgrade_override" {
+    for_each = var.upgrade_override != null ? [var.upgrade_override] : []
+
+    content {
+      force_upgrade_enabled = upgrade_override.value.force_upgrade_enabled
+      effective_until       = upgrade_override.value.effective_until
+    }
+  }
   dynamic "web_app_routing" {
     for_each = var.web_app_routing_dns_zone_ids
 

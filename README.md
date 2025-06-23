@@ -1131,6 +1131,21 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_upgrade_override"></a> [upgrade\_override](#input\_upgrade\_override)
+
+Description: (Optional) The upgrade override for the Kubernetes cluster. Once set, this block cannot be removed from the configuration. This is used to force an upgrade of the cluster even if it is not required. The `effective_until` field is used to specify the date until which the override is effective.
+
+Type:
+
+```hcl
+object({
+    force_upgrade_enabled = bool
+    effective_until       = optional(string)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_web_app_routing_dns_zone_ids"></a> [web\_app\_routing\_dns\_zone\_ids](#input\_web\_app\_routing\_dns\_zone\_ids)
 
 Description: The web app routing DNS zone IDs for the Kubernetes cluster.
