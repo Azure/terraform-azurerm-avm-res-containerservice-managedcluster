@@ -37,6 +37,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   vnet_subnet_id                = var.vnet_subnet_id
   workload_runtime              = var.workload_runtime
   zones                         = var.zones
+  temporary_name_for_rotation   = var.temporary_name_for_rotation
 
   dynamic "kubelet_config" {
     for_each = var.kubelet_config != null ? [var.kubelet_config] : []
@@ -195,6 +196,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
   vnet_subnet_id                = var.vnet_subnet_id
   workload_runtime              = var.workload_runtime
   zones                         = var.zones
+  temporary_name_for_rotation   = var.temporary_name_for_rotation
 
   dynamic "kubelet_config" {
     for_each = var.kubelet_config != null ? [var.kubelet_config] : []

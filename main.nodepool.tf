@@ -46,6 +46,7 @@ module "nodepools" {
   windows_profile                = each.value.windows_profile
   workload_runtime               = each.value.workload_runtime
   zones                          = each.value.zones
+  temporary_name_for_rotation    = each.value.temporary_name_for_rotation
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 }
