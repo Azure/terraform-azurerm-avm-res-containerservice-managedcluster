@@ -1,3 +1,8 @@
+output "aci_connector_object_id" {
+  description = "The object ID of the ACI Connector identity"
+  value       = try(azurerm_kubernetes_cluster.this.aci_connector_linux[0].connector_identity[0].object_id, null)
+}
+
 output "cluster_ca_certificate" {
   description = "The CA certificate of the AKS cluster."
   sensitive   = true
@@ -8,6 +13,11 @@ output "host" {
   description = "The host of the AKS cluster API server."
   sensitive   = true
   value       = azurerm_kubernetes_cluster.this.kube_config[0].host
+}
+
+output "ingress_app_object_id" {
+  description = "The object ID of the Ingress Application identity"
+  value       = try(azurerm_kubernetes_cluster.this.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id, null)
 }
 
 output "key_vault_secrets_provider_object_id" {
@@ -66,4 +76,9 @@ output "private_endpoints" {
 output "resource_id" {
   description = "Resource ID of the Kubernetes cluster."
   value       = azurerm_kubernetes_cluster.this.id
+}
+
+output "web_app_routing_object_id" {
+  description = "The object ID of the web app routing identity"
+  value       = try(azurerm_kubernetes_cluster.this.web_app_routing[0].web_app_routing_identity[0].object_id, null)
 }

@@ -6,6 +6,7 @@ This deploys the module using the Azure CNI Network Plugin.
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -64,10 +65,10 @@ resource "azurerm_resource_group" "this" {
 
 
 resource "azurerm_virtual_network" "vnet" {
-  address_space       = ["10.1.0.0/16"]
   location            = azurerm_resource_group.this.location
   name                = "cni-vnet"
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.1.0.0/16"]
 }
 
 resource "azurerm_subnet" "default_subnet" {

@@ -1192,6 +1192,10 @@ Default: `false`
 
 The following outputs are exported:
 
+### <a name="output_aci_connector_object_id"></a> [aci\_connector\_object\_id](#output\_aci\_connector\_object\_id)
+
+Description: The object ID of the ACI Connector identity
+
 ### <a name="output_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#output\_cluster\_ca\_certificate)
 
 Description: The CA certificate of the AKS cluster.
@@ -1199,6 +1203,10 @@ Description: The CA certificate of the AKS cluster.
 ### <a name="output_host"></a> [host](#output\_host)
 
 Description: The host of the AKS cluster API server.
+
+### <a name="output_ingress_app_object_id"></a> [ingress\_app\_object\_id](#output\_ingress\_app\_object\_id)
+
+Description: The object ID of the Ingress Application identity
 
 ### <a name="output_key_vault_secrets_provider_object_id"></a> [key\_vault\_secrets\_provider\_object\_id](#output\_key\_vault\_secrets\_provider\_object\_id)
 
@@ -1239,6 +1247,10 @@ Description:   A map of the private endpoints created.
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: Resource ID of the Kubernetes cluster.
+
+### <a name="output_web_app_routing_object_id"></a> [web\_app\_routing\_object\_id](#output\_web\_app\_routing\_object\_id)
+
+Description: The object ID of the web app routing identity
 
 ## Modules
 

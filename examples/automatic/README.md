@@ -6,6 +6,7 @@ This deploys the module using only defaults and AKS Automatic Mode.
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
