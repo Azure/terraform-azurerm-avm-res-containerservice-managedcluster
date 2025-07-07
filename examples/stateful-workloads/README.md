@@ -78,7 +78,6 @@ module "avm_res_containerregistry_registry" {
   resource_group_name = azurerm_resource_group.this.name
   admin_enabled       = false
   sku                 = "Premium"
-  tags                = {}
 }
 
 ## Section to create the Azure Container Registry task
@@ -341,6 +340,9 @@ Default:
     "name": "valkey",
     "node_count": 3,
     "os_type": "Linux",
+    "upgrade_settings": {
+      "max_surge": "10%"
+    },
     "vm_size": "Standard_D2ds_v4",
     "zones": [
       2,

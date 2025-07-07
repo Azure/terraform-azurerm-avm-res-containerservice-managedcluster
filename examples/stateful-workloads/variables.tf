@@ -81,6 +81,9 @@ variable "node_pools" {
       node_count = 3
       zones      = [2, 3]
       os_type    = "Linux"
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     }
   }
   description = "Optional. The additional node pools for the Kubernetes cluster."
