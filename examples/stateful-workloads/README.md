@@ -78,6 +78,7 @@ module "avm_res_containerregistry_registry" {
   resource_group_name = azurerm_resource_group.this.name
   admin_enabled       = false
   sku                 = "Premium"
+  tags                = {}
 }
 
 ## Section to create the Azure Container Registry task
