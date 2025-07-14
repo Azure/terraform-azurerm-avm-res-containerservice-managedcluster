@@ -9,8 +9,8 @@ variable "acr_task_content" {
   default     = <<-EOF
 version: v1.1.0
 steps:
-  - cmd: bash echo Waiting 10 seconds the propagation of the Container Registry Data Importer and Data Reader role
-  - cmd: bash sleep 10
+  - cmd: bash echo Waiting 60 seconds the propagation of the Container Registry Data Importer and Data Reader role
+  - cmd: bash sleep 60
   - cmd: az login --identity
   - cmd: az acr import --name $RegistryName --source acrforavmexamples.azurecr.io/valkey:latest --image valkey:latest
 EOF
