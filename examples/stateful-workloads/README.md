@@ -329,6 +329,11 @@ map(object({
     node_count = number
     zones      = optional(list(string))
     os_type    = string
+    upgrade_settings = optional(object({
+      drain_timeout_in_minutes      = optional(number)
+      node_soak_duration_in_minutes = optional(number)
+      max_surge                     = string
+    }))
   }))
 ```
 
