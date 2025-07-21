@@ -383,6 +383,14 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_temporary_name_for_rotation"></a> [temporary\_name\_for\_rotation](#input\_temporary\_name\_for\_rotation)
+
+Description: Optional. Specifies the name of the temporary node pool used to cycle the node pool when one of the relevant properties are updated.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 
 Description: - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
