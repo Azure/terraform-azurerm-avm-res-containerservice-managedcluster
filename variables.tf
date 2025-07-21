@@ -662,6 +662,7 @@ variable "node_pools" {
     ultra_ssd_enabled            = optional(bool)
     vnet_subnet_id               = optional(string)
     zones                        = optional(list(string))
+    temporary_name_for_rotation  = optional(string)
     workload_runtime             = optional(string)
     windows_profile = optional(object({
       outbound_nat_enabled = optional(bool)

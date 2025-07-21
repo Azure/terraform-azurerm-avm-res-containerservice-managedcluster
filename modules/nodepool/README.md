@@ -471,6 +471,14 @@ Type: `list(string)`
 
 Default: `null`
 
+### <a name="input_temporary_name_for_rotation"></a> [temporary_name_for_rotation](#input\_temporary_name_for_rotation)
+
+Description: Optional. Specifies the name of the temporary node pool used to cycle the node pool when one of the relevant properties are updated.
+
+Type: `string`
+
+Default: `null`
+
 ## Outputs
 
 The following outputs are exported:

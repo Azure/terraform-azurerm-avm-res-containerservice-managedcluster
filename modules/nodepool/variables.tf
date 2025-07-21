@@ -345,3 +345,9 @@ variable "zones" {
   default     = null
   description = "Optional. The availability zones for the nodepool."
 }
+
+variable "temporary_name_for_rotation" {
+  type        = string
+  default     = null
+  description = "Optional. Specifies the name of the temporary node pool used to cycle the node pool when one of the relevant properties are updated."
+}
