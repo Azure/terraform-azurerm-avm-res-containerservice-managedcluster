@@ -39,7 +39,6 @@ resource "azurerm_kubernetes_cluster" "this" {
 
     content {
       name                          = default_node_pool.value.name
-      vm_size                       = default_node_pool.value.vm_size
       auto_scaling_enabled          = default_node_pool.value.auto_scaling_enabled
       capacity_reservation_group_id = default_node_pool.value.capacity_reservation_group_id
       fips_enabled                  = default_node_pool.value.fips_enabled
@@ -67,6 +66,7 @@ resource "azurerm_kubernetes_cluster" "this" {
       temporary_name_for_rotation   = default_node_pool.value.temporary_name_for_rotation
       type                          = default_node_pool.value.type
       ultra_ssd_enabled             = default_node_pool.value.ultra_ssd_enabled
+      vm_size                       = default_node_pool.value.vm_size
       vnet_subnet_id                = default_node_pool.value.vnet_subnet_id
       workload_runtime              = default_node_pool.value.workload_runtime
       zones                         = default_node_pool.value.zones

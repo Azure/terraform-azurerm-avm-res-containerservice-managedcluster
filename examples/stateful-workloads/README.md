@@ -6,6 +6,7 @@ This deploys the module for running ValKey workloads on AKS. For more informatio
 ```hcl
 terraform {
   required_version = ">= 1.9.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"

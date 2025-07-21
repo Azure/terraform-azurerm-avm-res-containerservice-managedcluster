@@ -3,7 +3,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
 
   kubernetes_cluster_id         = var.cluster_resource_id
   name                          = var.name
-  vm_size                       = var.vm_size
   auto_scaling_enabled          = var.auto_scaling_enabled
   capacity_reservation_group_id = var.capacity_reservation_group_id
   eviction_policy               = var.eviction_policy
@@ -34,6 +33,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   spot_max_price                = var.spot_max_price
   tags                          = var.tags
   ultra_ssd_enabled             = var.ultra_ssd_enabled
+  vm_size                       = var.vm_size
   vnet_subnet_id                = var.vnet_subnet_id
   workload_runtime              = var.workload_runtime
   zones                         = var.zones
@@ -161,7 +161,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
 
   kubernetes_cluster_id         = var.cluster_resource_id
   name                          = "${var.name}${substr(md5(uuid()), 0, 4)}"
-  vm_size                       = var.vm_size
   auto_scaling_enabled          = var.auto_scaling_enabled
   capacity_reservation_group_id = var.capacity_reservation_group_id
   eviction_policy               = var.eviction_policy
@@ -192,6 +191,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
   spot_max_price                = var.spot_max_price
   tags                          = var.tags
   ultra_ssd_enabled             = var.ultra_ssd_enabled
+  vm_size                       = var.vm_size
   vnet_subnet_id                = var.vnet_subnet_id
   workload_runtime              = var.workload_runtime
   zones                         = var.zones
