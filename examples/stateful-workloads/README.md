@@ -6,6 +6,7 @@ This deploys the module for running ValKey workloads on AKS. For more informatio
 ```hcl
 terraform {
   required_version = ">= 1.9.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -249,7 +250,7 @@ Description: The content of the ACR task
 
 Type: `string`
 
-Default: `"version: v1.1.0\nsteps:\n  - cmd: bash echo Waiting 10 seconds the propagation of the Container Registry Data Importer and Data Reader role\n  - cmd: bash sleep 10\n  - cmd: az login --identity\n  - cmd: az acr import --name $RegistryName --source acrforavmexamples.azurecr.io/valkey:latest --image valkey:latest\n"`
+Default: `"version: v1.1.0\nsteps:\n  - cmd: bash echo Waiting 60 seconds the propagation of the Container Registry Data Importer and Data Reader role\n  - cmd: bash sleep 60\n  - cmd: az login --identity\n  - cmd: az acr import --name $RegistryName --source acrforavmexamples.azurecr.io/valkey:latest --image valkey:latest\n"`
 
 ### <a name="input_aks_mongodb_backup_storage_account_name"></a> [aks\_mongodb\_backup\_storage\_account\_name](#input\_aks\_mongodb\_backup\_storage\_account\_name)
 
@@ -328,6 +329,11 @@ map(object({
     node_count = number
     zones      = optional(list(string))
     os_type    = string
+    upgrade_settings = optional(object({
+      drain_timeout_in_minutes      = optional(number)
+      node_soak_duration_in_minutes = optional(number)
+      max_surge                     = string
+    }))
   }))
 ```
 
@@ -339,6 +345,9 @@ Default:
     "name": "valkey",
     "node_count": 3,
     "os_type": "Linux",
+    "upgrade_settings": {
+      "max_surge": "10%"
+    },
     "vm_size": "Standard_D2ds_v4",
     "zones": [
       2,

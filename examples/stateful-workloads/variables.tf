@@ -9,8 +9,8 @@ variable "acr_task_content" {
   default     = <<-EOF
 version: v1.1.0
 steps:
-  - cmd: bash echo Waiting 10 seconds the propagation of the Container Registry Data Importer and Data Reader role
-  - cmd: bash sleep 10
+  - cmd: bash echo Waiting 60 seconds the propagation of the Container Registry Data Importer and Data Reader role
+  - cmd: bash sleep 60
   - cmd: az login --identity
   - cmd: az acr import --name $RegistryName --source acrforavmexamples.azurecr.io/valkey:latest --image valkey:latest
 EOF
@@ -72,6 +72,11 @@ variable "node_pools" {
     node_count = number
     zones      = optional(list(string))
     os_type    = string
+    upgrade_settings = optional(object({
+      drain_timeout_in_minutes      = optional(number)
+      node_soak_duration_in_minutes = optional(number)
+      max_surge                     = string
+    }))
   }))
   default = {
     # This is an example of a node pool for a stateful workload with minimal configuration
@@ -81,6 +86,9 @@ variable "node_pools" {
       node_count = 3
       zones      = [2, 3]
       os_type    = "Linux"
+      upgrade_settings = {
+        max_surge = "10%"
+      }
     }
   }
   description = "Optional. The additional node pools for the Kubernetes cluster."
