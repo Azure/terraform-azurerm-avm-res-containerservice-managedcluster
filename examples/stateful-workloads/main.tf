@@ -22,7 +22,7 @@ provider "azurerm" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4"
 }
 
 # Creating the resource group

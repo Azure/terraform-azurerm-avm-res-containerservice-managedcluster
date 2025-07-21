@@ -30,7 +30,7 @@ provider "azurerm" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4"
 }
 
 # This is required for resource modules
@@ -258,7 +258,7 @@ The following Modules are called:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.3
+Version: 0.4
 
 ### <a name="module_waf_aligned"></a> [waf\_aligned](#module\_waf\_aligned)
 

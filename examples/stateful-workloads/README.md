@@ -28,7 +28,7 @@ provider "azurerm" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4"
 }
 
 # Creating the resource group
@@ -479,7 +479,7 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.3
+Version: 0.4
 
 ### <a name="module_stateful_workloads"></a> [stateful\_workloads](#module\_stateful\_workloads)
 
