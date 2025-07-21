@@ -39,6 +39,7 @@ module "nodepools" {
   snapshot_id                    = each.value.snapshot_id
   spot_max_price                 = each.value.spot_max_price
   tags                           = each.value.tags
+  temporary_name_for_rotation    = each.value.temporary_name_for_rotation
   timeouts                       = var.kubernetes_cluster_node_pool_timeouts
   ultra_ssd_enabled              = each.value.ultra_ssd_enabled
   upgrade_settings               = each.value.upgrade_settings
@@ -46,7 +47,6 @@ module "nodepools" {
   windows_profile                = each.value.windows_profile
   workload_runtime               = each.value.workload_runtime
   zones                          = each.value.zones
-  temporary_name_for_rotation    = each.value.temporary_name_for_rotation
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 }

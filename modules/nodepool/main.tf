@@ -32,12 +32,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   snapshot_id                   = var.snapshot_id
   spot_max_price                = var.spot_max_price
   tags                          = var.tags
+  temporary_name_for_rotation   = var.temporary_name_for_rotation
   ultra_ssd_enabled             = var.ultra_ssd_enabled
   vm_size                       = var.vm_size
   vnet_subnet_id                = var.vnet_subnet_id
   workload_runtime              = var.workload_runtime
   zones                         = var.zones
-  temporary_name_for_rotation   = var.temporary_name_for_rotation
 
   dynamic "kubelet_config" {
     for_each = var.kubelet_config != null ? [var.kubelet_config] : []
@@ -191,12 +191,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "create_before_destroy_node_pool
   snapshot_id                   = var.snapshot_id
   spot_max_price                = var.spot_max_price
   tags                          = var.tags
+  temporary_name_for_rotation   = var.temporary_name_for_rotation
   ultra_ssd_enabled             = var.ultra_ssd_enabled
   vm_size                       = var.vm_size
   vnet_subnet_id                = var.vnet_subnet_id
   workload_runtime              = var.workload_runtime
   zones                         = var.zones
-  temporary_name_for_rotation   = var.temporary_name_for_rotation
 
   dynamic "kubelet_config" {
     for_each = var.kubelet_config != null ? [var.kubelet_config] : []
