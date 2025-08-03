@@ -1221,7 +1221,7 @@ Description: The CA certificate of the AKS cluster.
 
 Description: The host of the AKS cluster API server.
 
-### <a name="output_public_fqdn"></a> [host](#output\_public\_fqdn)
+### <a name="output_public_fqdn"></a> [public\_fqdn](#output\_public\_fqdn)
 
 Description: The public fqdn of the AKS cluster API server when private_cluster_public_fqdn_enabled=true.
 
