@@ -20,7 +20,7 @@ output "public_fqdn" {
 }
 
 output "host" {
-  description = "The host of the AKS cluster API server (will use Microsoft managed public .fqdn when private_cluster_public_fqdn_enabled = true)."
+  description = "The host of the AKS cluster API server (will use Microsoft managed public fqdn when private_cluster_public_fqdn_enabled = true)."
   sensitive   = true
   value       = (
     var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
