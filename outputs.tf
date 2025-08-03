@@ -5,14 +5,25 @@ output "aci_connector_object_id" {
 
 output "cluster_ca_certificate" {
   description = "The CA certificate of the AKS cluster."
-  sensitive   = true
-  value       = azurerm_kubernetes_cluster.this.kube_config
+  value     = azurerm_kubernetes_cluster.this.kube_config[0].cluster_ca_certificate
+  sensitive = true
+}
+
+
+output "public_fqdn" {
+  description = "Returns .fqdn when both private_cluster_enabled and private_cluster_public_fqdn_enabled are true, otherwise null"
+  value       = (
+    var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
+  ) ? azurerm_kubernetes_cluster.this.fqdn : null
+  sensitive   = false
 }
 
 output "host" {
-  description = "The host of the AKS cluster API server."
+  description = "AKS API host — returns .fqdn when public_fqdn_enabled, otherwise kube_config[0].host"
   sensitive   = true
-  value       = azurerm_kubernetes_cluster.this.kube_config[0].host
+  value       = (
+    var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
+  ) ? "https://${azurerm_kubernetes_cluster.this.fqdn}" : azurerm_kubernetes_cluster.this.kube_config[0].host
 }
 
 output "ingress_app_object_id" {
