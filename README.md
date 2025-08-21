@@ -391,8 +391,8 @@ Default: `null`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see <https://aka.ms/avm/telemetryinfo>.  
+Description: This variable controls whether or not telemetry is enabled for the module.
+For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -1220,6 +1220,10 @@ Description: The CA certificate of the AKS cluster.
 ### <a name="output_host"></a> [host](#output\_host)
 
 Description: The host of the AKS cluster API server.
+
+### <a name="output_public_fqdn"></a> [public\_fqdn](#output\_public\_fqdn)
+
+Description: The public fqdn of the AKS cluster API server when private_cluster_public_fqdn_enabled=true.
 
 ### <a name="output_ingress_app_object_id"></a> [ingress\_app\_object\_id](#output\_ingress\_app\_object\_id)
 
