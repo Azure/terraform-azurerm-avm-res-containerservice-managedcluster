@@ -391,8 +391,8 @@ Default: `null`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -1219,11 +1219,7 @@ Description: The CA certificate of the AKS cluster.
 
 ### <a name="output_host"></a> [host](#output\_host)
 
-Description: The host of the AKS cluster API server.
-
-### <a name="output_public_fqdn"></a> [public\_fqdn](#output\_public\_fqdn)
-
-Description: The public fqdn of the AKS cluster API server when private_cluster_public_fqdn_enabled=true.
+Description: AKS API host — returns .fqdn when public\_fqdn\_enabled, otherwise kube\_config[0].host
 
 ### <a name="output_ingress_app_object_id"></a> [ingress\_app\_object\_id](#output\_ingress\_app\_object\_id)
 
@@ -1264,6 +1260,10 @@ Description: The OIDC issuer URL of the Kubernetes cluster.
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
 Description:   A map of the private endpoints created.
+
+### <a name="output_public_fqdn"></a> [public\_fqdn](#output\_public\_fqdn)
+
+Description: Returns .fqdn when both private\_cluster\_enabled and private\_cluster\_public\_fqdn\_enabled are true, otherwise null
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 

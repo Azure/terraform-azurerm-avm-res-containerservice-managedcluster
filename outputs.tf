@@ -5,23 +5,14 @@ output "aci_connector_object_id" {
 
 output "cluster_ca_certificate" {
   description = "The CA certificate of the AKS cluster."
-  value     = azurerm_kubernetes_cluster.this.kube_config[0].cluster_ca_certificate
-  sensitive = true
-}
-
-
-output "public_fqdn" {
-  description = "Returns .fqdn when both private_cluster_enabled and private_cluster_public_fqdn_enabled are true, otherwise null"
-  value       = (
-    var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
-  ) ? azurerm_kubernetes_cluster.this.fqdn : null
-  sensitive   = false
+  sensitive   = true
+  value       = azurerm_kubernetes_cluster.this.kube_config[0].cluster_ca_certificate
 }
 
 output "host" {
   description = "AKS API host — returns .fqdn when public_fqdn_enabled, otherwise kube_config[0].host"
   sensitive   = true
-  value       = (
+  value = (
     var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
   ) ? "https://${azurerm_kubernetes_cluster.this.fqdn}" : azurerm_kubernetes_cluster.this.kube_config[0].host
 }
@@ -82,6 +73,13 @@ output "private_endpoints" {
   A map of the private endpoints created.
   DESCRIPTION
   value       = var.private_endpoints_manage_dns_zone_group ? azurerm_private_endpoint.this_managed_dns_zone_groups : azurerm_private_endpoint.this_unmanaged_dns_zone_groups
+}
+
+output "public_fqdn" {
+  description = "Returns .fqdn when both private_cluster_enabled and private_cluster_public_fqdn_enabled are true, otherwise null"
+  value = (
+    var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
+  ) ? azurerm_kubernetes_cluster.this.fqdn : null
 }
 
 output "resource_id" {
