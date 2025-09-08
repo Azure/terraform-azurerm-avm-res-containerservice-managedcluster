@@ -481,7 +481,8 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.web_app_routing_dns_zone_ids
 
     content {
-      dns_zone_ids = web_app_routing.value
+      dns_zone_ids             = web_app_routing.value
+      default_nginx_controller = var.default_nginx_controller
     }
   }
   dynamic "windows_profile" {
