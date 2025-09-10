@@ -315,6 +315,14 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_default_nginx_controller"></a> [default\_nginx\_controller](#input\_default\_nginx\_controller)
+
+Description: Specifies the ingress type for the default nginx ingress controller.
+
+Type: `string`
+
+Default: `"AnnotationControlled"`
+
 ### <a name="input_defender_log_analytics_workspace_id"></a> [defender\_log\_analytics\_workspace\_id](#input\_defender\_log\_analytics\_workspace\_id)
 
 Description: The log analytics workspace ID for the Microsoft Defender.
@@ -1268,6 +1276,10 @@ Description: Returns .fqdn when both private\_cluster\_enabled and private\_clus
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: Resource ID of the Kubernetes cluster.
+
+### <a name="output_web_app_routing_client_id"></a> [web\_app\_routing\_client\_id](#output\_web\_app\_routing\_client\_id)
+
+Description: The object ID of the web app routing identity
 
 ### <a name="output_web_app_routing_object_id"></a> [web\_app\_routing\_object\_id](#output\_web\_app\_routing\_object\_id)
 

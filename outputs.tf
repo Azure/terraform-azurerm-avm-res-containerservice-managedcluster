@@ -87,6 +87,11 @@ output "resource_id" {
   value       = azurerm_kubernetes_cluster.this.id
 }
 
+output "web_app_routing_client_id" {
+  description = "The object ID of the web app routing identity"
+  value       = try(azurerm_kubernetes_cluster.this.web_app_routing[0].web_app_routing_identity[0].client_id, null)
+}
+
 output "web_app_routing_object_id" {
   description = "The object ID of the web app routing identity"
   value       = try(azurerm_kubernetes_cluster.this.web_app_routing[0].web_app_routing_identity[0].object_id, null)
