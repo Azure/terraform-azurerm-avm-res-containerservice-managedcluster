@@ -339,6 +339,14 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_default_nginx_controller"></a> [default\_nginx\_controller](#input\_default\_nginx\_controller)
+
+Description: Specifies the ingress type for the default nginx ingress controller.
+
+Type: `string`
+
+Default: `"AnnotationControlled"`
+
 ### <a name="input_defender_log_analytics_workspace_id"></a> [defender\_log\_analytics\_workspace\_id](#input\_defender\_log\_analytics\_workspace\_id)
 
 Description: The log analytics workspace ID for the Microsoft Defender.
@@ -415,8 +423,8 @@ Default: `null`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see <https://aka.ms/avm/telemetryinfo>.  
+Description: This variable controls whether or not telemetry is enabled for the module.
+For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -1288,6 +1296,10 @@ Description: OIDC issuer URL from GET export values.
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
 Description:   A map of the private endpoints created.
+
+### <a name="output_public_fqdn"></a> [public\_fqdn](#output\_public\_fqdn)
+
+Description: Returns .fqdn when both private\_cluster\_enabled and private\_cluster\_public\_fqdn\_enabled are true, otherwise null
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 

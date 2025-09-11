@@ -250,6 +250,12 @@ variable "create_nodepools_before_destroy" {
   nullable    = false
 }
 
+variable "default_nginx_controller" {
+  type        = string
+  default     = "AnnotationControlled"
+  description = "Specifies the ingress type for the default nginx ingress controller."
+}
+
 variable "defender_log_analytics_workspace_id" {
   type        = string
   default     = null

@@ -90,6 +90,13 @@ output "private_endpoints" {
   value       = var.private_endpoints_manage_dns_zone_group ? azurerm_private_endpoint.this_managed_dns_zone_groups : azurerm_private_endpoint.this_unmanaged_dns_zone_groups
 }
 
+output "public_fqdn" {
+  description = "Returns .fqdn when both private_cluster_enabled and private_cluster_public_fqdn_enabled are true, otherwise null"
+  value = (
+    var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
+  ) ? azurerm_kubernetes_cluster.this.fqdn : null
+}
+
 output "resource_id" {
   description = "Resource ID of the Kubernetes cluster."
   value       = azapi_resource.this.id
@@ -103,6 +110,11 @@ output "user_assigned_identity_client_ids" {
 output "user_assigned_identity_object_ids" {
   description = "Map of identity profile keys to principalIds."
   value       = try({ for k, v in azapi_resource.this_get.output.properties.identityProfile : k => v.objectId }, {})
+}
+
+output "web_app_routing_client_id" {
+  description = "The object ID of the web app routing identity"
+  value       = try(azurerm_kubernetes_cluster.this.web_app_routing[0].web_app_routing_identity[0].client_id, null)
 }
 
 output "web_app_routing_object_id" {
