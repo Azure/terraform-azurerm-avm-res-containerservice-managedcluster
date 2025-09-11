@@ -136,6 +136,25 @@ variable "aci_connector_linux_subnet_name" {
   description = "The subnet name for the ACI connector Linux."
 }
 
+variable "advanced_networking" {
+  type = object({
+    enabled               = optional(bool, false)
+    observability_enabled = optional(bool, false)
+    security_enabled      = optional(bool, false)
+  })
+  default = {
+    enabled               = false
+    observability_enabled = false
+    security_enabled      = false
+  }
+  description = "Advanced networking feature toggles: master enable plus optional observability and security sub-features."
+
+  validation {
+    condition     = (!var.advanced_networking.observability_enabled && !var.advanced_networking.security_enabled) || var.advanced_networking.enabled
+    error_message = "`advanced_networking.enabled` must be true when either sub-feature is enabled."
+  }
+}
+
 variable "api_server_access_profile" {
   type = object({
     authorized_ip_ranges = optional(set(string))
@@ -603,6 +622,14 @@ variable "network_profile" {
   validation {
     condition     = var.network_profile.network_policy != "cilium" || var.network_profile.network_plugin_mode == "overlay" || var.default_node_pool.pod_subnet_id != null
     error_message = "When the network policy is set to cilium, one of either network_plugin_mode = `overlay` or pod_subnet_id must be specified."
+  }
+  validation {
+    condition     = try(var.network_profile.network_data_plane, null) == null || contains(["azure", "cilium"], var.network_profile.network_data_plane)
+    error_message = "`network_data_plane` must be one of: azure, cilium."
+  }
+  validation {
+    condition     = try(var.network_profile.network_data_plane, null) != "cilium" || var.network_profile.network_policy == "cilium"
+    error_message = "When `network_data_plane` is set to cilium, `network_policy` must also be set to cilium."
   }
 }
 

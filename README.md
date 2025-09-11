@@ -39,9 +39,10 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azapi_update_resource.aks_cluster_http_proxy_config_no_proxy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azapi_update_resource.aks_cluster_post_create](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.this_get](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource_action.this_admin_kubeconfig](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azapi_resource_action.this_user_kubeconfig](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
@@ -51,9 +52,8 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
-- [terraform_data.http_proxy_config_no_proxy_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
-- [terraform_data.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -197,6 +197,30 @@ Description: The subnet name for the ACI connector Linux.
 Type: `string`
 
 Default: `null`
+
+### <a name="input_advanced_networking"></a> [advanced\_networking](#input\_advanced\_networking)
+
+Description: Advanced networking feature toggles: master enable plus optional observability and security sub-features.
+
+Type:
+
+```hcl
+object({
+    enabled               = optional(bool, false)
+    observability_enabled = optional(bool, false)
+    security_enabled      = optional(bool, false)
+  })
+```
+
+Default:
+
+```json
+{
+  "enabled": false,
+  "observability_enabled": false,
+  "security_enabled": false
+}
+```
 
 ### <a name="input_api_server_access_profile"></a> [api\_server\_access\_profile](#input\_api\_server\_access\_profile)
 
@@ -1211,35 +1235,35 @@ The following outputs are exported:
 
 ### <a name="output_aci_connector_object_id"></a> [aci\_connector\_object\_id](#output\_aci\_connector\_object\_id)
 
-Description: The object ID of the ACI Connector identity
+Description: (Not directly available via azapi without extra GET)
 
 ### <a name="output_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#output\_cluster\_ca\_certificate)
 
-Description: The CA certificate of the AKS cluster.
+Description: Base64 cluster CA certificate from user kubeconfig.
 
 ### <a name="output_host"></a> [host](#output\_host)
 
-Description: The host of the AKS cluster API server.
+Description: API server host from user kubeconfig.
 
 ### <a name="output_ingress_app_object_id"></a> [ingress\_app\_object\_id](#output\_ingress\_app\_object\_id)
 
-Description: The object ID of the Ingress Application identity
+Description: Ingress Application identity object id (not currently extracted).
 
 ### <a name="output_key_vault_secrets_provider_object_id"></a> [key\_vault\_secrets\_provider\_object\_id](#output\_key\_vault\_secrets\_provider\_object\_id)
 
-Description: The object ID of the key vault secrets provider.
+Description: Key vault secrets provider identity object id (not currently extracted).
 
 ### <a name="output_kube_admin_config"></a> [kube\_admin\_config](#output\_kube\_admin\_config)
 
-Description: The kube\_admin\_config block of the AKS cluster, only available when Local Accounts & Role-Based Access Control (RBAC) with AAD are enabled.
+Description: Admin kubeconfig raw YAML (sensitive).
 
 ### <a name="output_kube_config"></a> [kube\_config](#output\_kube\_config)
 
-Description: The kube\_config block of the AKS cluster
+Description: User kubeconfig raw YAML (sensitive).
 
 ### <a name="output_kubelet_identity_id"></a> [kubelet\_identity\_id](#output\_kubelet\_identity\_id)
 
-Description: The identity ID of the kubelet identity.
+Description: Kubelet identity object id (not currently extracted).
 
 ### <a name="output_name"></a> [name](#output\_name)
 
@@ -1247,7 +1271,11 @@ Description: Name of the Kubernetes cluster.
 
 ### <a name="output_node_resource_group_id"></a> [node\_resource\_group\_id](#output\_node\_resource\_group\_id)
 
-Description: The resource group ID of the node resource group.
+Description: Node resource group name not exported; manual lookup required.
+
+### <a name="output_node_resource_group_name"></a> [node\_resource\_group\_name](#output\_node\_resource\_group\_name)
+
+Description: Name of the automatically created node resource group.
 
 ### <a name="output_nodepool_resource_ids"></a> [nodepool\_resource\_ids](#output\_nodepool\_resource\_ids)
 
@@ -1255,7 +1283,7 @@ Description: A map of nodepool keys to resource ids.
 
 ### <a name="output_oidc_issuer_url"></a> [oidc\_issuer\_url](#output\_oidc\_issuer\_url)
 
-Description: The OIDC issuer URL of the Kubernetes cluster.
+Description: OIDC issuer URL from GET export values.
 
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
@@ -1265,9 +1293,17 @@ Description:   A map of the private endpoints created.
 
 Description: Resource ID of the Kubernetes cluster.
 
+### <a name="output_user_assigned_identity_client_ids"></a> [user\_assigned\_identity\_client\_ids](#output\_user\_assigned\_identity\_client\_ids)
+
+Description: Map of identity profile keys to clientIds.
+
+### <a name="output_user_assigned_identity_object_ids"></a> [user\_assigned\_identity\_object\_ids](#output\_user\_assigned\_identity\_object\_ids)
+
+Description: Map of identity profile keys to principalIds.
+
 ### <a name="output_web_app_routing_object_id"></a> [web\_app\_routing\_object\_id](#output\_web\_app\_routing\_object\_id)
 
-Description: The object ID of the web app routing identity
+Description: Web app routing identity object id (not currently extracted).
 
 ## Modules
 
