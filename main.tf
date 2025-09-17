@@ -57,7 +57,11 @@ resource "azapi_resource" "this" {
   location  = var.location
   name      = "${var.name}${var.cluster_suffix}"
   parent_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
-  type      = "Microsoft.ContainerService/managedClusters@2025-05-01"
+  type      = "Microsoft.ContainerService/managedClusters@2025-07-01"
+
+  # temporary until azapi adds support for 2025-07-01
+  schema_validation_enabled = false
+
   body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
@@ -69,17 +73,20 @@ resource "azapi_resource" "this" {
       } : null
       autoUpgradeProfile = (var.automatic_upgrade_channel != null || var.node_os_channel_upgrade != null) ? {
         upgradeChannel       = var.automatic_upgrade_channel
-        nodeOsUpgradeChannel = var.node_os_channel_upgrade
+        nodeOSUpgradeChannel = var.node_os_channel_upgrade
       } : null
-      oidcIssuerProfile = var.oidc_issuer_enabled ? { enabled = true } : null
+      oidcIssuerProfile = var.oidc_issuer_enabled ? { enabled = true } : { enabled = false }
       securityProfile = (var.workload_identity_enabled || var.image_cleaner_enabled || var.defender_log_analytics_workspace_id != null) ? {
         workloadIdentity = var.workload_identity_enabled ? { enabled = true } : null
         imageCleaner     = var.image_cleaner_enabled ? { enabled = true, intervalHours = var.image_cleaner_interval_hours } : null
         defender         = var.defender_log_analytics_workspace_id != null ? { logAnalyticsWorkspaceResourceId = var.defender_log_analytics_workspace_id } : null
-      } : null
+      } : {
+        workloadIdentity = null
+        imageCleaner     = null
+        defender         = null
+      }
       addonProfiles = {
-        azurepolicy            = var.azure_policy_enabled ? { enabled = true } : null
-        httpApplicationRouting = var.http_application_routing_enabled ? { enabled = true } : null
+        azurepolicy = var.azure_policy_enabled ? { enabled = true } : null
       }
       agentPoolProfiles = [
         {
@@ -98,6 +105,13 @@ resource "azapi_resource" "this" {
       networkProfile = local.network_profile_map
     }
   }
+
+  response_export_values = [
+    "properties.oidcIssuerProfile.issuerURL",
+    "properties.identityProfile",
+    "properties.nodeResourceGroup"
+  ]
+
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -174,23 +188,6 @@ resource "azapi_resource_action" "this_admin_kubeconfig" {
   type                   = azapi_resource.this.type
   response_export_values = ["kubeconfigs"]
 }
-
-resource "azapi_resource" "this_get" {
-  name           = azapi_resource.this.name
-  parent_id      = azapi_resource.this.parent_id
-  type           = azapi_resource.this.type
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  # Export selected read-only properties for outputs
-  response_export_values = [
-    "properties.oidcIssuerProfile.issuerURL",
-    "properties.identityProfile",
-    "properties.nodeResourceGroup"
-  ]
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-}
-
 
 # required AVM resources interfaces
 resource "azurerm_management_lock" "this" {

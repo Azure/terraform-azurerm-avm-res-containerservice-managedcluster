@@ -11,7 +11,7 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   private_service_connection {
     is_manual_connection           = false
     name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    private_connection_resource_id = azurerm_kubernetes_cluster.this.id
+    private_connection_resource_id = azapi_resource.this.id
     subresource_names              = ["management"]
   }
   dynamic "ip_configuration" {
@@ -50,7 +50,7 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
   private_service_connection {
     is_manual_connection           = false
     name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    private_connection_resource_id = azurerm_kubernetes_cluster.this.id
+    private_connection_resource_id = azapi_resource.this.id
     subresource_names              = ["management"]
   }
   dynamic "ip_configuration" {
