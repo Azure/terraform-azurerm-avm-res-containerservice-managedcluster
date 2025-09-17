@@ -66,7 +66,7 @@ output "node_resource_group_id" {
 
 output "node_resource_group_name" {
   description = "Name of the automatically created node resource group."
-  value       = try(azapi_resource.this_get.output.properties.nodeResourceGroup, null)
+  value       = try(azapi_resource.this.output.properties.nodeResourceGroup, null)
 }
 
 output "nodepool_resource_ids" {
@@ -80,7 +80,7 @@ output "nodepool_resource_ids" {
 
 output "oidc_issuer_url" {
   description = "OIDC issuer URL from GET export values."
-  value       = try(azapi_resource.this_get.output.properties.oidcIssuerProfile.issuerURL, null)
+  value       = try(azapi_resource.this.output.properties.oidcIssuerProfile.issuerURL, null)
 }
 
 output "private_endpoints" {
@@ -94,7 +94,7 @@ output "public_fqdn" {
   description = "Returns .fqdn when both private_cluster_enabled and private_cluster_public_fqdn_enabled are true, otherwise null"
   value = (
     var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
-  ) ? azurerm_kubernetes_cluster.this.fqdn : null
+  ) ? azapi_resource.this.output.properties.fqdn : null
 }
 
 output "resource_id" {
@@ -104,17 +104,17 @@ output "resource_id" {
 
 output "user_assigned_identity_client_ids" {
   description = "Map of identity profile keys to clientIds."
-  value       = try({ for k, v in azapi_resource.this_get.output.properties.identityProfile : k => v.clientId }, {})
+  value       = try({ for k, v in azapi_resource.this.output.properties.identityProfile : k => v.clientId }, {})
 }
 
 output "user_assigned_identity_object_ids" {
   description = "Map of identity profile keys to principalIds."
-  value       = try({ for k, v in azapi_resource.this_get.output.properties.identityProfile : k => v.objectId }, {})
+  value       = try({ for k, v in azapi_resource.this.output.properties.identityProfile : k => v.objectId }, {})
 }
 
 output "web_app_routing_client_id" {
   description = "The object ID of the web app routing identity"
-  value       = try(azurerm_kubernetes_cluster.this.web_app_routing[0].web_app_routing_identity[0].client_id, null)
+  value       = try(azapi_resource.this.output.properties.ingressProfile.webAppRouting.identity.clientId, null)
 }
 
 output "web_app_routing_object_id" {
