@@ -1,7 +1,167 @@
+variable "location" {
+  type        = string
+  description = "Azure region where the resource should be deployed."
+  nullable    = false
+}
+
+variable "name" {
+  type        = string
+  description = "The name of this resource."
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-_]{0,61}[a-zA-Z0-9])?$", var.name))
+    error_message = "The name must be between 1 and 63 characters long and can only contain lowercase letters, numbers and hyphens."
+  }
+}
+
+# This is required for most resource modules
+variable "resource_group_name" {
+  type        = string
+  description = "The resource group where the resources will be deployed."
+  nullable    = false
+}
+
+# tflint-ignore: terraform_unused_declarations
+variable "aci_connector_linux_subnet_name" {
+  type        = string
+  default     = null
+  description = "The subnet name for the ACI connector Linux."
+}
+
+variable "advanced_networking" {
+  type = object({
+    enabled               = optional(bool, false)
+    observability_enabled = optional(bool, false)
+    security_enabled      = optional(bool, false)
+  })
+  default = {
+    enabled               = false
+    observability_enabled = false
+    security_enabled      = false
+  }
+  description = "Advanced networking feature toggles: master enable plus optional observability and security sub-features."
+
+  validation {
+    condition     = (!var.advanced_networking.observability_enabled && !var.advanced_networking.security_enabled) || var.advanced_networking.enabled
+    error_message = "`advanced_networking.enabled` must be true when either sub-feature is enabled."
+  }
+}
+
+variable "alert_email" {
+  type        = string
+  default     = null
+  description = "The email address to send alerts to."
+}
+
+variable "api_server_access_profile" {
+  type = object({
+    authorized_ip_ranges = optional(set(string))
+  })
+  default     = null
+  description = <<-EOT
+ - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
+ EOT
+}
+
+# tflint-ignore: terraform_unused_declarations
+variable "auto_scaler_profile" {
+  type = object({
+    balance_similar_node_groups                   = optional(string)
+    daemonset_eviction_for_empty_nodes_enabled    = optional(string)
+    daemonset_eviction_for_occupied_nodes_enabled = optional(string)
+    empty_bulk_delete_max                         = optional(string)
+    expander                                      = optional(string)
+    ignore_daemonsets_utilization_enabled         = optional(string)
+    max_graceful_termination_sec                  = optional(string)
+    max_node_provisioning_time                    = optional(string)
+    max_unready_nodes                             = optional(string)
+    max_unready_percentage                        = optional(string)
+    new_pod_scale_up_delay                        = optional(string)
+    scale_down_delay_after_add                    = optional(string)
+    scale_down_delay_after_delete                 = optional(string)
+    scale_down_delay_after_failure                = optional(string)
+    scale_down_unneeded                           = optional(string)
+    scale_down_unready                            = optional(string)
+    scale_down_utilization_threshold              = optional(string)
+    scan_interval                                 = optional(string)
+    skip_nodes_with_local_storage                 = optional(string)
+    skip_nodes_with_system_pods                   = optional(string)
+  })
+  default     = null
+  description = "The auto scaler profile for the Kubernetes cluster."
+}
+
+variable "automatic_upgrade_channel" {
+  type        = string
+  default     = null
+  description = "(Optional) The upgrade channel for this Kubernetes Cluster. Possible values are `patch`, `rapid`, `node-image` and `stable`. By default automatic-upgrades are turned off. Note that you cannot specify the patch version using `kubernetes_version` or `orchestrator_version` when using the `patch` upgrade channel. See [the documentation](https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-cluster) for more information"
+
+  validation {
+    condition = var.automatic_upgrade_channel == null ? true : contains([
+      "patch", "stable", "rapid", "node-image"
+    ], var.automatic_upgrade_channel)
+    error_message = "`automatic_upgrade_channel`'s possible values are `patch`, `stable`, `rapid` or `node-image`."
+  }
+}
+
+variable "azure_active_directory_role_based_access_control" {
+  type = object({
+    tenant_id              = optional(string)
+    admin_group_object_ids = optional(list(string))
+    azure_rbac_enabled     = optional(bool)
+  })
+  default     = null
+  description = "The Azure Active Directory role-based access control for the Kubernetes cluster."
+}
+
+variable "azure_policy_enabled" {
+  type        = bool
+  default     = true
+  description = "Whether or not Azure Policy is enabled for the Kubernetes cluster."
+}
+
+variable "cluster_suffix" {
+  type        = string
+  default     = ""
+  description = "Optional. The suffix to append to the Kubernetes cluster name if create_before_destroy is set to true on the nodepools."
+}
+
+# tflint-ignore: terraform_unused_declarations
+variable "confidential_computing" {
+  type = object({
+    sgx_quote_helper_enabled = bool
+  })
+  default     = null
+  description = <<-EOT
+ - `sgx_quote_helper_enabled` - (Required) Should the SGX quote helper be enabled?
+EOT
+}
+
+variable "cost_analysis_enabled" {
+  type        = bool
+  default     = false
+  description = "Whether or not cost analysis is enabled for the Kubernetes cluster. SKU must be Standard or Premium."
+}
+
+variable "create_nodepools_before_destroy" {
+  type        = bool
+  default     = false
+  description = "Whether or not to create node pools before destroying the old ones. This is the opposite of the default behavior. Set this to true if zero downtime is required during nodepool redeployments such as changes to snapshot_id."
+  nullable    = false
+}
+
+# tflint-ignore: terraform_unused_declarations
+variable "default_nginx_controller" {
+  type        = string
+  default     = "AnnotationControlled"
+  description = "Specifies the ingress type for the default nginx ingress controller."
+}
+
 variable "default_node_pool" {
   type = object({
-    name                          = string
-    vm_size                       = string
+    name                          = optional(string, "systempool")
+    vm_size                       = optional(string)
     capacity_reservation_group_id = optional(string)
     auto_scaling_enabled          = optional(bool, false)
     host_encryption_enabled       = optional(bool)
@@ -31,7 +191,7 @@ variable "default_node_pool" {
     zones                         = optional(list(string))
     max_count                     = optional(number)
     min_count                     = optional(number)
-    node_count                    = optional(number)
+    node_count                    = optional(number, 3)
     kubelet_config = optional(object({
       cpu_manager_policy        = optional(string)
       cpu_cfs_quota_enabled     = optional(bool, true)
@@ -97,163 +257,21 @@ variable "default_node_pool" {
     }))
 
   })
-  description = "Required. The default node pool for the Kubernetes cluster."
+  default = {
+    name       = "systempool"
+    node_count = 3
+  }
+  description = "The default node pool for the Kubernetes cluster."
   nullable    = false
 
   validation {
     condition     = !var.default_node_pool.auto_scaling_enabled || var.default_node_pool.type == "VirtualMachineScaleSets"
     error_message = "Autoscaling on default node pools is only supported when the Kubernetes Cluster is using Virtual Machine Scale Sets type nodes."
   }
-}
-
-variable "location" {
-  type        = string
-  description = "Azure region where the resource should be deployed."
-  nullable    = false
-}
-
-variable "name" {
-  type        = string
-  description = "The name of this resource."
-  nullable    = false
-
   validation {
-    condition     = can(regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-_]{0,61}[a-zA-Z0-9])?$", var.name))
-    error_message = "The name must be between 1 and 63 characters long and can only contain lowercase letters, numbers and hyphens."
+    condition     = !var.default_node_pool.auto_scaling_enabled || var.sku.name != "Automatic"
+    error_message = "Auto scaling cannot be manually configured when using 'Automatic' SKU. Azure handles scaling automatically."
   }
-}
-
-# This is required for most resource modules
-variable "resource_group_name" {
-  type        = string
-  description = "The resource group where the resources will be deployed."
-  nullable    = false
-}
-
-variable "aci_connector_linux_subnet_name" {
-  type        = string
-  default     = null
-  description = "The subnet name for the ACI connector Linux."
-}
-
-variable "advanced_networking" {
-  type = object({
-    enabled               = optional(bool, false)
-    observability_enabled = optional(bool, false)
-    security_enabled      = optional(bool, false)
-  })
-  default = {
-    enabled               = false
-    observability_enabled = false
-    security_enabled      = false
-  }
-  description = "Advanced networking feature toggles: master enable plus optional observability and security sub-features."
-
-  validation {
-    condition     = (!var.advanced_networking.observability_enabled && !var.advanced_networking.security_enabled) || var.advanced_networking.enabled
-    error_message = "`advanced_networking.enabled` must be true when either sub-feature is enabled."
-  }
-}
-
-variable "api_server_access_profile" {
-  type = object({
-    authorized_ip_ranges = optional(set(string))
-  })
-  default     = null
-  description = <<-EOT
- - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
- EOT
-}
-
-variable "auto_scaler_profile" {
-  type = object({
-    balance_similar_node_groups                   = optional(string)
-    daemonset_eviction_for_empty_nodes_enabled    = optional(string)
-    daemonset_eviction_for_occupied_nodes_enabled = optional(string)
-    empty_bulk_delete_max                         = optional(string)
-    expander                                      = optional(string)
-    ignore_daemonsets_utilization_enabled         = optional(string)
-    max_graceful_termination_sec                  = optional(string)
-    max_node_provisioning_time                    = optional(string)
-    max_unready_nodes                             = optional(string)
-    max_unready_percentage                        = optional(string)
-    new_pod_scale_up_delay                        = optional(string)
-    scale_down_delay_after_add                    = optional(string)
-    scale_down_delay_after_delete                 = optional(string)
-    scale_down_delay_after_failure                = optional(string)
-    scale_down_unneeded                           = optional(string)
-    scale_down_unready                            = optional(string)
-    scale_down_utilization_threshold              = optional(string)
-    scan_interval                                 = optional(string)
-    skip_nodes_with_local_storage                 = optional(string)
-    skip_nodes_with_system_pods                   = optional(string)
-  })
-  default     = null
-  description = "The auto scaler profile for the Kubernetes cluster."
-}
-
-variable "automatic_upgrade_channel" {
-  type        = string
-  default     = null
-  description = "(Optional) The upgrade channel for this Kubernetes Cluster. Possible values are `patch`, `rapid`, `node-image` and `stable`. By default automatic-upgrades are turned off. Note that you cannot specify the patch version using `kubernetes_version` or `orchestrator_version` when using the `patch` upgrade channel. See [the documentation](https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-cluster) for more information"
-
-  validation {
-    condition = var.automatic_upgrade_channel == null ? true : contains([
-      "patch", "stable", "rapid", "node-image"
-    ], var.automatic_upgrade_channel)
-    error_message = "`automatic_upgrade_channel`'s possible values are `patch`, `stable`, `rapid` or `node-image`."
-  }
-}
-
-variable "azure_active_directory_role_based_access_control" {
-  type = object({
-    tenant_id              = optional(string)
-    admin_group_object_ids = optional(list(string))
-    azure_rbac_enabled     = optional(bool)
-  })
-  default     = null
-  description = "The Azure Active Directory role-based access control for the Kubernetes cluster."
-}
-
-variable "azure_policy_enabled" {
-  type        = bool
-  default     = true
-  description = "Whether or not Azure Policy is enabled for the Kubernetes cluster."
-}
-
-variable "cluster_suffix" {
-  type        = string
-  default     = ""
-  description = "Optional. The suffix to append to the Kubernetes cluster name if create_before_destroy is set to true on the nodepools."
-}
-
-variable "confidential_computing" {
-  type = object({
-    sgx_quote_helper_enabled = bool
-  })
-  default     = null
-  description = <<-EOT
- - `sgx_quote_helper_enabled` - (Required) Should the SGX quote helper be enabled?
-EOT
-}
-
-variable "cost_analysis_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether or not cost analysis is enabled for the Kubernetes cluster. SKU must be Standard or Premium."
-}
-
-variable "create_nodepools_before_destroy" {
-  type        = bool
-  default     = false
-  description = "Whether or not to create node pools before destroying the old ones. This is the opposite of the default behavior. Set this to true if zero downtime is required during nodepool redeployments such as changes to snapshot_id."
-  nullable    = false
-}
-
-variable "default_nginx_controller" {
-  type        = string
-  default     = "AnnotationControlled"
-  description = "Specifies the ingress type for the default nginx ingress controller."
 }
 
 variable "defender_log_analytics_workspace_id" {
@@ -307,6 +325,7 @@ DESCRIPTION
   }
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "disk_encryption_set_id" {
   type        = string
   default     = null
@@ -335,6 +354,7 @@ variable "dns_prefix_private_cluster" {
   }
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "edge_zone" {
   type        = string
   default     = null
@@ -352,12 +372,7 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "http_application_routing_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether or not HTTP application routing is enabled for the Kubernetes cluster."
-}
-
+# tflint-ignore: terraform_unused_declarations
 variable "http_proxy_config" {
   type = object({
     http_proxy  = optional(string)
@@ -387,6 +402,7 @@ variable "image_cleaner_interval_hours" {
   }
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "ingress_application_gateway" {
   type = object({
     gateway_id   = optional(string)
@@ -407,6 +423,7 @@ variable "key_management_service" {
   description = "The key management service for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "key_vault_secrets_provider" {
   type = object({
     secret_rotation_enabled  = optional(bool)
@@ -416,6 +433,7 @@ variable "key_vault_secrets_provider" {
   description = "The key vault secrets provider for the Kubernetes cluster. Either rotation enabled or rotation interval must be specified."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "kubelet_identity" {
   type = object({
     client_id                 = optional(string)
@@ -442,6 +460,7 @@ variable "kubernetes_cluster_node_pool_timeouts" {
 EOT
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "kubernetes_cluster_timeouts" {
   type = object({
     create = optional(string)
@@ -464,6 +483,7 @@ variable "kubernetes_version" {
   description = "The version of Kubernetes to use for the managed cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "linux_profile" {
   type = object({
     admin_username = string
@@ -473,6 +493,7 @@ variable "linux_profile" {
   description = "The Linux profile for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "local_account_disabled" {
   type        = bool
   default     = true
@@ -499,6 +520,13 @@ DESCRIPTION
   }
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  default     = null
+  description = "The Log Analytics Workspace Resource ID for container logging."
+}
+
+# tflint-ignore: terraform_unused_declarations
 variable "maintenance_window" {
   type = object({
     allowed = object({
@@ -514,10 +542,11 @@ variable "maintenance_window" {
   description = "The maintenance window for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "maintenance_window_auto_upgrade" {
   type = object({
     frequency    = string
-    interval     = string
+    interval     = number
     duration     = number
     day_of_week  = optional(string)
     day_of_month = optional(number)
@@ -534,10 +563,11 @@ variable "maintenance_window_auto_upgrade" {
   description = "values for maintenance window auto upgrade"
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "maintenance_window_node_os" {
   type = object({
     frequency    = string
-    interval     = string
+    interval     = number
     duration     = number
     day_of_week  = optional(string)
     day_of_month = optional(number)
@@ -576,6 +606,12 @@ variable "monitor_metrics" {
   })
   default     = null
   description = "The monitor metrics for the Kubernetes cluster. Both required if enabling Prometheus"
+}
+
+variable "monitor_workspace_id" {
+  type        = string
+  default     = null
+  description = "The Microsoft Monitor Workspace Resource ID for monitoring."
 }
 
 variable "network_profile" {
@@ -756,6 +792,7 @@ variable "node_pools" {
   description = "Optional. The additional node pools for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "node_resource_group_name" {
   type        = string
   default     = null
@@ -774,13 +811,34 @@ variable "oms_agent" {
     msi_auth_for_monitoring_enabled = optional(bool)
   })
   default     = null
-  description = "Optional. The OMS agent for the Kubernetes cluster."
+  description = "Optional. The OMS agent configuration for the Kubernetes cluster."
 }
 
-variable "open_service_mesh_enabled" {
+variable "onboard_alerts" {
   type        = bool
   default     = false
-  description = "Whether or not open service mesh is enabled for the Kubernetes cluster."
+  description = "Whether to enable recommended alerts. Set to false to disable alerts even if monitoring is enabled and alert_email is provided."
+
+  validation {
+    condition     = !var.onboard_alerts || (var.alert_email != null && trimspace(var.alert_email) != "")
+    error_message = "When `onboard_alerts` is true, `alert_email` must be provided."
+  }
+}
+
+variable "onboard_monitoring" {
+  type        = bool
+  default     = false
+  description = "Whether to enable monitoring resources. Set to false to disable monitoring even if workspace IDs are provided."
+
+  validation {
+    condition = !var.onboard_monitoring || (
+      var.monitor_workspace_id != null && trimspace(var.monitor_workspace_id) != "" && (
+        (var.log_analytics_workspace_id != null && trimspace(var.log_analytics_workspace_id) != "") ||
+        (var.oms_agent != null && var.oms_agent.log_analytics_workspace_id != null && trimspace(var.oms_agent.log_analytics_workspace_id) != "")
+      )
+    )
+    error_message = "When `onboard_monitoring` is true, provide `monitor_workspace_id` and either `log_analytics_workspace_id` or `oms_agent.log_analytics_workspace_id`."
+  }
 }
 
 variable "private_cluster_enabled" {
@@ -914,12 +972,14 @@ variable "role_based_access_control_enabled" {
   description = "Whether or not role-based access control is enabled for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "run_command_enabled" {
   type        = bool
   default     = false
   description = "Whether or not the run command is enabled for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "service_mesh_profile" {
   type = object({
     mode                             = string
@@ -938,6 +998,7 @@ variable "service_mesh_profile" {
   description = "The service mesh profile for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "service_principal" {
   type = object({
     client_id     = string
@@ -945,6 +1006,28 @@ variable "service_principal" {
   })
   default     = null
   description = "The service principal for the Kubernetes cluster. Only specify this or identity, not both."
+}
+
+# tflint-ignore: terraform_unused_declarations
+variable "sku" {
+  type = object({
+    name = string
+    tier = string
+  })
+  default = {
+    name = "Base"
+    tier = "Standard"
+  }
+  description = "The SKU configuration for the cluster, including name and tier."
+
+  validation {
+    condition     = can(regex("^(Free|Base|Standard|Automatic)$", var.sku.name)) && can(regex("^(Free|Standard)$", var.sku.tier))
+    error_message = "The SKU name must be one of: 'Free', 'Base', 'Standard', or 'Automatic' and the tier must be one of: 'Free' or 'Standard'."
+  }
+  validation {
+    condition     = var.sku.name != "Automatic" || var.sku.tier == "Standard"
+    error_message = "When SKU name is 'Automatic', the tier must be 'Standard'."
+  }
 }
 
 variable "sku_tier" {
@@ -958,6 +1041,7 @@ variable "sku_tier" {
   }
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "storage_profile" {
   type = object({
     blob_driver_enabled         = optional(bool),
@@ -969,6 +1053,7 @@ variable "storage_profile" {
   description = "Optional. The storage profile for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "support_plan" {
   type        = string
   default     = "KubernetesOfficial"
@@ -986,6 +1071,7 @@ variable "tags" {
   description = "(Optional) Tags of the resource."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "upgrade_override" {
   type = object({
     force_upgrade_enabled = bool
@@ -995,12 +1081,14 @@ variable "upgrade_override" {
   description = "(Optional) The upgrade override for the Kubernetes cluster. Once set, this block cannot be removed from the configuration. This is used to force an upgrade of the cluster even if it is not required. The `effective_until` field is used to specify the date until which the override is effective."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "web_app_routing_dns_zone_ids" {
   type        = map(list(string))
   default     = {}
   description = "The web app routing DNS zone IDs for the Kubernetes cluster."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "windows_profile" {
   type = object({
     admin_username = string
@@ -1019,6 +1107,7 @@ variable "windows_profile" {
   }
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "windows_profile_password" {
   type        = string
   default     = null
@@ -1031,6 +1120,7 @@ variable "windows_profile_password" {
   }
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "workload_autoscaler_profile" {
   type = object({
     keda_enabled = optional(bool)

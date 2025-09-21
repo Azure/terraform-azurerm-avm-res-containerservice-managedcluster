@@ -62,6 +62,14 @@ data "azurerm_client_config" "current" {}
 module "create_before_destroy" {
   source = "../.."
 
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
+  create_nodepools_before_destroy = true
   default_node_pool = {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
@@ -75,15 +83,7 @@ module "create_before_destroy" {
       max_surge = "10%"
     }
   }
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-  }
-  create_nodepools_before_destroy = true
-  dns_prefix                      = "createexample"
+  dns_prefix = "createexample"
   managed_identities = {
     system_assigned = true
   }
