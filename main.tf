@@ -69,7 +69,7 @@ resource "azapi_resource" "this" {
       apiServerAccessProfile = (var.api_server_access_profile != null || var.private_cluster_enabled) ? {
         authorizedIPRanges   = try(var.api_server_access_profile.authorized_ip_ranges, null)
         enablePrivateCluster = var.private_cluster_enabled
-        privateDnsZoneId     = var.private_cluster_enabled ? var.private_dns_zone_id : null
+        privateDnsZone       = var.private_cluster_enabled ? var.private_dns_zone_id : null
       } : null
       autoUpgradeProfile = (var.automatic_upgrade_channel != null || var.node_os_channel_upgrade != null) ? {
         upgradeChannel       = var.automatic_upgrade_channel
@@ -80,7 +80,7 @@ resource "azapi_resource" "this" {
         workloadIdentity = var.workload_identity_enabled ? { enabled = true } : null
         imageCleaner     = var.image_cleaner_enabled ? { enabled = true, intervalHours = var.image_cleaner_interval_hours } : null
         defender         = var.defender_log_analytics_workspace_id != null ? { logAnalyticsWorkspaceResourceId = var.defender_log_analytics_workspace_id } : null
-      } : {
+        } : {
         workloadIdentity = null
         imageCleaner     = null
         defender         = null
@@ -118,9 +118,13 @@ resource "azapi_resource" "this" {
   tags           = var.tags
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
-  identity {
-    type         = try(local.managed_identities.system_assigned_user_assigned.this.type, "SystemAssigned")
-    identity_ids = try(local.managed_identities.system_assigned_user_assigned.this.user_assigned_resource_ids, null)
+  # Only UMI is supported
+  dynamic "identity" {
+    for_each = length(keys(local.managed_identities.user_assigned)) > 0 ? [1] : []
+    content {
+      type         = "UserAssigned"
+      identity_ids = local.managed_identities.user_assigned.this.user_assigned_resource_ids
+    }
   }
 
   lifecycle {
