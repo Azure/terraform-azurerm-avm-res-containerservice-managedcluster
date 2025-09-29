@@ -40,7 +40,6 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.this_get](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.this_admin_kubeconfig](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.this_user_kubeconfig](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
@@ -60,113 +59,6 @@ The following resources are used by this module:
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_default_node_pool"></a> [default\_node\_pool](#input\_default\_node\_pool)
-
-Description: Required. The default node pool for the Kubernetes cluster.
-
-Type:
-
-```hcl
-object({
-    name                          = string
-    vm_size                       = string
-    capacity_reservation_group_id = optional(string)
-    auto_scaling_enabled          = optional(bool, false)
-    host_encryption_enabled       = optional(bool)
-    node_public_ip_enabled        = optional(bool)
-    gpu_instance                  = optional(string)
-    host_group_id                 = optional(string)
-    fips_enabled                  = optional(bool)
-    kubelet_disk_type             = optional(string)
-    max_pods                      = optional(number)
-    node_public_ip_prefix_id      = optional(string)
-    node_labels                   = optional(map(string))
-    only_critical_addons_enabled  = optional(string)
-    orchestrator_version          = optional(string)
-    os_disk_size_gb               = optional(string)
-    os_disk_type                  = optional(string)
-    os_sku                        = optional(string)
-    pod_subnet_id                 = optional(string)
-    proximity_placement_group_id  = optional(string)
-    scale_down_mode               = optional(string)
-    snapshot_id                   = optional(string)
-    temporary_name_for_rotation   = optional(string)
-    type                          = optional(string, "VirtualMachineScaleSets")
-    tags                          = optional(map(string))
-    ultra_ssd_enabled             = optional(bool)
-    vnet_subnet_id                = optional(string)
-    workload_runtime              = optional(string)
-    zones                         = optional(list(string))
-    max_count                     = optional(number)
-    min_count                     = optional(number)
-    node_count                    = optional(number)
-    kubelet_config = optional(object({
-      cpu_manager_policy        = optional(string)
-      cpu_cfs_quota_enabled     = optional(bool, true)
-      cpu_cfs_quota_period      = optional(string)
-      image_gc_high_threshold   = optional(number)
-      image_gc_low_threshold    = optional(number)
-      topology_manager_policy   = optional(string)
-      allowed_unsafe_sysctls    = optional(set(string))
-      container_log_max_size_mb = optional(number)
-      container_log_max_line    = optional(number)
-      pod_max_pid               = optional(number)
-    }))
-    linux_os_config = optional(object({
-      sysctl_config = optional(object({
-        fs_aio_max_nr                      = optional(number)
-        fs_file_max                        = optional(number)
-        fs_inotify_max_user_watches        = optional(number)
-        fs_nr_open                         = optional(number)
-        kernel_threads_max                 = optional(number)
-        net_core_netdev_max_backlog        = optional(number)
-        net_core_optmem_max                = optional(number)
-        net_core_rmem_default              = optional(number)
-        net_core_rmem_max                  = optional(number)
-        net_core_somaxconn                 = optional(number)
-        net_core_wmem_default              = optional(number)
-        net_core_wmem_max                  = optional(number)
-        net_ipv4_ip_local_port_range_min   = optional(number)
-        net_ipv4_ip_local_port_range_max   = optional(number)
-        net_ipv4_neigh_default_gc_thresh1  = optional(number)
-        net_ipv4_neigh_default_gc_thresh2  = optional(number)
-        net_ipv4_neigh_default_gc_thresh3  = optional(number)
-        net_ipv4_tcp_fin_timeout           = optional(number)
-        net_ipv4_tcp_keepalive_intvl       = optional(number)
-        net_ipv4_tcp_keepalive_probes      = optional(number)
-        net_ipv4_tcp_keepalive_time        = optional(number)
-        net_ipv4_tcp_max_syn_backlog       = optional(number)
-        net_ipv4_tcp_max_tw_buckets        = optional(number)
-        net_ipv4_tcp_tw_reuse              = optional(bool)
-        net_netfilter_nf_conntrack_buckets = optional(number)
-        net_netfilter_nf_conntrack_max     = optional(number)
-        vm_max_map_count                   = optional(number)
-        vm_swappiness                      = optional(number)
-        vm_vfs_cache_pressure              = optional(number)
-      }))
-
-      transparent_huge_page_enabled = optional(string)
-      transparent_huge_page_defrag  = optional(string)
-      swap_file_size_mb             = optional(number)
-    }))
-    node_network_profile = optional(object({
-      application_security_group_ids = optional(list(string))
-      node_public_ip_tags            = optional(map(string))
-      allowed_host_ports = optional(list(object({
-        port_end   = optional(number)
-        port_start = optional(number)
-        protocol   = optional(string)
-      })))
-    }))
-    upgrade_settings = optional(object({
-      drain_timeout_in_minutes      = optional(number)
-      node_soak_duration_in_minutes = optional(number)
-      max_surge                     = string
-    }))
-
-  })
-```
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -221,6 +113,14 @@ Default:
   "security_enabled": false
 }
 ```
+
+### <a name="input_alert_email"></a> [alert\_email](#input\_alert\_email)
+
+Description: The email address to send alerts to.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_api_server_access_profile"></a> [api\_server\_access\_profile](#input\_api\_server\_access\_profile)
 
@@ -347,6 +247,122 @@ Type: `string`
 
 Default: `"AnnotationControlled"`
 
+### <a name="input_default_node_pool"></a> [default\_node\_pool](#input\_default\_node\_pool)
+
+Description: The default node pool for the Kubernetes cluster.
+
+Type:
+
+```hcl
+object({
+    name                          = optional(string, "systempool")
+    vm_size                       = optional(string)
+    capacity_reservation_group_id = optional(string)
+    auto_scaling_enabled          = optional(bool, false)
+    host_encryption_enabled       = optional(bool)
+    node_public_ip_enabled        = optional(bool)
+    gpu_instance                  = optional(string)
+    host_group_id                 = optional(string)
+    fips_enabled                  = optional(bool)
+    kubelet_disk_type             = optional(string)
+    max_pods                      = optional(number)
+    node_public_ip_prefix_id      = optional(string)
+    node_labels                   = optional(map(string))
+    only_critical_addons_enabled  = optional(string)
+    orchestrator_version          = optional(string)
+    os_disk_size_gb               = optional(string)
+    os_disk_type                  = optional(string)
+    os_sku                        = optional(string)
+    pod_subnet_id                 = optional(string)
+    proximity_placement_group_id  = optional(string)
+    scale_down_mode               = optional(string)
+    snapshot_id                   = optional(string)
+    temporary_name_for_rotation   = optional(string)
+    type                          = optional(string, "VirtualMachineScaleSets")
+    tags                          = optional(map(string))
+    ultra_ssd_enabled             = optional(bool)
+    vnet_subnet_id                = optional(string)
+    workload_runtime              = optional(string)
+    zones                         = optional(list(string))
+    max_count                     = optional(number)
+    min_count                     = optional(number)
+    node_count                    = optional(number, 3)
+    kubelet_config = optional(object({
+      cpu_manager_policy        = optional(string)
+      cpu_cfs_quota_enabled     = optional(bool, true)
+      cpu_cfs_quota_period      = optional(string)
+      image_gc_high_threshold   = optional(number)
+      image_gc_low_threshold    = optional(number)
+      topology_manager_policy   = optional(string)
+      allowed_unsafe_sysctls    = optional(set(string))
+      container_log_max_size_mb = optional(number)
+      container_log_max_line    = optional(number)
+      pod_max_pid               = optional(number)
+    }))
+    linux_os_config = optional(object({
+      sysctl_config = optional(object({
+        fs_aio_max_nr                      = optional(number)
+        fs_file_max                        = optional(number)
+        fs_inotify_max_user_watches        = optional(number)
+        fs_nr_open                         = optional(number)
+        kernel_threads_max                 = optional(number)
+        net_core_netdev_max_backlog        = optional(number)
+        net_core_optmem_max                = optional(number)
+        net_core_rmem_default              = optional(number)
+        net_core_rmem_max                  = optional(number)
+        net_core_somaxconn                 = optional(number)
+        net_core_wmem_default              = optional(number)
+        net_core_wmem_max                  = optional(number)
+        net_ipv4_ip_local_port_range_min   = optional(number)
+        net_ipv4_ip_local_port_range_max   = optional(number)
+        net_ipv4_neigh_default_gc_thresh1  = optional(number)
+        net_ipv4_neigh_default_gc_thresh2  = optional(number)
+        net_ipv4_neigh_default_gc_thresh3  = optional(number)
+        net_ipv4_tcp_fin_timeout           = optional(number)
+        net_ipv4_tcp_keepalive_intvl       = optional(number)
+        net_ipv4_tcp_keepalive_probes      = optional(number)
+        net_ipv4_tcp_keepalive_time        = optional(number)
+        net_ipv4_tcp_max_syn_backlog       = optional(number)
+        net_ipv4_tcp_max_tw_buckets        = optional(number)
+        net_ipv4_tcp_tw_reuse              = optional(bool)
+        net_netfilter_nf_conntrack_buckets = optional(number)
+        net_netfilter_nf_conntrack_max     = optional(number)
+        vm_max_map_count                   = optional(number)
+        vm_swappiness                      = optional(number)
+        vm_vfs_cache_pressure              = optional(number)
+      }))
+
+      transparent_huge_page_enabled = optional(string)
+      transparent_huge_page_defrag  = optional(string)
+      swap_file_size_mb             = optional(number)
+    }))
+    node_network_profile = optional(object({
+      application_security_group_ids = optional(list(string))
+      node_public_ip_tags            = optional(map(string))
+      allowed_host_ports = optional(list(object({
+        port_end   = optional(number)
+        port_start = optional(number)
+        protocol   = optional(string)
+      })))
+    }))
+    upgrade_settings = optional(object({
+      drain_timeout_in_minutes      = optional(number)
+      node_soak_duration_in_minutes = optional(number)
+      max_surge                     = string
+    }))
+
+  })
+```
+
+Default:
+
+```json
+{
+  "name": "systempool",
+  "node_count": 3
+}
+```
+
 ### <a name="input_defender_log_analytics_workspace_id"></a> [defender\_log\_analytics\_workspace\_id](#input\_defender\_log\_analytics\_workspace\_id)
 
 Description: The log analytics workspace ID for the Microsoft Defender.
@@ -423,21 +439,13 @@ Default: `null`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
 Default: `true`
-
-### <a name="input_http_application_routing_enabled"></a> [http\_application\_routing\_enabled](#input\_http\_application\_routing\_enabled)
-
-Description: Whether or not HTTP application routing is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `false`
 
 ### <a name="input_http_proxy_config"></a> [http\_proxy\_config](#input\_http\_proxy\_config)
 
@@ -624,6 +632,14 @@ object({
 
 Default: `null`
 
+### <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id)
+
+Description: The Log Analytics Workspace Resource ID for container logging.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_maintenance_window"></a> [maintenance\_window](#input\_maintenance\_window)
 
 Description: The maintenance window for the Kubernetes cluster.
@@ -654,7 +670,7 @@ Type:
 ```hcl
 object({
     frequency    = string
-    interval     = string
+    interval     = number
     duration     = number
     day_of_week  = optional(string)
     day_of_month = optional(number)
@@ -680,7 +696,7 @@ Type:
 ```hcl
 object({
     frequency    = string
-    interval     = string
+    interval     = number
     duration     = number
     day_of_week  = optional(string)
     day_of_month = optional(number)
@@ -727,6 +743,14 @@ object({
     labels_allowed      = optional(string)
   })
 ```
+
+Default: `null`
+
+### <a name="input_monitor_workspace_id"></a> [monitor\_workspace\_id](#input\_monitor\_workspace\_id)
+
+Description: The Microsoft Monitor Workspace Resource ID for monitoring.
+
+Type: `string`
 
 Default: `null`
 
@@ -914,7 +938,7 @@ Default: `false`
 
 ### <a name="input_oms_agent"></a> [oms\_agent](#input\_oms\_agent)
 
-Description: Optional. The OMS agent for the Kubernetes cluster.
+Description: Optional. The OMS agent configuration for the Kubernetes cluster.
 
 Type:
 
@@ -927,9 +951,17 @@ object({
 
 Default: `null`
 
-### <a name="input_open_service_mesh_enabled"></a> [open\_service\_mesh\_enabled](#input\_open\_service\_mesh\_enabled)
+### <a name="input_onboard_alerts"></a> [onboard\_alerts](#input\_onboard\_alerts)
 
-Description: Whether or not open service mesh is enabled for the Kubernetes cluster.
+Description: Whether to enable recommended alerts. Set to false to disable alerts even if monitoring is enabled and alert\_email is provided.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_onboard_monitoring"></a> [onboard\_monitoring](#input\_onboard\_monitoring)
+
+Description: Whether to enable monitoring resources. Set to false to disable monitoring even if workspace IDs are provided.
 
 Type: `bool`
 
@@ -1123,6 +1155,28 @@ object({
 
 Default: `null`
 
+### <a name="input_sku"></a> [sku](#input\_sku)
+
+Description: The SKU configuration for the cluster, including name and tier.
+
+Type:
+
+```hcl
+object({
+    name = string
+    tier = string
+  })
+```
+
+Default:
+
+```json
+{
+  "name": "Base",
+  "tier": "Standard"
+}
+```
+
 ### <a name="input_sku_tier"></a> [sku\_tier](#input\_sku\_tier)
 
 Description: The SKU tier of the Kubernetes Cluster. Possible values are Free, Standard, and Premium.
@@ -1313,6 +1367,10 @@ Description: Map of identity profile keys to clientIds.
 
 Description: Map of identity profile keys to principalIds.
 
+### <a name="output_web_app_routing_client_id"></a> [web\_app\_routing\_client\_id](#output\_web\_app\_routing\_client\_id)
+
+Description: The object ID of the web app routing identity
+
 ### <a name="output_web_app_routing_object_id"></a> [web\_app\_routing\_object\_id](#output\_web\_app\_routing\_object\_id)
 
 Description: Web app routing identity object id (not currently extracted).
@@ -1320,6 +1378,24 @@ Description: Web app routing identity object id (not currently extracted).
 ## Modules
 
 The following Modules are called:
+
+### <a name="module_alerting"></a> [alerting](#module\_alerting)
+
+Source: ./modules/alerting
+
+Version:
+
+### <a name="module_maintenance_auto_upgrade"></a> [maintenance\_auto\_upgrade](#module\_maintenance\_auto\_upgrade)
+
+Source: ./modules/maintenanceconfiguration
+
+Version:
+
+### <a name="module_monitoring"></a> [monitoring](#module\_monitoring)
+
+Source: ./modules/monitoring
+
+Version:
 
 ### <a name="module_nodepools"></a> [nodepools](#module\_nodepools)
 

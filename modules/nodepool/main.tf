@@ -19,49 +19,11 @@ moved {
 }
 
 locals {
-  # Build sysctls map (filter out nulls) combining min/max port range if both provided
-  _sysctls = var.linux_os_config == null || var.linux_os_config.sysctl_config == null ? {} : {
-    fsAioMaxNr              = var.linux_os_config.sysctl_config.fs_aio_max_nr
-    fsFileMax               = var.linux_os_config.sysctl_config.fs_file_max
-    fsInotifyMaxUserWatches = var.linux_os_config.sysctl_config.fs_inotify_max_user_watches
-    fsNrOpen                = var.linux_os_config.sysctl_config.fs_nr_open
-    kernelThreadsMax        = var.linux_os_config.sysctl_config.kernel_threads_max
-    netCoreNetdevMaxBacklog = var.linux_os_config.sysctl_config.net_core_netdev_max_backlog
-    netCoreOptmemMax        = var.linux_os_config.sysctl_config.net_core_optmem_max
-    netCoreRmemDefault      = var.linux_os_config.sysctl_config.net_core_rmem_default
-    netCoreRmemMax          = var.linux_os_config.sysctl_config.net_core_rmem_max
-    netCoreSomaxconn        = var.linux_os_config.sysctl_config.net_core_somaxconn
-    netCoreWmemDefault      = var.linux_os_config.sysctl_config.net_core_wmem_default
-    netCoreWmemMax          = var.linux_os_config.sysctl_config.net_core_wmem_max
-    netIpv4IpLocalPortRange = (
-      var.linux_os_config.sysctl_config.net_ipv4_ip_local_port_range_min != null &&
-      var.linux_os_config.sysctl_config.net_ipv4_ip_local_port_range_max != null
-      ) ? (
-      format("%d %d",
-        var.linux_os_config.sysctl_config.net_ipv4_ip_local_port_range_min,
-        var.linux_os_config.sysctl_config.net_ipv4_ip_local_port_range_max
-      )
-    ) : null
-    netIpv4NeighDefaultGcThresh1   = var.linux_os_config.sysctl_config.net_ipv4_neigh_default_gc_thresh1
-    netIpv4NeighDefaultGcThresh2   = var.linux_os_config.sysctl_config.net_ipv4_neigh_default_gc_thresh2
-    netIpv4NeighDefaultGcThresh3   = var.linux_os_config.sysctl_config.net_ipv4_neigh_default_gc_thresh3
-    netIpv4TcpFinTimeout           = var.linux_os_config.sysctl_config.net_ipv4_tcp_fin_timeout
-    netIpv4TcpKeepaliveProbes      = var.linux_os_config.sysctl_config.net_ipv4_tcp_keepalive_probes
-    netIpv4TcpkeepaliveIntvl       = var.linux_os_config.sysctl_config.net_ipv4_tcp_keepalive_intvl
-    netIpv4TcpKeepaliveTime        = var.linux_os_config.sysctl_config.net_ipv4_tcp_keepalive_time
-    netIpv4TcpMaxSynBacklog        = var.linux_os_config.sysctl_config.net_ipv4_tcp_max_syn_backlog
-    netIpv4TcpMaxTwBuckets         = var.linux_os_config.sysctl_config.net_ipv4_tcp_max_tw_buckets
-    netIpv4TcpTwReuse              = var.linux_os_config.sysctl_config.net_ipv4_tcp_tw_reuse
-    netNetfilterNfConntrackBuckets = var.linux_os_config.sysctl_config.net_netfilter_nf_conntrack_buckets
-    netNetfilterNfConntrackMax     = var.linux_os_config.sysctl_config.net_netfilter_nf_conntrack_max
-    vmMaxMapCount                  = var.linux_os_config.sysctl_config.vm_max_map_count
-    vmSwappiness                   = var.linux_os_config.sysctl_config.vm_swappiness
-    vmVfsCachePressure             = var.linux_os_config.sysctl_config.vm_vfs_cache_pressure
-  }
   agent_pool_properties = { for k, v in local.agent_pool_properties_base : k => v if v != null }
   agent_pool_properties_base = {
     vmSize                     = var.vm_size
     enableAutoScaling          = var.auto_scaling_enabled
+    enableClusterAutoscaler    = var.auto_scaling_enabled
     capacityReservationGroupID = var.capacity_reservation_group_id
     scaleSetEvictionPolicy     = var.eviction_policy
     enableFIPS                 = var.fips_enabled
@@ -109,7 +71,7 @@ locals {
     imageGcHighThreshold  = var.kubelet_config.image_gc_high_threshold
     imageGcLowThreshold   = var.kubelet_config.image_gc_low_threshold
     topologyManagerPolicy = var.kubelet_config.topology_manager_policy
-    allowedUnsafeSysctls  = length(var.kubelet_config.allowed_unsafe_sysctls) == 0 ? null : var.kubelet_config.allowed_unsafe_sysctls
+    allowedUnsafeSysctls  = length(var.kubelet_config.allowed_unsafesysctls_base) == 0 ? null : var.kubelet_config.allowed_unsafesysctls_base
     containerLogMaxSizeMB = var.kubelet_config.container_log_max_size_mb
     containerLogMaxFiles  = var.kubelet_config.container_log_max_line
     podMaxPids            = var.kubelet_config.pod_max_pid
@@ -129,7 +91,46 @@ locals {
       protocol  = p.protocol
     }]
   }
-  sysctls = { for k, v in local._sysctls : k => v if v != null }
+  sysctls = { for k, v in local.sysctls_base : k => v if v != null }
+  # Build sysctls map (filter out nulls) combining min/max port range if both provided
+  sysctls_base = var.linux_os_config == null || var.linux_os_config.sysctl_config == null ? {} : {
+    fsAioMaxNr              = var.linux_os_config.sysctl_config.fs_aio_max_nr
+    fsFileMax               = var.linux_os_config.sysctl_config.fs_file_max
+    fsInotifyMaxUserWatches = var.linux_os_config.sysctl_config.fs_inotify_max_user_watches
+    fsNrOpen                = var.linux_os_config.sysctl_config.fs_nr_open
+    kernelThreadsMax        = var.linux_os_config.sysctl_config.kernel_threads_max
+    netCoreNetdevMaxBacklog = var.linux_os_config.sysctl_config.net_core_netdev_max_backlog
+    netCoreOptmemMax        = var.linux_os_config.sysctl_config.net_core_optmem_max
+    netCoreRmemDefault      = var.linux_os_config.sysctl_config.net_core_rmem_default
+    netCoreRmemMax          = var.linux_os_config.sysctl_config.net_core_rmem_max
+    netCoreSomaxconn        = var.linux_os_config.sysctl_config.net_core_somaxconn
+    netCoreWmemDefault      = var.linux_os_config.sysctl_config.net_core_wmem_default
+    netCoreWmemMax          = var.linux_os_config.sysctl_config.net_core_wmem_max
+    netIpv4IpLocalPortRange = (
+      var.linux_os_config.sysctl_config.net_ipv4_ip_local_port_range_min != null &&
+      var.linux_os_config.sysctl_config.net_ipv4_ip_local_port_range_max != null
+      ) ? (
+      format("%d %d",
+        var.linux_os_config.sysctl_config.net_ipv4_ip_local_port_range_min,
+        var.linux_os_config.sysctl_config.net_ipv4_ip_local_port_range_max
+      )
+    ) : null
+    netIpv4NeighDefaultGcThresh1   = var.linux_os_config.sysctl_config.net_ipv4_neigh_default_gc_thresh1
+    netIpv4NeighDefaultGcThresh2   = var.linux_os_config.sysctl_config.net_ipv4_neigh_default_gc_thresh2
+    netIpv4NeighDefaultGcThresh3   = var.linux_os_config.sysctl_config.net_ipv4_neigh_default_gc_thresh3
+    netIpv4TcpFinTimeout           = var.linux_os_config.sysctl_config.net_ipv4_tcp_fin_timeout
+    netIpv4TcpKeepaliveProbes      = var.linux_os_config.sysctl_config.net_ipv4_tcp_keepalive_probes
+    netIpv4TcpkeepaliveIntvl       = var.linux_os_config.sysctl_config.net_ipv4_tcp_keepalive_intvl
+    netIpv4TcpKeepaliveTime        = var.linux_os_config.sysctl_config.net_ipv4_tcp_keepalive_time
+    netIpv4TcpMaxSynBacklog        = var.linux_os_config.sysctl_config.net_ipv4_tcp_max_syn_backlog
+    netIpv4TcpMaxTwBuckets         = var.linux_os_config.sysctl_config.net_ipv4_tcp_max_tw_buckets
+    netIpv4TcpTwReuse              = var.linux_os_config.sysctl_config.net_ipv4_tcp_tw_reuse
+    netNetfilterNfConntrackBuckets = var.linux_os_config.sysctl_config.net_netfilter_nf_conntrack_buckets
+    netNetfilterNfConntrackMax     = var.linux_os_config.sysctl_config.net_netfilter_nf_conntrack_max
+    vmMaxMapCount                  = var.linux_os_config.sysctl_config.vm_max_map_count
+    vmSwappiness                   = var.linux_os_config.sysctl_config.vm_swappiness
+    vmVfsCachePressure             = var.linux_os_config.sysctl_config.vm_vfs_cache_pressure
+  }
   upgrade_settings_map = var.upgrade_settings == null ? null : {
     maxSurge                  = var.upgrade_settings.max_surge
     drainTimeoutInMinutes     = var.upgrade_settings.drain_timeout_in_minutes
@@ -146,12 +147,13 @@ resource "azapi_resource" "this" {
 
   name      = var.name
   parent_id = var.cluster_resource_id
-  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-05-01"
+  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-07-01"
   body = merge({
     properties = local.agent_pool_properties
   }, var.tags == null ? {} : { tags = var.tags })
-  ignore_null_property   = true
-  response_export_values = ["*"]
+  ignore_null_property      = true
+  response_export_values    = ["*"]
+  schema_validation_enabled = false
 
   timeouts {
     create = try(var.timeouts.create, null)
@@ -181,12 +183,13 @@ resource "azapi_resource" "create_before_destroy_node_pool" {
 
   name      = "${var.name}${substr(md5(uuid()), 0, 4)}"
   parent_id = var.cluster_resource_id
-  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-05-01"
+  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-07-01"
   body = merge({
     properties = local.agent_pool_properties
   }, var.tags == null ? {} : { tags = var.tags })
-  ignore_null_property   = true
-  response_export_values = ["*"]
+  ignore_null_property      = true
+  response_export_values    = ["*"]
+  schema_validation_enabled = false
 
   timeouts {
     create = try(var.timeouts.create, null)

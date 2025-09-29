@@ -21,17 +21,74 @@ provider "azurerm" {
   }
 }
 
-
+# AKS Automatic requires API Server VNet Integration which is not available in all regions yet.
+# See for updated locations: https://learn.microsoft.com/azure/aks/api-server-vnet-integration
 locals {
   locations = [
-    "eastus",
-    "eastus2",
-    "westus2",
-    "centralus",
-    "westeurope",
-    "northeurope",
-    "southeastasia",
-    "japaneast",
+    # "australiacentral",
+    # "australiacentral2",
+    # "australiaeast",
+    # "australiasoutheast",
+    # "austriaeast",
+    # "brazilsouth",
+    # "brazilsoutheast",
+    # "canadacentral",
+    # "canadaeast",
+    # "centralindia",
+    # "centralus",
+    # "centraluseuap",
+    # "chilecentral",
+    # "eastasia",
+    # "eastus",
+    # "francecentral",
+    # "francesouth",
+    # "germanynorth",
+    # "germanywestcentral",
+    # "indonesiacentral",
+    # "israelcentral",
+    # "israelnorthwest",
+    # "italynorth",
+    # "japaneast",
+    # "japanwest",
+    # "jioindiacentral",
+    # "jioindiawest",
+    # "koreacentral",
+    # "koreasouth",
+    # "malaysiawest",
+    # "mexicocentral",
+    # "newzealandnorth",
+    # "northcentralus",
+    # "northeurope",
+    # "norwayeast",
+    # "norwaywest",
+    # "polandcentral",
+    # "southafricanorth",
+    # "southafricawest",
+    # "southcentralus",
+    # "southcentralus2",
+    # "southeastasia",
+    # "southeastus",
+    # "southeastus3",
+    # "southeastus5",
+    # "southindia",
+    # "southwestus",
+    # "spaincentral",
+    "swedencentral",
+    # "swedensouth",
+    # "switzerlandnorth",
+    # "switzerlandwest",
+    # "taiwannorth",
+    # "taiwannorthwest",
+    # "uaecentral",
+    # "uaenorth",
+    # "uksouth",
+    # "ukwest",
+    # "usgovtexas",
+    # "westcentralus",
+    # "westeurope",
+    # "westus",
+    # "westus2",
+    # "westus3"
   ]
 }
 
@@ -58,40 +115,43 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-data "azurerm_client_config" "current" {}
+resource "azurerm_monitor_workspace" "example" {
+  location            = azurerm_resource_group.this.location
+  name                = "prom-${random_integer.region_index.result}"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+module "logs" {
+  source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
+  version = "0.4.2"
+
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.log_analytics_workspace.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+}
 
 module "automatic" {
   source = "../.."
 
-  default_node_pool = {
-    name                 = "default"
-    vm_size              = "Standard_DS2_v2"
-    node_count           = 3
-    min_count            = 3
-    max_count            = 3
-    auto_scaling_enabled = true
-    upgrade_settings = {
-      max_surge = "10%"
-    }
-  }
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-  }
-  dns_prefix = "automaticexample"
+  location                   = azurerm_resource_group.this.location
+  name                       = module.naming.kubernetes_cluster.name_unique
+  resource_group_name        = azurerm_resource_group.this.name
+  alert_email                = "test@example.com"
+  log_analytics_workspace_id = module.logs.resource_id
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
-    interval    = "1"
+    interval    = 1
     day_of_week = "Sunday"
     duration    = 4
     utc_offset  = "+00:00"
     start_time  = "00:00"
-    start_date  = "2024-10-15T00:00:00Z"
+    start_date  = "2025-09-27"
   }
-  managed_identities = {
-    system_assigned = true
+  monitor_workspace_id = azurerm_monitor_workspace.example.id
+  onboard_alerts       = true
+  onboard_monitoring   = true
+  sku = {
+    name = "Automatic"
+    tier = "Standard"
   }
 }

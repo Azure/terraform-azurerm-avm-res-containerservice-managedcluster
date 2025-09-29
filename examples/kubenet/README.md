@@ -69,6 +69,13 @@ data "azurerm_client_config" "current" {}
 module "kubenet" {
   source = "../.."
 
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled = true
+    tenant_id          = data.azurerm_client_config.current.tenant_id
+  }
   default_node_pool = {
     name                         = "default"
     vm_size                      = "Standard_DS2_v2"
@@ -81,13 +88,6 @@ module "kubenet" {
     upgrade_settings = {
       max_surge = "10%"
     }
-  }
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
   }
   dns_prefix = "kubenetexample"
   managed_identities = {

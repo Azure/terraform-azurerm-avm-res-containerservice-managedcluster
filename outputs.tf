@@ -9,7 +9,7 @@ output "cluster_ca_certificate" {
   value = try(
     base64encode(
       yamldecode(
-        try(azapi_resource_action.this_user_kubeconfig.output.kubeconfigs[0].value, "")
+        try(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value, "")
       ).clusters[0].cluster["certificate-authority-data"]
     ),
     null
@@ -21,7 +21,7 @@ output "host" {
   sensitive   = true
   value = try(
     yamldecode(
-      try(azapi_resource_action.this_user_kubeconfig.output.kubeconfigs[0].value, "")
+      try(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value, "")
     ).clusters[0].cluster.server,
     null
   )
@@ -40,18 +40,20 @@ output "key_vault_secrets_provider_object_id" {
 output "kube_admin_config" {
   description = "Admin kubeconfig raw YAML (sensitive)."
   sensitive   = true
-  value       = try(azapi_resource_action.this_admin_kubeconfig.output.kubeconfigs[0].value, null)
+  value       = try(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value, null)
 }
 
 output "kube_config" {
   description = "User kubeconfig raw YAML (sensitive)."
   sensitive   = true
-  value       = try(azapi_resource_action.this_user_kubeconfig.output.kubeconfigs[0].value, null)
+  value       = try(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value, null)
 }
 
 output "kubelet_identity_id" {
   description = "Kubelet identity object id (not currently extracted)."
-  value       = null
+  # Exposed when the managed cluster populates identityProfile.kubeletidentity
+  # If absent (e.g., preview features disabled), this will be null.
+  value = try(azapi_resource.this.output.properties.identityProfile.kubeletidentity.objectId, null)
 }
 
 output "name" {

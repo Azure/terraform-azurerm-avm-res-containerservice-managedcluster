@@ -284,6 +284,7 @@ variable "tags" {
   description = "Optional. A mapping of tags to assign to the resource."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "temporary_name_for_rotation" {
   type        = string
   default     = null
