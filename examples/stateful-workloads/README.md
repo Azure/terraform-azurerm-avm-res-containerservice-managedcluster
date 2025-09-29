@@ -46,7 +46,7 @@ resource "azurerm_resource_group" "this" {
 data "azurerm_client_config" "current" {}
 
 
-# Section to Create the Azure Key Vault 
+# Section to Create the Azure Key Vault
 ######################################################################################################################
 
 module "avm_res_keyvault_vault" {
@@ -127,6 +127,10 @@ resource "azurerm_container_registry_task_schedule_run_now" "this" {
 module "stateful_workloads" {
   source = "../.."
 
+  location                  = azurerm_resource_group.this.location
+  name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
+  resource_group_name       = azurerm_resource_group.this.name
+  automatic_upgrade_channel = "stable"
   default_node_pool = {
     name                    = "systempool"
     node_count              = 3
@@ -134,7 +138,8 @@ module "stateful_workloads" {
     os_type                 = "Linux"
     auto_upgrade_channel    = "stable"
     node_os_upgrade_channel = "NodeImage"
-    zones                   = [2, 3]
+    # Provide zones as strings for consistency with variable type list(string)
+    zones = ["2", "3"]
 
     addon_profile = {
       azure_key_vault_secrets_provider = {
@@ -145,11 +150,7 @@ module "stateful_workloads" {
       max_surge = "10%"
     }
   }
-  location                  = azurerm_resource_group.this.location
-  name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
-  resource_group_name       = azurerm_resource_group.this.name
-  automatic_upgrade_channel = "stable"
-  dns_prefix                = "statefulworkloads"
+  dns_prefix = "statefulworkloads"
   key_vault_secrets_provider = {
     secret_rotation_enabled = true
   }
@@ -351,8 +352,9 @@ Default:
     },
     "vm_size": "Standard_D2ds_v4",
     "zones": [
-      2,
-      3
+      "1",
+      "2",
+      "3"
     ]
   }
 }

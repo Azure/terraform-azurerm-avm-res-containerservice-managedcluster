@@ -84,8 +84,9 @@ variable "node_pools" {
       name       = "valkey"
       vm_size    = "Standard_D2ds_v4"
       node_count = 3
-      zones      = [2, 3]
-      os_type    = "Linux"
+      # Provide zones as strings (variable type list(string))
+      zones   = ["1", "2", "3"]
+      os_type = "Linux"
       upgrade_settings = {
         max_surge = "10%"
       }
