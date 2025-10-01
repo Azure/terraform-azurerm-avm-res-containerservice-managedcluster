@@ -131,6 +131,7 @@ Type:
 ```hcl
 object({
     authorized_ip_ranges = optional(set(string))
+    vnet_subnet_id       = optional(string)
   })
 ```
 
@@ -762,7 +763,7 @@ Type:
 
 ```hcl
 object({
-    network_plugin      = string
+    network_plugin      = optional(string)
     network_mode        = optional(string)
     network_policy      = optional(string)
     dns_service_ip      = optional(string)
