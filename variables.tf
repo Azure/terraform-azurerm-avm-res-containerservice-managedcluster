@@ -638,6 +638,7 @@ variable "node_pools" {
     host_group_id                 = optional(string)
     fips_enabled                  = optional(bool)
     gpu_instance                  = optional(string)
+    gpu_driver                    = optional(string)
     kubelet_disk_type             = optional(string)
     max_pods                      = optional(number)
     mode                          = optional(string)
