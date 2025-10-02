@@ -11,6 +11,7 @@ module "nodepools" {
   create_nodepool_before_destroy = var.create_nodepools_before_destroy
   eviction_policy                = each.value.eviction_policy
   fips_enabled                   = each.value.fips_enabled
+  gpu_driver                     = each.value.gpu_driver
   gpu_instance                   = each.value.gpu_instance
   host_encryption_enabled        = each.value.host_encryption_enabled
   host_group_id                  = each.value.host_group_id

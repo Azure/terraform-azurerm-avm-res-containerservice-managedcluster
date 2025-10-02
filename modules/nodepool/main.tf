@@ -7,6 +7,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   capacity_reservation_group_id = var.capacity_reservation_group_id
   eviction_policy               = var.eviction_policy
   fips_enabled                  = var.fips_enabled
+  gpu_driver                    = var.gpu_driver
   gpu_instance                  = var.gpu_instance
   host_encryption_enabled       = var.host_encryption_enabled
   host_group_id                 = var.host_group_id
