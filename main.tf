@@ -172,7 +172,9 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.api_server_access_profile != null ? [var.api_server_access_profile] : []
 
     content {
-      authorized_ip_ranges = api_server_access_profile.value.authorized_ip_ranges
+      authorized_ip_ranges                = api_server_access_profile.value.authorized_ip_ranges
+      subnet_id                           = api_server_access_profile.value.subnet_id
+      virtual_network_integration_enabled = api_server_access_profile.value.virtual_network_integration_enabled
     }
   }
   # Auto Scaler Configuration

@@ -11,7 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.0.0, < 5.0.0"
+      version = ">= 4.46.0, < 5.0.0"
     }
   }
 }
@@ -46,7 +46,7 @@ resource "azurerm_resource_group" "this" {
 data "azurerm_client_config" "current" {}
 
 
-# Section to Create the Azure Key Vault 
+# Section to Create the Azure Key Vault
 ######################################################################################################################
 
 module "avm_res_keyvault_vault" {
@@ -215,7 +215,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0, < 5.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.0.0)
 
 ## Resources
 
