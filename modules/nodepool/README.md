@@ -11,7 +11,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0, < 5.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.40.0, < 5.0.0)
 
 ## Resources
 
@@ -91,6 +91,14 @@ Default: `null`
 Description: Optional. Whether or not FIPS is enabled.
 
 Type: `bool`
+
+Default: `null`
+
+### <a name="input_gpu_driver"></a> [gpu\_driver](#input\_gpu\_driver)
+
+Description: Optional. Specifies whether to install the GPU Driver for the nodes. Possible values are Install and None. Changing this forces a new resource to be created.
+
+Type: `string`
 
 Default: `null`
 
