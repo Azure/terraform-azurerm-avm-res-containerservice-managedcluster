@@ -57,6 +57,7 @@ variable "alert_email" {
 variable "api_server_access_profile" {
   type = object({
     authorized_ip_ranges = optional(set(string))
+    vnet_subnet_id       = optional(string)
   })
   default     = null
   description = <<-EOT
@@ -616,7 +617,7 @@ variable "monitor_workspace_id" {
 
 variable "network_profile" {
   type = object({
-    network_plugin      = string
+    network_plugin      = optional(string)
     network_mode        = optional(string)
     network_policy      = optional(string)
     dns_service_ip      = optional(string)
