@@ -821,7 +821,7 @@ variable "onboard_alerts" {
   description = "Whether to enable recommended alerts. Set to false to disable alerts even if monitoring is enabled and alert_email is provided."
 
   validation {
-    condition     = !var.onboard_alerts || (var.alert_email != null && trimspace(var.alert_email) != "")
+    condition     = !var.onboard_alerts || (var.alert_email != null && try(trimspace(var.alert_email), "") != "")
     error_message = "When `onboard_alerts` is true, `alert_email` must be provided."
   }
 }
@@ -833,9 +833,9 @@ variable "onboard_monitoring" {
 
   validation {
     condition = !var.onboard_monitoring || (
-      var.monitor_workspace_id != null && trimspace(var.monitor_workspace_id) != "" && (
-        (var.log_analytics_workspace_id != null && trimspace(var.log_analytics_workspace_id) != "") ||
-        (var.oms_agent != null && var.oms_agent.log_analytics_workspace_id != null && trimspace(var.oms_agent.log_analytics_workspace_id) != "")
+      var.monitor_workspace_id != null && try(trimspace(var.monitor_workspace_id), "") != "" && (
+        (var.log_analytics_workspace_id != null && try(trimspace(var.log_analytics_workspace_id), "") != "") ||
+        (var.oms_agent != null && var.oms_agent.log_analytics_workspace_id != null && try(trimspace(var.oms_agent.log_analytics_workspace_id), "") != "")
       )
     )
     error_message = "When `onboard_monitoring` is true, provide `monitor_workspace_id` and either `log_analytics_workspace_id` or `oms_agent.log_analytics_workspace_id`."

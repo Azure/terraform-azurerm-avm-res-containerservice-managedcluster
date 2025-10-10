@@ -15,7 +15,7 @@ module "monitoring" {
 # Alerting module - conditionally instantiated
 module "alerting" {
   source = "./modules/alerting"
-  count  = var.onboard_alerts && var.alert_email != null && trimspace(var.alert_email) != "" ? 1 : 0
+  count  = var.onboard_alerts && var.alert_email != null && try(trimspace(var.alert_email), "") != "" ? 1 : 0
 
   aks_cluster_id      = azapi_resource.this.id
   aks_cluster_name    = azapi_resource.this.name
