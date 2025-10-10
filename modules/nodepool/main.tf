@@ -23,7 +23,6 @@ locals {
   agent_pool_properties_base = {
     vmSize                     = var.vm_size
     enableAutoScaling          = var.auto_scaling_enabled
-    enableClusterAutoscaler    = var.auto_scaling_enabled
     capacityReservationGroupID = var.capacity_reservation_group_id
     scaleSetEvictionPolicy     = var.eviction_policy
     enableFIPS                 = var.fips_enabled
