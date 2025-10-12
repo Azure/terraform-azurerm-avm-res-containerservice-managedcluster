@@ -40,7 +40,7 @@ resource "azapi_resource" "this" {
       error_message = "`onboard_monitoring` requires both `monitor_workspace_id` and `log_analytics_workspace_id` (or legacy `oms_agent.log_analytics_workspace_id`)."
     }
     precondition {
-      condition     = !var.onboard_alerts || (var.alert_email != null && trimspace(var.alert_email) != "")
+      condition     = !var.onboard_alerts || (var.alert_email != null && try(trimspace(var.alert_email), "") != "")
       error_message = "`onboard_alerts` requires a non-empty `alert_email`."
     }
     precondition {

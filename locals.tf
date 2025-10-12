@@ -104,11 +104,11 @@ locals {
   default_node_pool_min_count = var.default_node_pool.min_count == null ? null : tonumber(var.default_node_pool.min_count)
   default_node_pool_name      = coalesce(try(var.default_node_pool.name, null), "systempool")
   is_automatic                = var.sku.name == "Automatic"
-  log_analytics_use_aad_auth  = var.log_analytics_workspace_id != null && trimspace(var.log_analytics_workspace_id) != "" ? true : try(var.oms_agent.msi_auth_for_monitoring_enabled, false)
+  log_analytics_use_aad_auth  = (var.log_analytics_workspace_id != null && try(trimspace(var.log_analytics_workspace_id), "") != "") ? true : try(var.oms_agent.msi_auth_for_monitoring_enabled, false)
   log_analytics_workspace_id = (
-    var.log_analytics_workspace_id != null && trimspace(var.log_analytics_workspace_id) != ""
+    var.log_analytics_workspace_id != null && try(trimspace(var.log_analytics_workspace_id), "") != ""
     ? var.log_analytics_workspace_id
-    : var.oms_agent != null && var.oms_agent.log_analytics_workspace_id != null && trimspace(var.oms_agent.log_analytics_workspace_id) != ""
+    : var.oms_agent != null && var.oms_agent.log_analytics_workspace_id != null && try(trimspace(var.oms_agent.log_analytics_workspace_id), "") != ""
     ? var.oms_agent.log_analytics_workspace_id
     : null
   )
@@ -147,7 +147,7 @@ locals {
       kubeStateMetrics = local.monitor_profile_kube_state_metrics
     } : {}
   )
-  monitor_workspace_id = var.monitor_workspace_id != null && trimspace(var.monitor_workspace_id) != "" ? var.monitor_workspace_id : null
+  monitor_workspace_id = var.monitor_workspace_id != null && try(trimspace(var.monitor_workspace_id), "") != "" ? var.monitor_workspace_id : null
   network_profile_advanced = var.advanced_networking.enabled ? {
     enabled       = true
     observability = var.advanced_networking.observability_enabled ? { enabled = true } : null
