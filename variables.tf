@@ -138,11 +138,15 @@ variable "aci_connector_linux_subnet_name" {
 
 variable "api_server_access_profile" {
   type = object({
-    authorized_ip_ranges = optional(set(string))
+    authorized_ip_ranges                = optional(set(string))
+    subnet_id                           = optional(string)
+    virtual_network_integration_enabled = optional(bool, false)
   })
   default     = null
   description = <<-EOT
  - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
+ - `subnet_id` - (Optional) The ID of the Subnet where the API server endpoint is delegated to.
+ - `virtual_network_integration_enabled` - (Optional) Whether to enable virtual network integration for the API Server. Defaults to false.
  EOT
 }
 

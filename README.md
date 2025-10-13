@@ -29,7 +29,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.40.0, < 5.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.0.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -201,12 +201,16 @@ Default: `null`
 ### <a name="input_api_server_access_profile"></a> [api\_server\_access\_profile](#input\_api\_server\_access\_profile)
 
 Description: - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
+- `subnet_id` - (Optional) The ID of the Subnet where the API server endpoint is delegated to.
+- `virtual_network_integration_enabled` - (Optional) Whether to enable virtual network integration for the API Server. Defaults to false.
 
 Type:
 
 ```hcl
 object({
-    authorized_ip_ranges = optional(set(string))
+    authorized_ip_ranges                = optional(set(string))
+    subnet_id                           = optional(string)
+    virtual_network_integration_enabled = optional(bool, false)
   })
 ```
 
