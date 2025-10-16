@@ -5,7 +5,7 @@ locals {
         enabled = true
         config = {
           logAnalyticsWorkspaceResourceID = var.log_analytics_workspace_id
-          useAADAuth                      = var.oms_agent.msi_auth_for_monitoring_enabled ? "true" : "false"
+          useAADAuth                      = try(var.oms_agent.msi_auth_for_monitoring_enabled, true) ? "true" : "false"
         }
       }
     } : {},
@@ -126,7 +126,7 @@ locals {
   monitor_profile = local.monitor_profile_enabled ? {
     metrics = local.monitor_profile_metrics
   } : null
-  monitor_profile_enabled = var.managed_grafana_workspace_id != null || var.monitor_metrics != null
+  monitor_profile_enabled = var.prometheus_workspace_id != null || var.monitor_metrics != null
   monitor_profile_kube_state_metrics = var.monitor_metrics == null ? null : {
     metricAnnotationsAllowList = coalesce(var.monitor_metrics.annotations_allowed, "")
     metricLabelsAllowlist      = coalesce(var.monitor_metrics.labels_allowed, "")

@@ -704,14 +704,6 @@ object({
 
 Default: `null`
 
-### <a name="input_managed_grafana_workspace_id"></a> [managed\_grafana\_workspace\_id](#input\_managed\_grafana\_workspace\_id)
-
-Description: The Managed Grafana Workspace Resource ID for dashboarding.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
 Description: Controls the Managed Identity configuration on this resource. The following properties can be specified:
@@ -1049,6 +1041,14 @@ Description: Whether to manage private DNS zone groups with this module. If set 
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_prometheus_workspace_id"></a> [prometheus\_workspace\_id](#input\_prometheus\_workspace\_id)
+
+Description: The monitor workspace resource ID for managed Prometheus.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 

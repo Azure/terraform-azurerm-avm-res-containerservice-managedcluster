@@ -50,15 +50,15 @@ Description: The resource ID of the Log Analytics workspace
 
 Type: `string`
 
-### <a name="input_managed_grafana_workspace_id"></a> [managed\_grafana\_workspace\_id](#input\_managed\_grafana\_workspace\_id)
-
-Description: The resource ID of the Azure Monitor workspace for managed Grafana
-
-Type: `string`
-
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
 Description: The resource ID of the parent resource group
+
+Type: `string`
+
+### <a name="input_prometheus_workspace_id"></a> [prometheus\_workspace\_id](#input\_prometheus\_workspace\_id)
+
+Description: The resource ID of the Azure Monitor workspace for managed Prometheus
 
 Type: `string`
 

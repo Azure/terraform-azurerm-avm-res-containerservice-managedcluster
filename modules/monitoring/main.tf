@@ -33,7 +33,7 @@ resource "azapi_resource" "dcr_msprom" {
       destinations = {
         monitoringAccounts = [
           {
-            accountResourceId = var.managed_grafana_workspace_id
+            accountResourceId = var.prometheus_workspace_id
             name              = "MonitoringAccount1"
           }
         ]
@@ -132,7 +132,7 @@ resource "azapi_resource" "prg_node" {
         }
       ]
       scopes = [
-        var.managed_grafana_workspace_id
+        var.prometheus_workspace_id
       ]
     }
   }
@@ -225,7 +225,7 @@ resource "azapi_resource" "prg_ux" {
         },
       ]
       scopes = [
-        var.managed_grafana_workspace_id,
+        var.prometheus_workspace_id,
         var.aks_cluster_id
       ]
     }
@@ -333,7 +333,7 @@ resource "azapi_resource" "prg_k8s" {
         }
       ]
       scopes = [
-        var.managed_grafana_workspace_id,
+        var.prometheus_workspace_id,
       ]
     }
   }
