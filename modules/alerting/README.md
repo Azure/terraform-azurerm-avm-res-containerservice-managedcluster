@@ -32,27 +32,15 @@ Description: The resource ID of the AKS cluster
 
 Type: `string`
 
-### <a name="input_aks_cluster_name"></a> [aks\_cluster\_name](#input\_aks\_cluster\_name)
-
-Description: The name of the AKS cluster
-
-Type: `string`
-
 ### <a name="input_alert_email"></a> [alert\_email](#input\_alert\_email)
 
 Description: Email address for alert notifications
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
-Description: The name of the resource group
-
-Type: `string`
-
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
-
-Description: The Azure subscription ID
+Description: The parent resource group ID
 
 Type: `string`
 

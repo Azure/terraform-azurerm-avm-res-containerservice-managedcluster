@@ -52,7 +52,6 @@ The following resources are used by this module:
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -72,9 +71,9 @@ Description: The name of this resource.
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
-Description: The resource group where the resources will be deployed.
+Description: The resource ID of the parent resource.
 
 Type: `string`
 
@@ -92,27 +91,18 @@ Default: `null`
 
 ### <a name="input_advanced_networking"></a> [advanced\_networking](#input\_advanced\_networking)
 
-Description: Advanced networking feature toggles: master enable plus optional observability and security sub-features.
+Description: Advanced networking feature toggles: observability and security sub-features.
 
 Type:
 
 ```hcl
 object({
-    enabled               = optional(bool, false)
-    observability_enabled = optional(bool, false)
-    security_enabled      = optional(bool, false)
+    observability = optional(bool, false)
+    security      = optional(bool, false)
   })
 ```
 
-Default:
-
-```json
-{
-  "enabled": false,
-  "observability_enabled": false,
-  "security_enabled": false
-}
-```
+Default: `null`
 
 ### <a name="input_alert_email"></a> [alert\_email](#input\_alert\_email)
 
@@ -408,7 +398,7 @@ Default: `{}`
 
 ### <a name="input_disk_encryption_set_id"></a> [disk\_encryption\_set\_id](#input\_disk\_encryption\_set\_id)
 
-Description: The disk encryption set ID for the Kubernetes cluster.
+Description: The disk encryption set resource ID for the Kubernetes cluster.
 
 Type: `string`
 
@@ -714,6 +704,14 @@ object({
 
 Default: `null`
 
+### <a name="input_managed_grafana_workspace_id"></a> [managed\_grafana\_workspace\_id](#input\_managed\_grafana\_workspace\_id)
+
+Description: The Managed Grafana Workspace Resource ID for dashboarding.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
 Description: Controls the Managed Identity configuration on this resource. The following properties can be specified:
@@ -744,14 +742,6 @@ object({
     labels_allowed      = optional(string)
   })
 ```
-
-Default: `null`
-
-### <a name="input_monitor_workspace_id"></a> [monitor\_workspace\_id](#input\_monitor\_workspace\_id)
-
-Description: The Microsoft Monitor Workspace Resource ID for monitoring.
-
-Type: `string`
 
 Default: `null`
 
@@ -921,14 +911,6 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_node_resource_group_name"></a> [node\_resource\_group\_name](#input\_node\_resource\_group\_name)
-
-Description: The resource group name for the node pool.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_oidc_issuer_enabled"></a> [oidc\_issuer\_enabled](#input\_oidc\_issuer\_enabled)
 
 Description: Whether or not the OIDC issuer is enabled for the Kubernetes cluster.
@@ -939,13 +921,12 @@ Default: `false`
 
 ### <a name="input_oms_agent"></a> [oms\_agent](#input\_oms\_agent)
 
-Description: Optional. The OMS agent configuration for the Kubernetes cluster.
+Description: The OMS agent configuration for the Kubernetes cluster. Uses `var.log_analytics_workspace_id` for the Log Analytics Workspace. Omit or set to `null` to disable.
 
 Type:
 
 ```hcl
 object({
-    log_analytics_workspace_id      = string
     msi_auth_for_monitoring_enabled = optional(bool)
   })
 ```
@@ -1177,14 +1158,6 @@ Default:
   "tier": "Standard"
 }
 ```
-
-### <a name="input_sku_tier"></a> [sku\_tier](#input\_sku\_tier)
-
-Description: The SKU tier of the Kubernetes Cluster. Possible values are Free, Standard, and Premium.
-
-Type: `string`
-
-Default: `"Standard"`
 
 ### <a name="input_storage_profile"></a> [storage\_profile](#input\_storage\_profile)
 

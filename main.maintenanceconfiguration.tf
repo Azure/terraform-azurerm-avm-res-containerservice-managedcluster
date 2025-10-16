@@ -1,10 +1,10 @@
 module "maintenance_auto_upgrade" {
   source = "./modules/maintenanceconfiguration"
 
-  parent_id         = azapi_resource.this.id
   duration_hours    = try(var.maintenance_window_auto_upgrade.duration, null)
   frequency         = try(var.maintenance_window_auto_upgrade.frequency, null)
   interval          = try(var.maintenance_window_auto_upgrade.interval, null)
+  parent_id         = azapi_resource.this.id
   day_of_month      = try(var.maintenance_window_auto_upgrade.day_of_month, null)
   day_of_week       = try(var.maintenance_window_auto_upgrade.day_of_week, null)
   enable            = var.maintenance_window_auto_upgrade != null

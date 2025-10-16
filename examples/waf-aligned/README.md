@@ -113,9 +113,8 @@ data "azurerm_client_config" "current" {}
 module "waf_aligned" {
   source = "../.."
 
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+  location = azurerm_resource_group.this.location
+  name     = module.naming.kubernetes_cluster.name_unique
   auto_scaler_profile = {
     expander                      = "random"
     scan_interval                 = "20s"
@@ -210,6 +209,7 @@ module "waf_aligned" {
   }
   private_cluster_enabled = true
   private_dns_zone_id     = azurerm_private_dns_zone.zone.id
+  resource_group_name     = azurerm_resource_group.this.name
   sku_tier                = "Standard"
 
   depends_on = [azurerm_role_assignment.private_dns_zone_contributor]

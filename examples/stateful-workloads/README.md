@@ -129,7 +129,6 @@ module "stateful_workloads" {
 
   location                  = azurerm_resource_group.this.location
   name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
-  resource_group_name       = azurerm_resource_group.this.name
   automatic_upgrade_channel = "stable"
   default_node_pool = {
     name                    = "systempool"
@@ -164,6 +163,7 @@ module "stateful_workloads" {
   node_os_channel_upgrade   = "NodeImage"
   node_pools                = var.node_pools
   oidc_issuer_enabled       = true
+  resource_group_name       = azurerm_resource_group.this.name
   sku_tier                  = "Standard"
   workload_identity_enabled = true
 }

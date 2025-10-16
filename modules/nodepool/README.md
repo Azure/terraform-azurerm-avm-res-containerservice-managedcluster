@@ -26,12 +26,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_cluster_resource_id"></a> [cluster\_resource\_id](#input\_cluster\_resource\_id)
-
-Description: Resource ID of the existing Kubernetes cluster.
-
-Type: `string`
-
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: Required. The name of the Kubernetes nodepool.
@@ -41,6 +35,12 @@ Type: `string`
 ### <a name="input_network_plugin_mode"></a> [network\_plugin\_mode](#input\_network\_plugin\_mode)
 
 Description: The network plugin mode for the nodepool.
+
+Type: `string`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: Resource ID of the existing Kubernetes cluster.
 
 Type: `string`
 

@@ -147,7 +147,6 @@ module "automatic" {
 
   location                   = azurerm_resource_group.this.location
   name                       = module.naming.kubernetes_cluster.name_unique
-  resource_group_name        = azurerm_resource_group.this.name
   alert_email                = "test@example.com"
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
   maintenance_window_auto_upgrade = {
@@ -162,6 +161,7 @@ module "automatic" {
   monitor_workspace_id = azurerm_monitor_workspace.example.id
   onboard_alerts       = true
   onboard_monitoring   = true
+  resource_group_name  = azurerm_resource_group.this.name
   sku = {
     name = "Automatic"
     tier = "Standard"

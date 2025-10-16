@@ -1,8 +1,3 @@
-variable "parent_id" {
-  type        = string
-  description = "Resource ID of the parent managed cluster."
-}
-
 variable "duration_hours" {
   type        = number
   description = "Duration of the maintenance window in hours."
@@ -16,6 +11,11 @@ variable "frequency" {
 variable "interval" {
   type        = number
   description = "Interval associated with the frequency (days, weeks or months depending on frequency)."
+}
+
+variable "parent_id" {
+  type        = string
+  description = "Resource ID of the parent managed cluster."
 }
 
 variable "day_of_month" {

@@ -65,14 +65,12 @@ locals {
       }
     )
   ]
-
   api_server_access_profile = (var.api_server_access_profile != null || var.private_cluster_enabled) ? {
     authorizedIPRanges   = var.api_server_access_profile.authorized_ip_ranges
     enablePrivateCluster = var.private_cluster_enabled
     privateDnsZone       = var.private_cluster_enabled ? var.private_dns_zone_id : null
     subnetId             = var.api_server_access_profile.vnet_subnet_id
   } : null
-
   auto_scaler_profile_map = (
     local.is_automatic || !try(var.default_node_pool.auto_scaling_enabled, false) || var.auto_scaler_profile == null
     ) ? null : {
@@ -106,7 +104,6 @@ locals {
   default_node_pool_min_count = var.default_node_pool.min_count == null ? null : tonumber(var.default_node_pool.min_count)
   default_node_pool_name      = coalesce(try(var.default_node_pool.name, null), "systempool")
   is_automatic                = var.sku.name == "Automatic"
-
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
       this = {
@@ -142,7 +139,6 @@ locals {
       kubeStateMetrics = local.monitor_profile_kube_state_metrics
     } : {}
   )
-
   network_profile_advanced = var.advanced_networking
   network_profile_combined = local.is_automatic ? merge(
     local.network_profile_template,
@@ -170,7 +166,6 @@ locals {
       natGatewayProfile   = local.network_profile_nat_gateway_profile
     }
   )
-
   network_profile_filtered = { for k, v in local.network_profile_combined : k => v if v != null }
   network_profile_load_balancer_profile = var.network_profile.load_balancer_profile == null ? null : {
     managedOutboundIPs = (
@@ -189,11 +184,9 @@ locals {
     allocatedOutboundPorts = try(var.network_profile.load_balancer_profile.outbound_ports_allocated, null)
     idleTimeoutInMinutes   = try(var.network_profile.load_balancer_profile.idle_timeout_in_minutes, null)
   }
-
   network_profile_map = local.is_automatic ? (
     var.network_profile.outbound_type != null && var.network_profile.outbound_type != "loadBalancer" ? local.network_profile_filtered : null
   ) : local.network_profile_filtered
-
   network_profile_nat_gateway_profile = var.network_profile.nat_gateway_profile == null ? null : {
     managedOutboundIPProfile = (
       try(var.network_profile.nat_gateway_profile.managed_outbound_ip_count, null) == null
@@ -202,7 +195,6 @@ locals {
     }
     idleTimeoutInMinutes = try(var.network_profile.nat_gateway_profile.idle_timeout_in_minutes, null)
   }
-
   network_profile_template = {
     networkPlugin       = null
     dnsServiceIP        = null
@@ -221,7 +213,6 @@ locals {
     loadBalancerProfile = null
     natGatewayProfile   = null
   }
-
   private_endpoint_application_security_group_associations = { for assoc in flatten([
     for pe_k, pe_v in var.private_endpoints : [
       for asg_k, asg_v in pe_v.application_security_group_associations : {
@@ -231,7 +222,6 @@ locals {
       }
     ]
   ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
-
   properties_base = {
     kubernetesVersion      = var.kubernetes_version
     addonProfiles          = local.addon_profiles
@@ -246,11 +236,8 @@ locals {
     securityProfile    = null
     autoScalerProfile  = null
   }
-
-  properties_final = { for k, v in local.properties_final_preclean : k => v if v != null }
-
+  properties_final          = { for k, v in local.properties_final_preclean : k => v if v != null }
   properties_final_preclean = local.is_automatic ? local.properties_base : merge(local.properties_base, local.properties_standard_only)
-
   properties_standard_only = {
     dnsPrefix = coalesce(var.dns_prefix, var.dns_prefix_private_cluster, random_string.dns_prefix.result)
     autoUpgradeProfile = (var.automatic_upgrade_channel != null || var.node_os_channel_upgrade != null) ? {
@@ -269,6 +256,5 @@ locals {
     }
     autoScalerProfile = local.auto_scaler_profile_map
   }
-
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
 }

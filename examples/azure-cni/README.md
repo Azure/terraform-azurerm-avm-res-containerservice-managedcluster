@@ -124,9 +124,8 @@ data "azurerm_client_config" "current" {}
 module "cni" {
   source = "../.."
 
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+  location = azurerm_resource_group.this.location
+  name     = module.naming.kubernetes_cluster.name_unique
   # Minimal autoscaler profile to expose autoscaler settings for policy evaluation
   auto_scaler_profile = {
     expander            = "least-waste"
@@ -219,6 +218,7 @@ module "cni" {
   oms_agent = {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   }
+  resource_group_name = azurerm_resource_group.this.name
   storage_profile = {
     blob_driver_enabled         = true
     disk_driver_enabled         = true

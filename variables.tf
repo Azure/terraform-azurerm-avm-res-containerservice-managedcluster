@@ -569,6 +569,12 @@ variable "maintenance_window_node_os" {
   description = "values for maintenance window node os"
 }
 
+variable "managed_grafana_workspace_id" {
+  type        = string
+  default     = null
+  description = "The Managed Grafana Workspace Resource ID for dashboarding."
+}
+
 variable "managed_identities" {
   type = object({
     system_assigned            = optional(bool, false)
@@ -904,12 +910,6 @@ variable "private_endpoints_manage_dns_zone_group" {
   nullable    = false
 }
 
-variable "managed_grafana_workspace_id" {
-  type        = string
-  default     = null
-  description = "The Managed Grafana Workspace Resource ID for dashboarding."
-}
-
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
@@ -942,19 +942,17 @@ variable "role_assignments" {
 variable "role_based_access_control_enabled" {
   type        = bool
   default     = true
-  nullable    = false
   description = "Whether or not role-based access control is enabled for the Kubernetes cluster."
+  nullable    = false
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "run_command_enabled" {
   type        = bool
   default     = false
-  nullable    = false
   description = "Whether or not the run command is enabled for the Kubernetes cluster."
+  nullable    = false
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "service_mesh_profile" {
   type = object({
     mode                             = string
@@ -973,7 +971,6 @@ variable "service_mesh_profile" {
   description = "The service mesh profile for the Kubernetes cluster."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "service_principal" {
   type = object({
     client_id     = string

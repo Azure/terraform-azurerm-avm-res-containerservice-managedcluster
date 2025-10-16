@@ -24,12 +24,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_cluster_resource_id"></a> [cluster\_resource\_id](#input\_cluster\_resource\_id)
-
-Description: Resource ID of the parent managed cluster.
-
-Type: `string`
-
 ### <a name="input_duration_hours"></a> [duration\_hours](#input\_duration\_hours)
 
 Description: Duration of the maintenance window in hours.
@@ -47,6 +41,12 @@ Type: `string`
 Description: Interval associated with the frequency (days, weeks or months depending on frequency).
 
 Type: `number`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: Resource ID of the parent managed cluster.
+
+Type: `string`
 
 ## Optional Inputs
 

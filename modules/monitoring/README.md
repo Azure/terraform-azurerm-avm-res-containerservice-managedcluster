@@ -38,12 +38,6 @@ Description: The resource ID of the AKS cluster
 
 Type: `string`
 
-### <a name="input_aks_cluster_name"></a> [aks\_cluster\_name](#input\_aks\_cluster\_name)
-
-Description: The name of the AKS cluster
-
-Type: `string`
-
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: The Azure region where resources will be created
@@ -56,21 +50,15 @@ Description: The resource ID of the Log Analytics workspace
 
 Type: `string`
 
-### <a name="input_monitor_workspace_id"></a> [monitor\_workspace\_id](#input\_monitor\_workspace\_id)
+### <a name="input_managed_grafana_workspace_id"></a> [managed\_grafana\_workspace\_id](#input\_managed\_grafana\_workspace\_id)
 
-Description: The resource ID of the Azure Monitor workspace
-
-Type: `string`
-
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: The name of the resource group
+Description: The resource ID of the Azure Monitor workspace for managed Grafana
 
 Type: `string`
 
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
-Description: The Azure subscription ID
+Description: The resource ID of the parent resource group
 
 Type: `string`
 

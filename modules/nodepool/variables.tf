@@ -1,9 +1,3 @@
-variable "parent_id" {
-  type        = string
-  nullable    = false
-  description = "Resource ID of the existing Kubernetes cluster."
-}
-
 # Main properties
 variable "name" {
   type        = string
@@ -22,6 +16,12 @@ variable "name" {
 variable "network_plugin_mode" {
   type        = string
   description = "The network plugin mode for the nodepool."
+}
+
+variable "parent_id" {
+  type        = string
+  description = "Resource ID of the existing Kubernetes cluster."
+  nullable    = false
 }
 
 variable "vm_size" {

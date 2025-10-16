@@ -200,10 +200,9 @@ resource "azurerm_log_analytics_workspace" "this" {
 module "automatic" {
   source = "../.."
 
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  alert_email         = "test@this.com"
+  location    = azurerm_resource_group.this.location
+  name        = module.naming.kubernetes_cluster.name_unique
+  alert_email = "test@this.com"
   api_server_access_profile = {
     vnet_subnet_id = azurerm_subnet.api_server.id
   }
@@ -231,6 +230,7 @@ module "automatic" {
   onboard_monitoring      = true
   private_cluster_enabled = true
   private_dns_zone_id     = azurerm_private_dns_zone.this.id
+  resource_group_name     = azurerm_resource_group.this.name
   sku = {
     name = "Automatic"
     tier = "Standard"
