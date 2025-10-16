@@ -1,8 +1,8 @@
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionendpoints?pivots=deployment-language-terraform
 resource "azapi_resource" "dce_msprom" {
   location  = var.location
-  name      = "MSProm-${var.location}-${var.aks_cluster_name}"
-  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+  name      = "MSProm-${var.location}-${basename(var.aks_cluster_id)}"
+  parent_id = var.parent_id
   type      = "Microsoft.Insights/dataCollectionEndpoints@2023-03-11"
   body = {
     kind       = "Linux"
@@ -13,8 +13,8 @@ resource "azapi_resource" "dce_msprom" {
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionrules?pivots=deployment-language-terraform
 resource "azapi_resource" "dcr_msprom" {
   location  = var.location
-  name      = "MSProm-${var.location}-${var.aks_cluster_name}"
-  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+  name      = "MSProm-${var.location}-${basename(var.aks_cluster_id)}"
+  parent_id = var.parent_id
   type      = "Microsoft.Insights/dataCollectionRules@2023-03-11"
   body = {
     kind = "Linux"
@@ -33,7 +33,7 @@ resource "azapi_resource" "dcr_msprom" {
       destinations = {
         monitoringAccounts = [
           {
-            accountResourceId = var.monitor_workspace_id
+            accountResourceId = var.managed_grafana_workspace_id
             name              = "MonitoringAccount1"
           }
         ]
@@ -54,7 +54,7 @@ resource "azapi_resource" "dcr_msprom" {
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionruleassociations?pivots=deployment-language-terraform
 resource "azapi_resource" "dcr_msprom_aks" {
-  name      = "dcr-${var.aks_cluster_name}"
+  name      = "dcr-${basename(var.aks_cluster_id)}"
   parent_id = var.aks_cluster_id
   type      = "Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11"
   body = {
@@ -77,12 +77,12 @@ resource "azapi_resource" "dce_msprom_aks" {
 # https://learn.microsoft.com/azure/templates/microsoft.alertsmanagement/prometheusrulegroups?pivots=deployment-language-terraform
 resource "azapi_resource" "prg_node" {
   location  = var.location
-  name      = "NodeRecordingRulesRuleGroup - ${var.aks_cluster_name}"
-  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+  name      = "NodeRecordingRulesRuleGroup - ${basename(var.aks_cluster_id)}"
+  parent_id = var.parent_id
   type      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
   body = {
     properties = {
-      clusterName = var.aks_cluster_name
+      clusterName = basename(var.aks_cluster_id)
       enabled     = true
       interval    = "PT1M"
       rules = [
@@ -132,7 +132,7 @@ resource "azapi_resource" "prg_node" {
         }
       ]
       scopes = [
-        var.monitor_workspace_id
+        var.managed_grafana_workspace_id
       ]
     }
   }
@@ -141,12 +141,12 @@ resource "azapi_resource" "prg_node" {
 # https://learn.microsoft.com/azure/azure-monitor/containers/prometheus-metrics-scrape-default
 resource "azapi_resource" "prg_ux" {
   location  = var.location
-  name      = "UXRecordingRulesRuleGroup - ${var.aks_cluster_name}"
-  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+  name      = "UXRecordingRulesRuleGroup - ${basename(var.aks_cluster_id)}"
+  parent_id = var.parent_id
   type      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
   body = {
     properties = {
-      clusterName = var.aks_cluster_name
+      clusterName = basename(var.aks_cluster_id)
       enabled     = true
       interval    = "PT1M"
       description = "UX Recording Rules for Linux"
@@ -225,7 +225,7 @@ resource "azapi_resource" "prg_ux" {
         },
       ]
       scopes = [
-        var.monitor_workspace_id,
+        var.managed_grafana_workspace_id,
         var.aks_cluster_id
       ]
     }
@@ -234,12 +234,12 @@ resource "azapi_resource" "prg_ux" {
 
 resource "azapi_resource" "prg_k8s" {
   location  = var.location
-  name      = "KubernetesRecordingRulesRuleGroup - ${var.aks_cluster_name}"
-  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+  name      = "KubernetesRecordingRulesRuleGroup - ${basename(var.aks_cluster_id)}"
+  parent_id = var.parent_id
   type      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
   body = {
     properties = {
-      clusterName = var.aks_cluster_name
+      clusterName = basename(var.aks_cluster_id)
       enabled     = true
       interval    = "PT1M"
       rules = [
@@ -333,7 +333,7 @@ resource "azapi_resource" "prg_k8s" {
         }
       ]
       scopes = [
-        var.monitor_workspace_id
+        var.managed_grafana_workspace_id,
       ]
     }
   }
@@ -342,8 +342,8 @@ resource "azapi_resource" "prg_k8s" {
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionrules?pivots=deployment-language-terraform
 resource "azapi_resource" "dcr_msci" {
   location  = var.location
-  name      = "MSCI-${var.location}-${var.aks_cluster_name}"
-  parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+  name      = "MSCI-${var.location}-${basename(var.aks_cluster_id)}"
+  parent_id = var.parent_id
   type      = "Microsoft.Insights/dataCollectionRules@2023-03-11"
   body = {
     kind = "Linux"
@@ -397,7 +397,7 @@ resource "azapi_resource" "dcr_msci" {
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionruleassociations?pivots=deployment-language-terraform
 resource "azapi_resource" "dcr_msci_aks" {
-  name      = "msci-${var.aks_cluster_name}"
+  name      = "msci-${basename(var.aks_cluster_id)}"
   parent_id = var.aks_cluster_id
   type      = "Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11"
   body = {

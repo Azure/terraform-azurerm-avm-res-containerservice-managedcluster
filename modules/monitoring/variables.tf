@@ -4,12 +4,6 @@ variable "aks_cluster_id" {
   nullable    = false
 }
 
-variable "aks_cluster_name" {
-  type        = string
-  description = "The name of the AKS cluster"
-  nullable    = false
-}
-
 variable "location" {
   type        = string
   description = "The Azure region where resources will be created"
@@ -22,20 +16,14 @@ variable "log_analytics_workspace_id" {
   nullable    = false
 }
 
-variable "monitor_workspace_id" {
+variable "managed_grafana_workspace_id" {
   type        = string
-  description = "The resource ID of the Azure Monitor workspace"
+  description = "The resource ID of the Azure Monitor workspace for managed Grafana"
   nullable    = false
 }
 
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
-  description = "The name of the resource group"
-  nullable    = false
-}
-
-variable "subscription_id" {
-  type        = string
-  description = "The Azure subscription ID"
+  description = "The resource ID of the parent resource group"
   nullable    = false
 }

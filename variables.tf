@@ -15,14 +15,17 @@ variable "name" {
   }
 }
 
-# This is required for most resource modules
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
-  description = "The resource group where the resources will be deployed."
+  description = "The resource ID of the parent resource."
   nullable    = false
+
+  validation {
+    error_message = "Value must be a resource group resource ID."
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+$", var.parent_id))
+  }
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "aci_connector_linux_subnet_name" {
   type        = string
   default     = null
@@ -31,21 +34,11 @@ variable "aci_connector_linux_subnet_name" {
 
 variable "advanced_networking" {
   type = object({
-    enabled               = optional(bool, false)
-    observability_enabled = optional(bool, false)
-    security_enabled      = optional(bool, false)
+    observability = optional(bool, false)
+    security      = optional(bool, false)
   })
-  default = {
-    enabled               = false
-    observability_enabled = false
-    security_enabled      = false
-  }
-  description = "Advanced networking feature toggles: master enable plus optional observability and security sub-features."
-
-  validation {
-    condition     = (!var.advanced_networking.observability_enabled && !var.advanced_networking.security_enabled) || var.advanced_networking.enabled
-    error_message = "`advanced_networking.enabled` must be true when either sub-feature is enabled."
-  }
+  default     = null
+  description = "Advanced networking feature toggles: observability and security sub-features."
 }
 
 variable "alert_email" {
@@ -60,12 +53,11 @@ variable "api_server_access_profile" {
     vnet_subnet_id       = optional(string)
   })
   default     = null
-  description = <<-EOT
- - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
- EOT
+  description = <<EOT
+- `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
+EOT
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "auto_scaler_profile" {
   type = object({
     balance_similar_node_groups                   = optional(string)
@@ -134,8 +126,8 @@ variable "confidential_computing" {
     sgx_quote_helper_enabled = bool
   })
   default     = null
-  description = <<-EOT
- - `sgx_quote_helper_enabled` - (Required) Should the SGX quote helper be enabled?
+  description = <<EOT
+- `sgx_quote_helper_enabled` - (Required) Should the SGX quote helper be enabled?
 EOT
 }
 
@@ -326,11 +318,10 @@ DESCRIPTION
   }
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "disk_encryption_set_id" {
   type        = string
   default     = null
-  description = "The disk encryption set ID for the Kubernetes cluster."
+  description = "The disk encryption set resource ID for the Kubernetes cluster."
 }
 
 variable "dns_prefix" {
@@ -355,7 +346,6 @@ variable "dns_prefix_private_cluster" {
   }
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "edge_zone" {
   type        = string
   default     = null
@@ -373,7 +363,6 @@ DESCRIPTION
   nullable    = false
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "http_proxy_config" {
   type = object({
     http_proxy  = optional(string)
@@ -403,7 +392,6 @@ variable "image_cleaner_interval_hours" {
   }
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "ingress_application_gateway" {
   type = object({
     gateway_id   = optional(string)
@@ -424,7 +412,6 @@ variable "key_management_service" {
   description = "The key management service for the Kubernetes cluster."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "key_vault_secrets_provider" {
   type = object({
     secret_rotation_enabled  = optional(bool)
@@ -434,7 +421,6 @@ variable "key_vault_secrets_provider" {
   description = "The key vault secrets provider for the Kubernetes cluster. Either rotation enabled or rotation interval must be specified."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "kubelet_identity" {
   type = object({
     client_id                 = optional(string)
@@ -453,11 +439,11 @@ variable "kubernetes_cluster_node_pool_timeouts" {
     update = optional(string)
   })
   default     = null
-  description = <<-EOT
- - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
- - `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
- - `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
- - `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
+  description = <<EOT
+- `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
+- `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
+- `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
 EOT
 }
 
@@ -470,11 +456,11 @@ variable "kubernetes_cluster_timeouts" {
     update = optional(string)
   })
   default     = null
-  description = <<-EOT
- - `create` - (Defaults to 90 minutes) Used when creating the Kubernetes Cluster.
- - `delete` - (Defaults to 90 minutes) Used when deleting the Kubernetes Cluster.
- - `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster.
- - `update` - (Defaults to 90 minutes) Used when updating the Kubernetes Cluster.
+  description = <<EOT
+- `create` - (Defaults to 90 minutes) Used when creating the Kubernetes Cluster.
+- `delete` - (Defaults to 90 minutes) Used when deleting the Kubernetes Cluster.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster.
+- `update` - (Defaults to 90 minutes) Used when updating the Kubernetes Cluster.
 EOT
 }
 
@@ -543,7 +529,6 @@ variable "maintenance_window" {
   description = "The maintenance window for the Kubernetes cluster."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "maintenance_window_auto_upgrade" {
   type = object({
     frequency    = string
@@ -564,7 +549,6 @@ variable "maintenance_window_auto_upgrade" {
   description = "values for maintenance window auto upgrade"
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "maintenance_window_node_os" {
   type = object({
     frequency    = string
@@ -607,12 +591,6 @@ variable "monitor_metrics" {
   })
   default     = null
   description = "The monitor metrics for the Kubernetes cluster. Both required if enabling Prometheus"
-}
-
-variable "monitor_workspace_id" {
-  type        = string
-  default     = null
-  description = "The Microsoft Monitor Workspace Resource ID for monitoring."
 }
 
 variable "network_profile" {
@@ -793,13 +771,6 @@ variable "node_pools" {
   description = "Optional. The additional node pools for the Kubernetes cluster."
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "node_resource_group_name" {
-  type        = string
-  default     = null
-  description = "The resource group name for the node pool."
-}
-
 variable "oidc_issuer_enabled" {
   type        = bool
   default     = false
@@ -808,20 +779,20 @@ variable "oidc_issuer_enabled" {
 
 variable "oms_agent" {
   type = object({
-    log_analytics_workspace_id      = string
     msi_auth_for_monitoring_enabled = optional(bool)
   })
   default     = null
-  description = "Optional. The OMS agent configuration for the Kubernetes cluster."
+  description = "The OMS agent configuration for the Kubernetes cluster. Uses `var.log_analytics_workspace_id` for the Log Analytics Workspace. Omit or set to `null` to disable."
 }
 
 variable "onboard_alerts" {
   type        = bool
   default     = false
   description = "Whether to enable recommended alerts. Set to false to disable alerts even if monitoring is enabled and alert_email is provided."
+  nullable    = false
 
   validation {
-    condition     = !var.onboard_alerts || (var.alert_email != null && try(trimspace(var.alert_email), "") != "")
+    condition     = !var.onboard_alerts || var.alert_email != null
     error_message = "When `onboard_alerts` is true, `alert_email` must be provided."
   }
 }
@@ -832,13 +803,8 @@ variable "onboard_monitoring" {
   description = "Whether to enable monitoring resources. Set to false to disable monitoring even if workspace IDs are provided."
 
   validation {
-    condition = !var.onboard_monitoring || (
-      var.monitor_workspace_id != null && try(trimspace(var.monitor_workspace_id), "") != "" && (
-        (var.log_analytics_workspace_id != null && try(trimspace(var.log_analytics_workspace_id), "") != "") ||
-        (var.oms_agent != null && var.oms_agent.log_analytics_workspace_id != null && try(trimspace(var.oms_agent.log_analytics_workspace_id), "") != "")
-      )
-    )
-    error_message = "When `onboard_monitoring` is true, provide `monitor_workspace_id` and either `log_analytics_workspace_id` or `oms_agent.log_analytics_workspace_id`."
+    condition     = !var.onboard_monitoring || var.log_analytics_workspace_id != null
+    error_message = "When `onboard_monitoring` is true, provide `log_analytics_workspace_id`."
   }
 }
 
@@ -938,6 +904,12 @@ variable "private_endpoints_manage_dns_zone_group" {
   nullable    = false
 }
 
+variable "managed_grafana_workspace_id" {
+  type        = string
+  default     = null
+  description = "The Managed Grafana Workspace Resource ID for dashboarding."
+}
+
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
@@ -970,6 +942,7 @@ variable "role_assignments" {
 variable "role_based_access_control_enabled" {
   type        = bool
   default     = true
+  nullable    = false
   description = "Whether or not role-based access control is enabled for the Kubernetes cluster."
 }
 
@@ -977,6 +950,7 @@ variable "role_based_access_control_enabled" {
 variable "run_command_enabled" {
   type        = bool
   default     = false
+  nullable    = false
   description = "Whether or not the run command is enabled for the Kubernetes cluster."
 }
 
@@ -1009,7 +983,6 @@ variable "service_principal" {
   description = "The service principal for the Kubernetes cluster. Only specify this or identity, not both."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "sku" {
   type = object({
     name = string
@@ -1031,18 +1004,6 @@ variable "sku" {
   }
 }
 
-variable "sku_tier" {
-  type        = string
-  default     = "Standard"
-  description = "The SKU tier of the Kubernetes Cluster. Possible values are Free, Standard, and Premium."
-
-  validation {
-    condition     = can(index(["Free", "Standard", "Premium"], var.sku_tier))
-    error_message = "The SKU tier must be one of: 'Free', 'Standard', or 'Premium'. Free does not have an SLA."
-  }
-}
-
-# tflint-ignore: terraform_unused_declarations
 variable "storage_profile" {
   type = object({
     blob_driver_enabled         = optional(bool),
@@ -1054,7 +1015,6 @@ variable "storage_profile" {
   description = "Optional. The storage profile for the Kubernetes cluster."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "support_plan" {
   type        = string
   default     = "KubernetesOfficial"
@@ -1072,7 +1032,6 @@ variable "tags" {
   description = "(Optional) Tags of the resource."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "upgrade_override" {
   type = object({
     force_upgrade_enabled = bool
@@ -1082,14 +1041,12 @@ variable "upgrade_override" {
   description = "(Optional) The upgrade override for the Kubernetes cluster. Once set, this block cannot be removed from the configuration. This is used to force an upgrade of the cluster even if it is not required. The `effective_until` field is used to specify the date until which the override is effective."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "web_app_routing_dns_zone_ids" {
   type        = map(list(string))
   default     = {}
   description = "The web app routing DNS zone IDs for the Kubernetes cluster."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "windows_profile" {
   type = object({
     admin_username = string
@@ -1108,7 +1065,6 @@ variable "windows_profile" {
   }
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "windows_profile_password" {
   type        = string
   default     = null
@@ -1121,7 +1077,6 @@ variable "windows_profile_password" {
   }
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "workload_autoscaler_profile" {
   type = object({
     keda_enabled = optional(bool)

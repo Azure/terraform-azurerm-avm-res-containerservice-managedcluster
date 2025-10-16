@@ -2,7 +2,7 @@ module "nodepools" {
   source   = "./modules/nodepool"
   for_each = var.node_pools
 
-  cluster_resource_id            = azapi_resource.this.id
+  parent_id                      = azapi_resource.this.id
   name                           = each.value.name
   network_plugin_mode            = var.network_profile.network_plugin_mode
   vm_size                        = each.value.vm_size

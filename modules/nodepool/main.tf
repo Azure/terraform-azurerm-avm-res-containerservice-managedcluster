@@ -145,13 +145,13 @@ resource "azapi_resource" "this" {
   count = var.create_nodepool_before_destroy ? 0 : 1
 
   name      = var.name
-  parent_id = var.cluster_resource_id
+  parent_id = var.parent_id
   type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-07-01"
   body = merge({
     properties = local.agent_pool_properties
   }, var.tags == null ? {} : { tags = var.tags })
   ignore_null_property      = true
-  response_export_values    = ["*"]
+  response_export_values    = []
   schema_validation_enabled = false
 
   timeouts {
@@ -181,13 +181,13 @@ resource "azapi_resource" "create_before_destroy_node_pool" {
   count = var.create_nodepool_before_destroy ? 1 : 0
 
   name      = "${var.name}${substr(md5(uuid()), 0, 4)}"
-  parent_id = var.cluster_resource_id
+  parent_id = var.parent_id
   type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-07-01"
   body = merge({
     properties = local.agent_pool_properties
   }, var.tags == null ? {} : { tags = var.tags })
   ignore_null_property      = true
-  response_export_values    = ["*"]
+  response_export_values    = []
   schema_validation_enabled = false
 
   timeouts {

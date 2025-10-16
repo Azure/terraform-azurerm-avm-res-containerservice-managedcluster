@@ -4,26 +4,14 @@ variable "aks_cluster_id" {
   nullable    = false
 }
 
-variable "aks_cluster_name" {
-  type        = string
-  description = "The name of the AKS cluster"
-  nullable    = false
-}
-
 variable "alert_email" {
   type        = string
   description = "Email address for alert notifications"
   nullable    = false
 }
 
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
-  description = "The name of the resource group"
-  nullable    = false
-}
-
-variable "subscription_id" {
-  type        = string
-  description = "The Azure subscription ID"
+  description = "The parent resource group ID"
   nullable    = false
 }

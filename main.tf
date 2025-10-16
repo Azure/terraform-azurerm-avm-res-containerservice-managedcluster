@@ -1,9 +1,7 @@
-data "azurerm_client_config" "current" {}
-
 resource "azapi_resource" "this" {
   location  = var.location
   name      = "${var.name}${var.cluster_suffix}"
-  parent_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
+  parent_id = var.parent_id
   type      = "Microsoft.ContainerService/managedClusters@2025-07-01"
   body = {
     properties = local.properties_final
@@ -32,12 +30,8 @@ resource "azapi_resource" "this" {
     ]
 
     precondition {
-      condition     = local.is_automatic || var.cost_analysis_enabled != true || (var.sku_tier == "Standard" || var.sku_tier == "Premium")
-      error_message = "`sku_tier` must be either `Standard` or `Premium` when cost analysis is enabled."
-    }
-    precondition {
-      condition     = !var.onboard_monitoring || (local.monitor_workspace_id != null && local.log_analytics_workspace_id != null)
-      error_message = "`onboard_monitoring` requires both `monitor_workspace_id` and `log_analytics_workspace_id` (or legacy `oms_agent.log_analytics_workspace_id`)."
+      condition     = local.is_automatic || var.cost_analysis_enabled != true || (var.sku.tier == "Standard" || var.sku.tier == "Premium")
+      error_message = "`sku.tier` must be either `Standard` or `Premium` when cost analysis is enabled."
     }
     precondition {
       condition     = !var.onboard_alerts || (var.alert_email != null && try(trimspace(var.alert_email), "") != "")

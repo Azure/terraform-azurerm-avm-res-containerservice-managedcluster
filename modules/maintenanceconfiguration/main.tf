@@ -33,7 +33,7 @@ resource "azapi_resource" "this" {
   count = var.enable ? 1 : 0
 
   name      = "aksManagedAutoUpgradeSchedule"
-  parent_id = var.cluster_resource_id
+  parent_id = var.parent_id
   type      = "Microsoft.ContainerService/managedClusters/maintenanceConfigurations@2025-07-01"
   body = {
     properties = {

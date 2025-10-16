@@ -1,5 +1,6 @@
-variable "cluster_resource_id" {
+variable "parent_id" {
   type        = string
+  nullable    = false
   description = "Resource ID of the existing Kubernetes cluster."
 }
 

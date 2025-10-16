@@ -1,4 +1,4 @@
-variable "cluster_resource_id" {
+variable "parent_id" {
   type        = string
   description = "Resource ID of the parent managed cluster."
 }
