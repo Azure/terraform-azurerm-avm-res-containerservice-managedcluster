@@ -13,7 +13,8 @@ resource "azapi_resource" "this" {
   response_export_values = [
     "properties.oidcIssuerProfile.issuerURL",
     "properties.identityProfile",
-    "properties.nodeResourceGroup"
+    "properties.nodeResourceGroup",
+    "properties.fqdn",
   ]
   schema_validation_enabled = false
   tags                      = var.tags
@@ -58,7 +59,7 @@ resource "azapi_resource" "this" {
       error_message = "Exactly one of `dns_prefix` or `dns_prefix_private_cluster` must be specified (non-null and non-empty)."
     }
     precondition {
-      condition     = local.is_automatic || (var.dns_prefix_private_cluster == null) || (var.private_dns_zone_id != null)
+      condition     = local.is_automatic || (var.dns_prefix_private_cluster == null) || (var.api_server_access_profile.private_dns_zone_id != null)
       error_message = "When `dns_prefix_private_cluster` is set, `private_dns_zone_id` must be set."
     }
     precondition {
