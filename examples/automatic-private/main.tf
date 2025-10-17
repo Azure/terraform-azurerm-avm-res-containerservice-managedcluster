@@ -201,6 +201,7 @@ module "automatic" {
     vnet_subnet_id         = azurerm_subnet.api_server.id
     enable_private_cluster = true
     private_dns_zone_id    = azurerm_private_dns_zone.this.id
+    run_command_enabled    = false
   }
   default_node_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
@@ -223,8 +224,6 @@ module "automatic" {
   }
   onboard_alerts          = true
   onboard_monitoring      = true
-  private_cluster_enabled = true
-  private_dns_zone_id     = azurerm_private_dns_zone.this.id
   prometheus_workspace_id = azurerm_monitor_workspace.this.id
   sku = {
     name = "Automatic"

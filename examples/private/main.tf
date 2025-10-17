@@ -130,7 +130,9 @@ module "private" {
   name      = module.naming.kubernetes_cluster.name_unique
   parent_id = azurerm_resource_group.this.id
   advanced_networking = {
-    observability = true
+    observability = {
+      enabled = true
+    }
   }
   api_server_access_profile = {
     enable_private_cluster = true
