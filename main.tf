@@ -7,10 +7,6 @@ resource "azapi_resource" "this" {
     properties = local.properties_final
     sku        = var.sku
   }
-  sensitive_body = local.sensitive_body
-  sensitive_body_version = {
-    "properties.windowsProfile.adminPassword" = var.windows_profile_password_version
-  }
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -21,8 +17,12 @@ resource "azapi_resource" "this" {
     "properties.fqdn",
   ]
   schema_validation_enabled = false
-  tags                      = var.tags
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  sensitive_body            = local.sensitive_body
+  sensitive_body_version = {
+    "properties.windowsProfile.adminPassword" = var.windows_profile_password_version
+  }
+  tags           = var.tags
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   identity {
     type         = try(length(local.managed_identities.user_assigned.this.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned", "SystemAssigned")

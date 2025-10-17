@@ -30,14 +30,7 @@ provider "azurerm" {
 
 locals {
   locations = [
-    "eastus",
-    "eastus2",
-    "westus2",
-    "centralus",
-    "westeurope",
-    "northeurope",
-    "southeastasia",
-    "japaneast",
+    "swedencentral",
   ]
 }
 
@@ -140,10 +133,15 @@ data "azurerm_client_config" "current" {}
 module "private" {
   source = "../.."
 
-  location = azurerm_resource_group.this.location
-  name     = module.naming.kubernetes_cluster.name_unique
+  location  = azurerm_resource_group.this.location
+  name      = module.naming.kubernetes_cluster.name_unique
+  parent_id = azurerm_resource_group.this.id
+  advanced_networking = {
+    observability = true
+  }
   api_server_access_profile = {
-    vnet_subnet_id = azurerm_subnet.api_server.id
+    enable_private_cluster = true
+    private_dns_zone_id    = azurerm_private_dns_zone.zone.id
   }
   azure_active_directory_role_based_access_control = {
     azure_rbac_enabled = true
@@ -176,7 +174,7 @@ module "private" {
   node_pools = {
     unp1 = {
       name                 = "userpool1"
-      vm_size              = "Standard_DS2_v2"
+      vm_size              = "Standard_D2s_v6"
       auto_scaling_enabled = true
       max_count            = 4
       max_pods             = 30
@@ -188,25 +186,11 @@ module "private" {
         max_surge = "10%"
       }
     }
-    unp2 = {
-      name                 = "userpool2"
-      vm_size              = "Standard_DS2_v2"
-      auto_scaling_enabled = true
-      max_count            = 4
-      max_pods             = 30
-      min_count            = 2
-      os_disk_size_gb      = 128
-      vnet_subnet_id       = azurerm_subnet.unp2_subnet.id
-
-      upgrade_settings = {
-        max_surge = "10%"
-      }
-    }
   }
-  private_cluster_enabled = true
-  private_dns_zone_id     = azurerm_private_dns_zone.zone.id
-  resource_group_name     = azurerm_resource_group.this.name
-  sku_tier                = "Standard"
+  sku = {
+    name = "Base"
+    tier = "Standard"
+  }
 
   depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
 }

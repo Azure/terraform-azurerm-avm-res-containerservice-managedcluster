@@ -61,7 +61,7 @@ variable "api_server_access_profile" {
     enable_private_cluster_public_fqdn = optional(bool)
     private_dns_zone_id                = optional(string)
     run_command_enabled                = optional(bool)
-  } )
+  })
   default     = null
   description = <<EOT
 - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
@@ -1007,10 +1007,10 @@ variable "windows_profile" {
 
 variable "windows_profile_password" {
   type        = string
+  ephemeral   = true
   default     = null
   description = "(Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters."
   sensitive   = true
-  ephemeral   = true
 
   validation {
     condition     = var.windows_profile_password == null ? true : length(var.windows_profile_password) >= 14 && length(var.windows_profile_password) <= 123

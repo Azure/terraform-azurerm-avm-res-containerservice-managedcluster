@@ -205,7 +205,9 @@ module "automatic" {
   parent_id   = azurerm_resource_group.this.id
   alert_email = "test@this.com"
   api_server_access_profile = {
-    vnet_subnet_id = azurerm_subnet.api_server.id
+    vnet_subnet_id         = azurerm_subnet.api_server.id
+    enable_private_cluster = true
+    private_dns_zone_id    = azurerm_private_dns_zone.this.id
   }
   default_node_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id

@@ -125,6 +125,10 @@ data "azurerm_client_config" "current" {}
 
 module "private" {
   source = "../.."
+
+  location  = azurerm_resource_group.this.location
+  name      = module.naming.kubernetes_cluster.name_unique
+  parent_id = azurerm_resource_group.this.id
   advanced_networking = {
     observability = true
   }
@@ -132,9 +136,6 @@ module "private" {
     enable_private_cluster = true
     private_dns_zone_id    = azurerm_private_dns_zone.zone.id
   }
-  location  = azurerm_resource_group.this.location
-  parent_id = azurerm_resource_group.this.id
-  name      = module.naming.kubernetes_cluster.name_unique
   azure_active_directory_role_based_access_control = {
     azure_rbac_enabled = true
     tenant_id          = data.azurerm_client_config.current.tenant_id
@@ -183,5 +184,6 @@ module "private" {
     name = "Base"
     tier = "Standard"
   }
+
   depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
 }

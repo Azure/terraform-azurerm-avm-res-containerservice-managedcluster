@@ -50,6 +50,22 @@ locals {
       }
     }
   )
+  advanced_networking = var.advanced_networking != null ? {
+    enabled = true
+    observability = var.advanced_networking.observability != null ? {
+      enabled = var.advanced_networking.observability.enabled
+    } : null
+    security = var.advanced_networking.security != null ? {
+      enabled                 = var.advanced_networking.security.enabled
+      advancedNetworkPolicies = var.advanced_networking.security.advanced_network_policies
+      transit_encryption = var.advanced_networking.security.transit_encryption != null ? {
+        type = var.advanced_networking.security.transit_encryption.type
+      } : null
+    } : null
+    performance = var.advanced_networking.performance != null ? {
+      accelerationMode = var.advanced_networking.performance.acceleration_mode
+    } : null
+  } : null
   agent_pool_profile_template = {
     availabilityZones = null
     count             = null
@@ -178,22 +194,6 @@ locals {
       kubeStateMetrics = local.monitor_profile_kube_state_metrics
     } : {}
   )
-  advanced_networking = var.advanced_networking != null ? {
-    enabled = true
-    observability = var.advanced_networking.observability != null ? {
-      enabled = var.advanced_networking.observability.enabled
-    } : null
-    security = var.advanced_networking.security != null ? {
-      enabled                 = var.advanced_networking.security.enabled
-      advancedNetworkPolicies = var.advanced_networking.security.advanced_network_policies
-      transit_encryption = var.advanced_networking.security.transit_encryption != null ? {
-        type = var.advanced_networking.security.transit_encryption.type
-      } : null
-    } : null
-    performance = var.advanced_networking.performance != null ? {
-      accelerationMode = var.advanced_networking.performance.acceleration_mode
-    } : null
-  } : null
   network_profile_combined = local.is_automatic ? merge(
     local.network_profile_template,
     {

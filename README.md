@@ -81,24 +81,28 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_aci_connector_linux_subnet_name"></a> [aci\_connector\_linux\_subnet\_name](#input\_aci\_connector\_linux\_subnet\_name)
-
-Description: The subnet name for the ACI connector Linux.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_advanced_networking"></a> [advanced\_networking](#input\_advanced\_networking)
 
-Description: Advanced networking feature toggles: observability and security sub-features.
+Description: Advanced networking feature toggles: observability, performance, and security sub-features.
 
 Type:
 
 ```hcl
 object({
-    observability = optional(bool, false)
-    security      = optional(bool, false)
+    enabled = optional(bool, false)
+    observability = optional(object({
+      enabled = optional(bool, false)
+    }), null)
+    security = optional(object({
+      advanced_network_policies = optional(string, null)
+      enabled                   = optional(bool, false)
+      transit_encryption = optional(object({
+        type = optional(string, null)
+      }), null)
+    }), null)
+    performance = optional(object({
+      acceleration_mode = optional(string, null)
+    }), null)
   })
 ```
 
@@ -115,13 +119,20 @@ Default: `null`
 ### <a name="input_api_server_access_profile"></a> [api\_server\_access\_profile](#input\_api\_server\_access\_profile)
 
 Description: - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
+- `vnet_subnet_id` - (Optional) The subnet ID for the API server.
+- `enable_private_cluster` - (Optional) Whether to enable private cluster.
+- `private_dns_zone_id` - (Optional) The private DNS zone ID for the API server. Required if `enable_private_cluster`
 
 Type:
 
 ```hcl
 object({
-    authorized_ip_ranges = optional(set(string))
-    vnet_subnet_id       = optional(string)
+    authorized_ip_ranges               = optional(list(string))
+    subnet_id                          = optional(string)
+    enable_private_cluster             = optional(bool)
+    enable_private_cluster_public_fqdn = optional(bool)
+    private_dns_zone_id                = optional(string)
+    run_command_enabled                = optional(bool)
   })
 ```
 
@@ -398,7 +409,7 @@ Default: `{}`
 
 ### <a name="input_disk_encryption_set_id"></a> [disk\_encryption\_set\_id](#input\_disk\_encryption\_set\_id)
 
-Description: The disk encryption set resource ID for the Kubernetes cluster.
+Description: The disk encryption set resource ID for the Kubernetes cluster. The managed identity assigned to the cluster must have 'Contributor' role on the disk encryption set.
 
 Type: `string`
 
@@ -415,14 +426,6 @@ Default: `null`
 ### <a name="input_dns_prefix_private_cluster"></a> [dns\_prefix\_private\_cluster](#input\_dns\_prefix\_private\_cluster)
 
 Description: The Private Cluster DNS prefix specified when creating a private cluster. Required if deploying private cluster and providing a private dns zone id.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_edge_zone"></a> [edge\_zone](#input\_edge\_zone)
-
-Description: (Optional) Specifies the Extended Zone (formerly called Edge Zone) within the Azure Region where this Managed Kubernetes Cluster should exist. Changing this forces a new resource to be created.
 
 Type: `string`
 
@@ -448,7 +451,7 @@ Type:
 object({
     http_proxy  = optional(string)
     https_proxy = optional(string)
-    no_proxy    = optional(set(string))
+    no_proxy    = optional(list(string))
     trusted_ca  = optional(string)
   })
 ```
@@ -513,22 +516,6 @@ Type:
 object({
     secret_rotation_enabled  = optional(bool)
     secret_rotation_interval = optional(string)
-  })
-```
-
-Default: `null`
-
-### <a name="input_kubelet_identity"></a> [kubelet\_identity](#input\_kubelet\_identity)
-
-Description: The kubelet identity for the Kubernetes cluster.
-
-Type:
-
-```hcl
-object({
-    client_id                 = optional(string)
-    object_id                 = optional(string)
-    user_assigned_identity_id = optional(string)
   })
 ```
 
@@ -655,32 +642,6 @@ Default: `null`
 ### <a name="input_maintenance_window_auto_upgrade"></a> [maintenance\_window\_auto\_upgrade](#input\_maintenance\_window\_auto\_upgrade)
 
 Description: values for maintenance window auto upgrade
-
-Type:
-
-```hcl
-object({
-    frequency    = string
-    interval     = number
-    duration     = number
-    day_of_week  = optional(string)
-    day_of_month = optional(number)
-    week_index   = optional(string)
-    start_time   = optional(string)
-    utc_offset   = optional(string)
-    start_date   = optional(string)
-    not_allowed = optional(object({
-      start = string
-      end   = string
-    }))
-  })
-```
-
-Default: `null`
-
-### <a name="input_maintenance_window_node_os"></a> [maintenance\_window\_node\_os](#input\_maintenance\_window\_node\_os)
-
-Description: values for maintenance window node os
 
 Type:
 
@@ -941,30 +902,6 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_private_cluster_enabled"></a> [private\_cluster\_enabled](#input\_private\_cluster\_enabled)
-
-Description: Whether or not the Kubernetes cluster is private.
-
-Type: `bool`
-
-Default: `false`
-
-### <a name="input_private_cluster_public_fqdn_enabled"></a> [private\_cluster\_public\_fqdn\_enabled](#input\_private\_cluster\_public\_fqdn\_enabled)
-
-Description: Whether or not the private cluster public FQDN is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `false`
-
-### <a name="input_private_dns_zone_id"></a> [private\_dns\_zone\_id](#input\_private\_dns\_zone\_id)
-
-Description: The private DNS zone ID for the Kubernetes cluster.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
 Description:   A map of private endpoints to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -1090,14 +1027,6 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_run_command_enabled"></a> [run\_command\_enabled](#input\_run\_command\_enabled)
-
-Description: Whether or not the run command is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `false`
-
 ### <a name="input_service_mesh_profile"></a> [service\_mesh\_profile](#input\_service\_mesh\_profile)
 
 Description: The service mesh profile for the Kubernetes cluster.
@@ -1117,21 +1046,6 @@ object({
       cert_object_name       = string
       key_object_name        = string
     }))
-  })
-```
-
-Default: `null`
-
-### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
-
-Description: The service principal for the Kubernetes cluster. Only specify this or identity, not both.
-
-Type:
-
-```hcl
-object({
-    client_id     = string
-    client_secret = string
   })
 ```
 
@@ -1223,8 +1137,9 @@ Type:
 
 ```hcl
 object({
-    admin_username = string
-    license        = optional(string)
+    admin_username    = string
+    license           = optional(string)
+    csi_proxy_enabled = optional(bool, false)
     gmsa = optional(object({
       root_domain = string
       dns_server  = string
@@ -1237,6 +1152,14 @@ Default: `null`
 ### <a name="input_windows_profile_password"></a> [windows\_profile\_password](#input\_windows\_profile\_password)
 
 Description: (Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_windows_profile_password_version"></a> [windows\_profile\_password\_version](#input\_windows\_profile\_password\_version)
+
+Description: (Optional) The version of the Admin Password for Windows VM.
 
 Type: `string`
 

@@ -488,10 +488,6 @@ The following outputs are exported:
 
 Description: Name of the Kubernetes node pool.
 
-### <a name="output_properties"></a> [properties](#output\_properties)
-
-Description: Full response body properties of the node pool (from AzAPI).
-
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: Resource ID of the Kubernetes node pool.
