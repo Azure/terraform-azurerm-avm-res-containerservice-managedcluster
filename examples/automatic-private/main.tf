@@ -195,6 +195,7 @@ module "automatic" {
 
   location    = azurerm_resource_group.this.location
   name        = module.naming.kubernetes_cluster.name_unique
+  parent_id   = azurerm_resource_group.this.id
   alert_email = "test@this.com"
   api_server_access_profile = {
     vnet_subnet_id         = azurerm_subnet.api_server.id
@@ -217,13 +218,14 @@ module "automatic" {
   managed_identities = {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.this.id]
   }
-  monitor_workspace_id = azurerm_monitor_workspace.this.id
   network_profile = {
     outbound_type = "loadBalancer"
   }
-  onboard_alerts      = true
-  onboard_monitoring  = true
-  resource_group_name = azurerm_resource_group.this.name
+  onboard_alerts          = true
+  onboard_monitoring      = true
+  private_cluster_enabled = true
+  private_dns_zone_id     = azurerm_private_dns_zone.this.id
+  prometheus_workspace_id = azurerm_monitor_workspace.this.id
   sku = {
     name = "Automatic"
     tier = "Standard"

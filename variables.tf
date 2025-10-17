@@ -575,12 +575,6 @@ variable "maintenance_window_node_os" {
   description = "values for maintenance window node os"
 }
 
-variable "managed_grafana_workspace_id" {
-  type        = string
-  default     = null
-  description = "The Managed Grafana Workspace Resource ID for dashboarding."
-}
-
 variable "managed_identities" {
   type = object({
     system_assigned            = optional(bool, false)
@@ -895,6 +889,12 @@ variable "private_endpoints_manage_dns_zone_group" {
   default     = true
   description = "Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy."
   nullable    = false
+}
+
+variable "prometheus_workspace_id" {
+  type        = string
+  default     = null
+  description = "The monitor workspace resource ID for managed Prometheus."
 }
 
 variable "role_assignments" {

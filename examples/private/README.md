@@ -71,22 +71,33 @@ resource "azurerm_virtual_network" "vnet" {
   address_space       = ["10.1.0.0/16"]
 }
 
+resource "azurerm_subnet" "api_server" {
+  address_prefixes     = ["10.1.0.0/28"]
+  name                 = "apiServerSubnet"
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+
+  lifecycle {
+    ignore_changes = [delegation]
+  }
+}
+
 resource "azurerm_subnet" "subnet" {
-  address_prefixes     = ["10.1.0.0/24"]
+  address_prefixes     = ["10.1.1.0/24"]
   name                 = "default"
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.vnet.name
 }
 
 resource "azurerm_subnet" "unp1_subnet" {
-  address_prefixes     = ["10.1.1.0/24"]
+  address_prefixes     = ["10.1.2.0/24"]
   name                 = "unp1"
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.vnet.name
 }
 
 resource "azurerm_subnet" "unp2_subnet" {
-  address_prefixes     = ["10.1.2.0/24"]
+  address_prefixes     = ["10.1.3.0/24"]
   name                 = "unp2"
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.vnet.name
@@ -131,6 +142,9 @@ module "private" {
 
   location = azurerm_resource_group.this.location
   name     = module.naming.kubernetes_cluster.name_unique
+  api_server_access_profile = {
+    vnet_subnet_id = azurerm_subnet.api_server.id
+  }
   azure_active_directory_role_based_access_control = {
     azure_rbac_enabled = true
     tenant_id          = data.azurerm_client_config.current.tenant_id
@@ -217,6 +231,7 @@ The following resources are used by this module:
 - [azurerm_private_dns_zone_virtual_network_link.vnet_link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_role_assignment.private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_subnet.api_server](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.unp1_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.unp2_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)

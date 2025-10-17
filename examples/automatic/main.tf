@@ -140,6 +140,7 @@ module "automatic" {
 
   location                   = azurerm_resource_group.this.location
   name                       = module.naming.kubernetes_cluster.name_unique
+  parent_id                  = azurerm_resource_group.this.id
   alert_email                = "test@example.com"
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
   maintenance_window_auto_upgrade = {
@@ -151,10 +152,9 @@ module "automatic" {
     start_time  = "00:00"
     start_date  = "2025-09-27"
   }
-  monitor_workspace_id = azurerm_monitor_workspace.example.id
-  onboard_alerts       = true
-  onboard_monitoring   = true
-  resource_group_name  = azurerm_resource_group.this.name
+  onboard_alerts          = true
+  onboard_monitoring      = true
+  prometheus_workspace_id = azurerm_monitor_workspace.example.id
   sku = {
     name = "Automatic"
     tier = "Standard"
