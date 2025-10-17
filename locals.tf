@@ -5,13 +5,50 @@ locals {
         enabled = true
         config = {
           logAnalyticsWorkspaceResourceID = var.log_analytics_workspace_id
-          useAADAuth                      = try(var.oms_agent.msi_auth_for_monitoring_enabled, true) ? "true" : "false"
+          useAADAuth                      = var.oms_agent != null ? tostring(var.oms_agent.msi_auth_for_monitoring_enabled) : "false"
         }
       }
-    } : {},
+      } : {
+      omsagent = {
+        enabled = false
+        config  = null
+      }
+    },
     !local.is_automatic && var.azure_policy_enabled ? {
       azurepolicy = { enabled = true }
-    } : {}
+      } : {
+      azurepolicy = { enabled = false }
+    },
+    var.ingress_application_gateway != null ? {
+      ingressApplicationGateway = {
+        enabled = true
+        config = {
+          applicationGatewayId   = var.ingress_application_gateway.application_gateway_id
+          applicationGatewayName = var.ingress_application_gateway.application_gateway_name
+          subnetCIDR             = var.ingress_application_gateway.subnet_cidr
+          subnetId               = var.ingress_application_gateway.subnet_id
+        }
+      }
+      } : {
+      ingressApplicationGateway = {
+        enabled = false
+        config  = null
+      }
+    },
+    var.key_vault_secrets_provider != null ? {
+      azureKeyvaultSecretsProvider = {
+        enabled = true
+        config = {
+          enableSecretRotation = var.key_vault_secrets_provider.secret_rotation_enabled
+          rotationPollInterval = var.key_vault_secrets_provider.secret_rotation_interval
+        }
+      }
+      } : {
+      azureKeyvaultSecretsProvider = {
+        enabled = false
+        config  = null
+      }
+    }
   )
   agent_pool_profile_template = {
     availabilityZones = null
@@ -71,6 +108,7 @@ locals {
     enablePrivateClusterPublicFQDN = var.api_server_access_profile.enable_private_cluster_public_fqdn
     privateDnsZone                 = var.api_server_access_profile.private_dns_zone_id
     subnetId                       = var.api_server_access_profile.subnet_id
+    disableRunCommand              = !var.api_server_access_profile.run_command_enabled
   } : null
   auto_scaler_profile_map = (
     local.is_automatic || !try(var.default_node_pool.auto_scaling_enabled, false) || var.auto_scaler_profile == null
@@ -140,6 +178,22 @@ locals {
       kubeStateMetrics = local.monitor_profile_kube_state_metrics
     } : {}
   )
+  advanced_networking = var.advanced_networking != null ? {
+    enabled = true
+    observability = var.advanced_networking.observability != null ? {
+      enabled = var.advanced_networking.observability.enabled
+    } : null
+    security = var.advanced_networking.security != null ? {
+      enabled                 = var.advanced_networking.security.enabled
+      advancedNetworkPolicies = var.advanced_networking.security.advanced_network_policies
+      transit_encryption = var.advanced_networking.security.transit_encryption != null ? {
+        type = var.advanced_networking.security.transit_encryption.type
+      } : null
+    } : null
+    performance = var.advanced_networking.performance != null ? {
+      accelerationMode = var.advanced_networking.performance.acceleration_mode
+    } : null
+  } : null
   network_profile_combined = local.is_automatic ? merge(
     local.network_profile_template,
     {
@@ -156,7 +210,7 @@ locals {
       podCidrs            = var.network_profile.pod_cidrs
       serviceCidr         = var.network_profile.service_cidr
       serviceCidrs        = var.network_profile.service_cidrs
-      advancedNetworking  = var.advanced_networking
+      advancedNetworking  = local.advanced_networking
       networkMode         = var.network_profile.network_mode
       networkPluginMode   = var.network_profile.network_plugin_mode
       networkDataplane    = var.network_profile.network_data_plane
@@ -231,15 +285,26 @@ locals {
     kubernetesVersion      = var.kubernetes_version
     networkProfile         = local.network_profile_map
     # Placeholders (null) for non-Automatic-only attributes so object type remains consistent across ternary
-    dnsPrefix          = null
+    autoScalerProfile  = null
     autoUpgradeProfile = null
+    dnsPrefix          = null
+    httpProxyConfig    = null
     oidcIssuerProfile  = null
     securityProfile    = null
-    autoScalerProfile  = null
+    windowsProfile     = null
+    storageProfile     = null
+    supportPlan        = null
   }
   properties_final          = { for k, v in local.properties_final_preclean : k => v if v != null }
   properties_final_preclean = local.is_automatic ? local.properties_base : merge(local.properties_base, local.properties_standard_only)
   properties_standard_only = {
+    httpProxyConfig = var.http_proxy_config != null ? {
+      enabled    = true
+      httpProxy  = var.http_proxy_config.http_proxy
+      httpsProxy = var.http_proxy_config.https_proxy
+      noProxy    = var.http_proxy_config.no_proxy
+      trustedCa  = var.http_proxy_config.trusted_ca
+    } : null
     dnsPrefix = coalesce(var.dns_prefix, var.dns_prefix_private_cluster, random_string.dns_prefix.result)
     autoUpgradeProfile = (var.automatic_upgrade_channel != null || var.node_os_channel_upgrade != null) ? {
       upgradeChannel       = var.automatic_upgrade_channel
@@ -261,6 +326,22 @@ locals {
       defender         = null
     }
     autoScalerProfile = local.auto_scaler_profile_map
+    windowsProfile = var.windows_profile != null ? {
+      adminUsername  = var.windows_profile.admin_username
+      enableCSIProxy = var.windows_profile.csi_proxy_enabled
+      gmsaProfile = var.windows_profile.gmsa != null ? {
+        rootDomain = var.windows_profile.gmsa.root_domain
+        enabled    = true
+        dnsServer  = var.windows_profile.gmsa.dns_server
+      } : null
+    } : null
+    storageProfile = var.storage_profile != null ? {
+      diskCSIDriver      = { enabled = var.storage_profile.disk_driver_enabled }
+      fileCSIDriver      = { enabled = var.storage_profile.file_driver_enabled }
+      blobCSIDriver      = { enabled = var.storage_profile.blob_driver_enabled }
+      snapshotController = { enabled = var.storage_profile.snapshot_controller_enabled }
+    } : null
+    supportPlan = var.support_plan
   }
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
 }

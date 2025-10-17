@@ -26,19 +26,25 @@ variable "parent_id" {
   }
 }
 
-variable "aci_connector_linux_subnet_name" {
-  type        = string
-  default     = null
-  description = "The subnet name for the ACI connector Linux."
-}
-
 variable "advanced_networking" {
   type = object({
-    observability = optional(bool, false)
-    security      = optional(bool, false)
+    enabled = optional(bool, false)
+    observability = optional(object({
+      enabled = optional(bool, false)
+    }), null)
+    security = optional(object({
+      advanced_network_policies = optional(string, null)
+      enabled                   = optional(bool, false)
+      transit_encryption = optional(object({
+        type = optional(string, null)
+      }), null)
+    }), null)
+    performance = optional(object({
+      acceleration_mode = optional(string, null)
+    }), null)
   })
   default     = null
-  description = "Advanced networking feature toggles: observability and security sub-features."
+  description = "Advanced networking feature toggles: observability, performance, and security sub-features."
 }
 
 variable "alert_email" {
@@ -54,7 +60,8 @@ variable "api_server_access_profile" {
     enable_private_cluster             = optional(bool)
     enable_private_cluster_public_fqdn = optional(bool)
     private_dns_zone_id                = optional(string)
-  })
+    run_command_enabled                = optional(bool)
+  } )
   default     = null
   description = <<EOT
 - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
@@ -352,12 +359,6 @@ variable "dns_prefix_private_cluster" {
   }
 }
 
-variable "edge_zone" {
-  type        = string
-  default     = null
-  description = "(Optional) Specifies the Extended Zone (formerly called Edge Zone) within the Azure Region where this Managed Kubernetes Cluster should exist. Changing this forces a new resource to be created."
-}
-
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -373,7 +374,7 @@ variable "http_proxy_config" {
   type = object({
     http_proxy  = optional(string)
     https_proxy = optional(string)
-    no_proxy    = optional(set(string))
+    no_proxy    = optional(list(string))
     trusted_ca  = optional(string)
   })
   default     = null
@@ -425,16 +426,6 @@ variable "key_vault_secrets_provider" {
   })
   default     = null
   description = "The key vault secrets provider for the Kubernetes cluster. Either rotation enabled or rotation interval must be specified."
-}
-
-variable "kubelet_identity" {
-  type = object({
-    client_id                 = optional(string)
-    object_id                 = optional(string)
-    user_assigned_identity_id = optional(string)
-  })
-  default     = null
-  description = "The kubelet identity for the Kubernetes cluster."
 }
 
 variable "kubernetes_cluster_node_pool_timeouts" {
@@ -553,26 +544,6 @@ variable "maintenance_window_auto_upgrade" {
   })
   default     = null
   description = "values for maintenance window auto upgrade"
-}
-
-variable "maintenance_window_node_os" {
-  type = object({
-    frequency    = string
-    interval     = number
-    duration     = number
-    day_of_week  = optional(string)
-    day_of_month = optional(number)
-    week_index   = optional(string)
-    start_time   = optional(string)
-    utc_offset   = optional(string)
-    start_date   = optional(string)
-    not_allowed = optional(object({
-      start = string
-      end   = string
-    }))
-  })
-  default     = null
-  description = "values for maintenance window node os"
 }
 
 variable "managed_identities" {
@@ -933,13 +904,6 @@ variable "role_based_access_control_enabled" {
   nullable    = false
 }
 
-variable "run_command_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether or not the run command is enabled for the Kubernetes cluster."
-  nullable    = false
-}
-
 variable "service_mesh_profile" {
   type = object({
     mode                             = string
@@ -956,15 +920,6 @@ variable "service_mesh_profile" {
   })
   default     = null
   description = "The service mesh profile for the Kubernetes cluster."
-}
-
-variable "service_principal" {
-  type = object({
-    client_id     = string
-    client_secret = string
-  })
-  default     = null
-  description = "The service principal for the Kubernetes cluster. Only specify this or identity, not both."
 }
 
 variable "sku" {
@@ -1033,8 +988,9 @@ variable "web_app_routing_dns_zone_ids" {
 
 variable "windows_profile" {
   type = object({
-    admin_username = string
-    license        = optional(string)
+    admin_username    = string
+    license           = optional(string)
+    csi_proxy_enabled = optional(bool, false)
     gmsa = optional(object({
       root_domain = string
       dns_server  = string
@@ -1054,10 +1010,22 @@ variable "windows_profile_password" {
   default     = null
   description = "(Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters."
   sensitive   = true
+  ephemeral   = true
 
   validation {
     condition     = var.windows_profile_password == null ? true : length(var.windows_profile_password) >= 14 && length(var.windows_profile_password) <= 123
     error_message = "The Windows profile password must be between 14 and 123 characters long."
+  }
+}
+
+variable "windows_profile_password_version" {
+  type        = string
+  default     = null
+  description = "(Optional) The version of the Admin Password for Windows VM."
+
+  validation {
+    error_message = "Must be specified when `windows_profile_password` is used"
+    condition     = var.windows_profile_password != null ? var.windows_profile_password_version != null : true
   }
 }
 

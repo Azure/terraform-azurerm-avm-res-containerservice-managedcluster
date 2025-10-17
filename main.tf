@@ -7,6 +7,10 @@ resource "azapi_resource" "this" {
     properties = local.properties_final
     sku        = var.sku
   }
+  sensitive_body = local.sensitive_body
+  sensitive_body_version = {
+    "properties.windowsProfile.adminPassword" = var.windows_profile_password_version
+  }
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
