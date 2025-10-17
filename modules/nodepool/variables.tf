@@ -285,7 +285,6 @@ variable "tags" {
   description = "Optional. A mapping of tags to assign to the resource."
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "temporary_name_for_rotation" {
   type        = string
   default     = null
@@ -301,10 +300,10 @@ variable "timeouts" {
   })
   default     = null
   description = <<-EOT
- - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
- - `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
- - `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
- - `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
+- `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
+- `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
+- `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
 EOT
 }
 

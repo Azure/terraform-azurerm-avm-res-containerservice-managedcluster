@@ -49,12 +49,18 @@ variable "alert_email" {
 
 variable "api_server_access_profile" {
   type = object({
-    authorized_ip_ranges = optional(set(string))
-    vnet_subnet_id       = optional(string)
+    authorized_ip_ranges               = optional(list(string))
+    subnet_id                          = optional(string)
+    enable_private_cluster             = optional(bool)
+    enable_private_cluster_public_fqdn = optional(bool)
+    private_dns_zone_id                = optional(string)
   })
   default     = null
   description = <<EOT
 - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
+- `vnet_subnet_id` - (Optional) The subnet ID for the API server.
+- `enable_private_cluster` - (Optional) Whether to enable private cluster.
+- `private_dns_zone_id` - (Optional) The private DNS zone ID for the API server. Required if `enable_private_cluster`
 EOT
 }
 
@@ -321,7 +327,7 @@ DESCRIPTION
 variable "disk_encryption_set_id" {
   type        = string
   default     = null
-  description = "The disk encryption set resource ID for the Kubernetes cluster."
+  description = "The disk encryption set resource ID for the Kubernetes cluster. The managed identity assigned to the cluster must have 'Contributor' role on the disk encryption set."
 }
 
 variable "dns_prefix" {
@@ -812,25 +818,6 @@ variable "onboard_monitoring" {
     condition     = !var.onboard_monitoring || var.log_analytics_workspace_id != null
     error_message = "When `onboard_monitoring` is true, provide `log_analytics_workspace_id`."
   }
-}
-
-variable "private_cluster_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether or not the Kubernetes cluster is private."
-  nullable    = false
-}
-
-variable "private_cluster_public_fqdn_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether or not the private cluster public FQDN is enabled for the Kubernetes cluster."
-}
-
-variable "private_dns_zone_id" {
-  type        = string
-  default     = null
-  description = "The private DNS zone ID for the Kubernetes cluster."
 }
 
 variable "private_endpoints" {

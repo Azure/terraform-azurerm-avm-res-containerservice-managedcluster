@@ -95,7 +95,7 @@ output "private_endpoints" {
 output "public_fqdn" {
   description = "Returns .fqdn when both private_cluster_enabled and private_cluster_public_fqdn_enabled are true, otherwise null"
   value = (
-    var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
+    var.api_server_access_profile != null && var.api_server_access_profile.enable_private_cluster_public_fqdn
   ) ? azapi_resource.this.output.properties.fqdn : null
 }
 

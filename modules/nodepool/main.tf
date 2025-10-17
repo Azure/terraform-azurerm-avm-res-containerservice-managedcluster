@@ -175,6 +175,11 @@ resource "azapi_resource" "this" {
       error_message = "Eviction policy can only be set when priority is set to 'Spot'."
     }
   }
+  tags = var.tags
+
+  replace_triggers_refs = [
+    "properties.vmSize",
+  ]
 }
 
 resource "azapi_resource" "create_before_destroy_node_pool" {
@@ -219,6 +224,10 @@ resource "azapi_resource" "create_before_destroy_node_pool" {
       error_message = "Node pool name must be less than or equal to 8 characters if create_before_destroy is selected to prevent name conflicts."
     }
   }
+  replace_triggers_refs = [
+    "properties.vmSize",
+  ]
+  tags = var.tags
 }
 
 resource "terraform_data" "pool_name_keeper" {

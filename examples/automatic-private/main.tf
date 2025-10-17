@@ -197,7 +197,9 @@ module "automatic" {
   name        = module.naming.kubernetes_cluster.name_unique
   alert_email = "test@this.com"
   api_server_access_profile = {
-    vnet_subnet_id = azurerm_subnet.api_server.id
+    vnet_subnet_id         = azurerm_subnet.api_server.id
+    enable_private_cluster = true
+    private_dns_zone_id    = azurerm_private_dns_zone.this.id
   }
   default_node_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
@@ -219,11 +221,9 @@ module "automatic" {
   network_profile = {
     outbound_type = "loadBalancer"
   }
-  onboard_alerts          = true
-  onboard_monitoring      = true
-  private_cluster_enabled = true
-  private_dns_zone_id     = azurerm_private_dns_zone.this.id
-  resource_group_name     = azurerm_resource_group.this.name
+  onboard_alerts      = true
+  onboard_monitoring  = true
+  resource_group_name = azurerm_resource_group.this.name
   sku = {
     name = "Automatic"
     tier = "Standard"

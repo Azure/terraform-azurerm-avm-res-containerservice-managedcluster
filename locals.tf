@@ -65,11 +65,12 @@ locals {
       }
     )
   ]
-  api_server_access_profile = (var.api_server_access_profile != null || var.private_cluster_enabled) ? {
-    authorizedIPRanges   = var.api_server_access_profile.authorized_ip_ranges
-    enablePrivateCluster = var.private_cluster_enabled
-    privateDnsZone       = var.private_cluster_enabled ? var.private_dns_zone_id : null
-    subnetId             = var.api_server_access_profile.vnet_subnet_id
+  api_server_access_profile = var.api_server_access_profile != null ? {
+    authorizedIPRanges             = var.api_server_access_profile.authorized_ip_ranges
+    enablePrivateCluster           = var.api_server_access_profile.enable_private_cluster
+    enablePrivateClusterPublicFQDN = var.api_server_access_profile.enable_private_cluster_public_fqdn
+    privateDnsZone                 = var.api_server_access_profile.private_dns_zone_id
+    subnetId                       = var.api_server_access_profile.subnet_id
   } : null
   auto_scaler_profile_map = (
     local.is_automatic || !try(var.default_node_pool.auto_scaling_enabled, false) || var.auto_scaler_profile == null
@@ -139,7 +140,6 @@ locals {
       kubeStateMetrics = local.monitor_profile_kube_state_metrics
     } : {}
   )
-  network_profile_advanced = var.advanced_networking
   network_profile_combined = local.is_automatic ? merge(
     local.network_profile_template,
     {
@@ -156,7 +156,7 @@ locals {
       podCidrs            = var.network_profile.pod_cidrs
       serviceCidr         = var.network_profile.service_cidr
       serviceCidrs        = var.network_profile.service_cidrs
-      advancedNetworking  = local.network_profile_advanced
+      advancedNetworking  = var.advanced_networking
       networkMode         = var.network_profile.network_mode
       networkPluginMode   = var.network_profile.network_plugin_mode
       networkDataplane    = var.network_profile.network_data_plane
@@ -223,11 +223,12 @@ locals {
     ]
   ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
   properties_base = {
-    kubernetesVersion      = var.kubernetes_version
     addonProfiles          = local.addon_profiles
-    azureMonitorProfile    = local.monitor_profile
     agentPoolProfiles      = local.agent_pool_profiles
     apiServerAccessProfile = local.api_server_access_profile
+    azureMonitorProfile    = local.monitor_profile
+    diskEncryptionSetID    = var.disk_encryption_set_id
+    kubernetesVersion      = var.kubernetes_version
     networkProfile         = local.network_profile_map
     # Placeholders (null) for non-Automatic-only attributes so object type remains consistent across ternary
     dnsPrefix          = null
@@ -247,8 +248,13 @@ locals {
     oidcIssuerProfile = var.oidc_issuer_enabled ? { enabled = true } : { enabled = false }
     securityProfile = (var.workload_identity_enabled || var.image_cleaner_enabled || var.defender_log_analytics_workspace_id != null) ? {
       workloadIdentity = var.workload_identity_enabled ? { enabled = true } : null
-      imageCleaner     = var.image_cleaner_enabled ? { enabled = true, intervalHours = var.image_cleaner_interval_hours } : null
-      defender         = var.defender_log_analytics_workspace_id != null ? { logAnalyticsWorkspaceResourceId = var.defender_log_analytics_workspace_id } : null
+      imageCleaner = var.image_cleaner_enabled ? {
+        enabled       = true,
+        intervalHours = var.image_cleaner_interval_hours
+      } : null
+      defender = var.defender_log_analytics_workspace_id != null ? {
+        logAnalyticsWorkspaceResourceId = var.defender_log_analytics_workspace_id
+      } : null
       } : {
       workloadIdentity = null
       imageCleaner     = null
