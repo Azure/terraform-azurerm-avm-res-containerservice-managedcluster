@@ -1,55 +1,4 @@
 locals {
-  addon_profiles = merge(
-    var.log_analytics_workspace_id != null ? {
-      omsagent = {
-        enabled = true
-        config = {
-          logAnalyticsWorkspaceResourceID = var.log_analytics_workspace_id
-          useAADAuth                      = var.oms_agent != null ? tostring(var.oms_agent.msi_auth_for_monitoring_enabled) : "false"
-        }
-      }
-      } : {
-      omsagent = {
-        enabled = false
-        config  = null
-      }
-    },
-    !local.is_automatic && var.azure_policy_enabled ? {
-      azurepolicy = { enabled = true }
-      } : {
-      azurepolicy = { enabled = false }
-    },
-    var.ingress_application_gateway != null ? {
-      ingressApplicationGateway = {
-        enabled = true
-        config = {
-          applicationGatewayId   = var.ingress_application_gateway.application_gateway_id
-          applicationGatewayName = var.ingress_application_gateway.application_gateway_name
-          subnetCIDR             = var.ingress_application_gateway.subnet_cidr
-          subnetId               = var.ingress_application_gateway.subnet_id
-        }
-      }
-      } : {
-      ingressApplicationGateway = {
-        enabled = false
-        config  = null
-      }
-    },
-    var.key_vault_secrets_provider != null ? {
-      azureKeyvaultSecretsProvider = {
-        enabled = true
-        config = {
-          enableSecretRotation = var.key_vault_secrets_provider.secret_rotation_enabled
-          rotationPollInterval = var.key_vault_secrets_provider.secret_rotation_interval
-        }
-      }
-      } : {
-      azureKeyvaultSecretsProvider = {
-        enabled = false
-        config  = null
-      }
-    }
-  )
   advanced_networking = var.advanced_networking != null ? {
     enabled = true
     observability = var.advanced_networking.observability != null ? {
@@ -66,6 +15,7 @@ locals {
       accelerationMode = var.advanced_networking.performance.acceleration_mode
     } : null
   } : null
+
   agent_pool_profile_template = {
     availabilityZones = null
     count             = null
@@ -79,6 +29,7 @@ locals {
     vmSize            = null
     vnetSubnetID      = null
   }
+
   agent_pool_profiles = local.agent_pool_profiles_raw == null ? null : [
     for profile in local.agent_pool_profiles_raw : {
       for k, v in merge(
@@ -87,6 +38,7 @@ locals {
       ) : k => v if !(can(v == null) && v == null)
     }
   ]
+
   agent_pool_profiles_automatic = local.is_automatic ? [
     merge(
       local.agent_pool_profile_template,
@@ -98,8 +50,11 @@ locals {
       }
     )
   ] : []
+
   agent_pool_profiles_combined = concat(local.agent_pool_profiles_automatic, local.agent_pool_profiles_standard)
-  agent_pool_profiles_raw      = length(local.agent_pool_profiles_combined) == 0 ? null : local.agent_pool_profiles_combined
+
+  agent_pool_profiles_raw = length(local.agent_pool_profiles_combined) == 0 ? null : local.agent_pool_profiles_combined
+
   agent_pool_profiles_standard = local.is_automatic ? [] : [
     merge(
       local.agent_pool_profile_template,
@@ -118,6 +73,7 @@ locals {
       }
     )
   ]
+
   api_server_access_profile = var.api_server_access_profile != null ? {
     authorizedIPRanges             = var.api_server_access_profile.authorized_ip_ranges
     enablePrivateCluster           = var.api_server_access_profile.enable_private_cluster
@@ -126,8 +82,9 @@ locals {
     subnetId                       = var.api_server_access_profile.subnet_id
     disableRunCommand              = !var.api_server_access_profile.run_command_enabled
   } : null
+
   auto_scaler_profile_map = (
-    local.is_automatic || !try(var.default_node_pool.auto_scaling_enabled, false) || var.auto_scaler_profile == null
+    local.is_automatic || !var.default_node_pool.auto_scaling_enabled || var.auto_scaler_profile == null
     ) ? null : {
     balanceSimilarNodeGroups                 = var.auto_scaler_profile.balance_similar_node_groups
     daemonsetEvictionForEmptyNodesEnabled    = var.auto_scaler_profile.daemonset_eviction_for_empty_nodes_enabled
@@ -154,11 +111,13 @@ locals {
     (contains(["patch"], var.automatic_upgrade_channel) && can(regex("^[0-9]{1,}\\.[0-9]{1,}$", var.kubernetes_version)) && (can(regex("^[0-9]{1,}\\.[0-9]{1,}$", var.default_node_pool.orchestrator_version)) || var.default_node_pool.orchestrator_version == null)) ||
     (contains(["rapid", "stable", "node-image"], var.automatic_upgrade_channel) && var.kubernetes_version == null && var.default_node_pool.orchestrator_version == null)
   )
+
   default_node_pool_count     = var.default_node_pool.node_count == null ? null : tonumber(var.default_node_pool.node_count)
   default_node_pool_max_count = var.default_node_pool.max_count == null ? null : tonumber(var.default_node_pool.max_count)
   default_node_pool_min_count = var.default_node_pool.min_count == null ? null : tonumber(var.default_node_pool.min_count)
   default_node_pool_name      = coalesce(try(var.default_node_pool.name, null), "systempool")
   is_automatic                = var.sku.name == "Automatic"
+
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
       this = {
@@ -178,6 +137,7 @@ locals {
       }
     } : {}
   }
+
   monitor_profile = local.monitor_profile_enabled ? {
     metrics = local.monitor_profile_metrics
   } : null
@@ -194,79 +154,7 @@ locals {
       kubeStateMetrics = local.monitor_profile_kube_state_metrics
     } : {}
   )
-  network_profile_combined = local.is_automatic ? merge(
-    local.network_profile_template,
-    {
-      outboundType = var.network_profile.outbound_type
-    }
-    ) : merge(
-    local.network_profile_template,
-    {
-      networkPlugin       = var.network_profile.network_plugin
-      dnsServiceIP        = var.network_profile.dns_service_ip
-      networkPolicy       = var.network_profile.network_policy
-      outboundType        = var.network_profile.outbound_type
-      podCidr             = var.network_profile.pod_cidr
-      podCidrs            = var.network_profile.pod_cidrs
-      serviceCidr         = var.network_profile.service_cidr
-      serviceCidrs        = var.network_profile.service_cidrs
-      advancedNetworking  = local.advanced_networking
-      networkMode         = var.network_profile.network_mode
-      networkPluginMode   = var.network_profile.network_plugin_mode
-      networkDataplane    = var.network_profile.network_data_plane
-      ipFamilies          = var.network_profile.ip_versions
-      loadBalancerSku     = var.network_profile.load_balancer_sku
-      loadBalancerProfile = local.network_profile_load_balancer_profile
-      natGatewayProfile   = local.network_profile_nat_gateway_profile
-    }
-  )
-  network_profile_filtered = { for k, v in local.network_profile_combined : k => v if v != null }
-  network_profile_load_balancer_profile = var.network_profile.load_balancer_profile == null ? null : {
-    managedOutboundIPs = (
-      var.network_profile.load_balancer_profile.managed_outbound_ip_count == null &&
-      var.network_profile.load_balancer_profile.managed_outbound_ipv6_count == null
-      ) ? null : {
-      count     = var.network_profile.load_balancer_profile.managed_outbound_ip_count
-      countIPv6 = var.network_profile.load_balancer_profile.managed_outbound_ipv6_count
-    }
-    outboundIPs = length(try(var.network_profile.load_balancer_profile.outbound_ip_address_ids, [])) == 0 ? null : {
-      publicIPs = [for id in var.network_profile.load_balancer_profile.outbound_ip_address_ids : { id = id }]
-    }
-    outboundIPPrefixes = length(try(var.network_profile.load_balancer_profile.outbound_ip_prefix_ids, [])) == 0 ? null : {
-      publicIPPrefixes = [for id in var.network_profile.load_balancer_profile.outbound_ip_prefix_ids : { id = id }]
-    }
-    allocatedOutboundPorts = try(var.network_profile.load_balancer_profile.outbound_ports_allocated, null)
-    idleTimeoutInMinutes   = try(var.network_profile.load_balancer_profile.idle_timeout_in_minutes, null)
-  }
-  network_profile_map = local.is_automatic ? (
-    var.network_profile.outbound_type != null && var.network_profile.outbound_type != "loadBalancer" ? local.network_profile_filtered : null
-  ) : local.network_profile_filtered
-  network_profile_nat_gateway_profile = var.network_profile.nat_gateway_profile == null ? null : {
-    managedOutboundIPProfile = (
-      try(var.network_profile.nat_gateway_profile.managed_outbound_ip_count, null) == null
-      ) ? null : {
-      count = var.network_profile.nat_gateway_profile.managed_outbound_ip_count
-    }
-    idleTimeoutInMinutes = try(var.network_profile.nat_gateway_profile.idle_timeout_in_minutes, null)
-  }
-  network_profile_template = {
-    networkPlugin       = null
-    dnsServiceIP        = null
-    networkPolicy       = null
-    outboundType        = null
-    podCidr             = null
-    podCidrs            = null
-    serviceCidr         = null
-    serviceCidrs        = null
-    advancedNetworking  = null
-    networkMode         = null
-    networkPluginMode   = null
-    networkDataplane    = null
-    ipFamilies          = null
-    loadBalancerSku     = null
-    loadBalancerProfile = null
-    natGatewayProfile   = null
-  }
+
   private_endpoint_application_security_group_associations = { for assoc in flatten([
     for pe_k, pe_v in var.private_endpoints : [
       for asg_k, asg_v in pe_v.application_security_group_associations : {
@@ -276,6 +164,7 @@ locals {
       }
     ]
   ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
+
   properties_base = {
     addonProfiles          = local.addon_profiles
     agentPoolProfiles      = local.agent_pool_profiles

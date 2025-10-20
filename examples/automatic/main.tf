@@ -21,6 +21,12 @@ provider "azurerm" {
   }
 }
 
+module "regions" {
+  source         = "Azure/avm-utl-regions/azurerm"
+  version        = "0.9.0"
+  is_recommended = true
+  region_filter  = local.locations
+}
 # AKS Automatic requires API Server VNet Integration which is not available in all regions yet.
 # See for updated locations: https://learn.microsoft.com/azure/aks/api-server-vnet-integration
 locals {
@@ -94,7 +100,7 @@ locals {
 
 # This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
-  max = length(local.locations) - 1
+  max = length(module.regions.regions) - 1
   min = 0
 }
 ## End of section to provide a random Azure region for the resource group
@@ -106,7 +112,7 @@ resource "random_string" "suffix" {
 }
 
 locals {
-  location = local.locations[random_integer.region_index.result]
+  location = module.regions.regions[random_integer.region_index.result].name
 }
 
 # This ensures we have unique CAF compliant names for our resources.
