@@ -1,9 +1,9 @@
 locals {
-  sensitive_body = {
+  sensitive_body = var.windows_profile == null ? null : {
     properties = {
-      windowsProfile = var.windows_profile != null ? {
+      windowsProfile = {
         adminPassword = var.windows_profile_password
-      } : null
+      }
     }
   }
 }

@@ -18,7 +18,7 @@ resource "azapi_resource" "this" {
   ]
   schema_validation_enabled = false
   sensitive_body            = local.sensitive_body
-  sensitive_body_version = {
+  sensitive_body_version = var.windows_profile == null ? null : {
     "properties.windowsProfile.adminPassword" = var.windows_profile_password_version
   }
   tags           = var.tags

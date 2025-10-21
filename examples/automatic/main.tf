@@ -25,7 +25,7 @@ module "regions" {
   source         = "Azure/avm-utl-regions/azurerm"
   version        = "0.9.0"
   is_recommended = true
-  region_filter  = local.locations
+  region_filter  = ["swedencentral"]
 }
 # AKS Automatic requires API Server VNet Integration which is not available in all regions yet.
 # See for updated locations: https://learn.microsoft.com/azure/aks/api-server-vnet-integration
