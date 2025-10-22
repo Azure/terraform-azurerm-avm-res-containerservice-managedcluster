@@ -117,8 +117,9 @@ data "azurerm_client_config" "current" {}
 module "cni" {
   source = "../.."
 
-  location = azurerm_resource_group.this.location
-  name     = module.naming.kubernetes_cluster.name_unique
+  location  = azurerm_resource_group.this.location
+  name      = module.naming.kubernetes_cluster.name_unique
+  parent_id = azurerm_resource_group.this.id
   # Minimal autoscaler profile to expose autoscaler settings for policy evaluation
   auto_scaler_profile = {
     expander            = "least-waste"
@@ -146,21 +147,7 @@ module "cni" {
   }
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   dns_prefix                          = "cniexample"
-  kubelet_identity = {
-    client_id                 = azurerm_user_assigned_identity.kubelet_identity.client_id
-    object_id                 = azurerm_user_assigned_identity.kubelet_identity.principal_id
-    user_assigned_identity_id = azurerm_user_assigned_identity.kubelet_identity.id
-  }
   maintenance_window_auto_upgrade = {
-    frequency   = "Weekly"
-    interval    = 1
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2024-10-15"
-  }
-  maintenance_window_node_os = {
     frequency   = "Weekly"
     interval    = 1
     day_of_week = "Sunday"
@@ -211,7 +198,6 @@ module "cni" {
   oms_agent = {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   }
-  resource_group_name = azurerm_resource_group.this.name
   storage_profile = {
     blob_driver_enabled         = true
     disk_driver_enabled         = true
