@@ -281,6 +281,21 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_bootstrap_profile"></a> [bootstrap\_profile](#input\_bootstrap\_profile)
+
+Description: Values for cluster bootstrapping information.
+
+Type:
+
+```hcl
+object({
+    artifact_source       = optional(string, "Direct")
+    container_registry_id = optional(string)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_cluster_suffix"></a> [cluster\_suffix](#input\_cluster\_suffix)
 
 Description: Optional. The suffix to append to the Kubernetes cluster name if create\_before\_destroy is set to true on the nodepools.
