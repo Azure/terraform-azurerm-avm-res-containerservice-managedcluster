@@ -215,7 +215,7 @@ variable "bootstrap_profile" {
   description = "Values for cluster bootstrapping information."
 
   validation {
-    condition     = can(index(["Cache", "Direct"], var.bootstrap_profile.artifact_source))
+    condition     = var.bootstrap_profile == null || can(index(["Cache", "Direct"], var.bootstrap_profile.artifact_source))
     error_message = "The artifact source must be one of: 'Cache', or 'Direct'. Defaults to 'Direct'."
   }
 }
