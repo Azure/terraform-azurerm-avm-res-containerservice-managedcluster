@@ -206,6 +206,20 @@ variable "azure_policy_enabled" {
   description = "Whether or not Azure Policy is enabled for the Kubernetes cluster."
 }
 
+variable "bootstrap_profile" {
+  type = object({
+    artifact_source       = optional(string, "Direct")
+    container_registry_id = optional(string)
+  })
+  default     = null
+  description = "Values for cluster bootstrapping information."
+
+  validation {
+    condition     = can(index(["Cache", "Direct"], var.bootstrap_profile.artifact_source))
+    error_message = "The artifact source must be one of: 'Cache', or 'Direct'. Defaults to 'Direct'."
+  }
+}
+
 variable "cluster_suffix" {
   type        = string
   default     = ""

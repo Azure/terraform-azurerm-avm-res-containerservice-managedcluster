@@ -213,6 +213,14 @@ resource "azurerm_kubernetes_cluster" "this" {
       tenant_id              = azure_active_directory_role_based_access_control.value.tenant_id
     }
   }
+  dynamic "bootstrap_profile" {
+    for_each = var.bootstrap_profile != null ? [var.bootstrap_profile] : []
+
+    content {
+      artifact_source       = bootstrap_profile.value.artifact_source
+      container_registry_id = bootstrap_profile.value.container_registry_id
+    }
+  }
   dynamic "confidential_computing" {
     for_each = var.confidential_computing == null ? [] : [var.confidential_computing]
 
