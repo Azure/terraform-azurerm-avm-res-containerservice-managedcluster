@@ -491,6 +491,26 @@ object({
 
 Default: `null`
 
+### <a name="input_ingress_profile"></a> [ingress\_profile](#input\_ingress\_profile)
+
+Description: The ingress profile for the Kubernetes cluster.
+
+Type:
+
+```hcl
+object({
+    web_app_routing = object({
+      enabled               = bool
+      dns_zone_resource_ids = optional(list(string))
+      nginx = object({
+        default_ingress_controller_type = string
+      })
+    })
+  })
+```
+
+Default: `null`
+
 ### <a name="input_key_management_service"></a> [key\_management\_service](#input\_key\_management\_service)
 
 Description: The key management service for the Kubernetes cluster.

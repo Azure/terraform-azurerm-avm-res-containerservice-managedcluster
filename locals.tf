@@ -15,7 +15,6 @@ locals {
       accelerationMode = var.advanced_networking.performance.acceleration_mode
     } : null
   } : null
-
   agent_pool_profile_template = {
     availabilityZones = null
     count             = null
@@ -29,7 +28,6 @@ locals {
     vmSize            = null
     vnetSubnetID      = null
   }
-
   agent_pool_profiles = local.agent_pool_profiles_raw == null ? null : [
     for profile in local.agent_pool_profiles_raw : {
       for k, v in merge(
@@ -38,7 +36,6 @@ locals {
       ) : k => v if !(can(v == null) && v == null)
     }
   ]
-
   agent_pool_profiles_automatic = local.is_automatic ? [
     merge(
       local.agent_pool_profile_template,
@@ -50,11 +47,8 @@ locals {
       }
     )
   ] : []
-
   agent_pool_profiles_combined = concat(local.agent_pool_profiles_automatic, local.agent_pool_profiles_standard)
-
-  agent_pool_profiles_raw = length(local.agent_pool_profiles_combined) == 0 ? null : local.agent_pool_profiles_combined
-
+  agent_pool_profiles_raw      = length(local.agent_pool_profiles_combined) == 0 ? null : local.agent_pool_profiles_combined
   agent_pool_profiles_standard = local.is_automatic ? [] : [
     merge(
       local.agent_pool_profile_template,
@@ -73,7 +67,6 @@ locals {
       }
     )
   ]
-
   api_server_access_profile = var.api_server_access_profile != null ? {
     authorizedIPRanges             = var.api_server_access_profile.authorized_ip_ranges
     enablePrivateCluster           = var.api_server_access_profile.enable_private_cluster
@@ -82,7 +75,6 @@ locals {
     subnetId                       = var.api_server_access_profile.subnet_id
     disableRunCommand              = !var.api_server_access_profile.run_command_enabled
   } : null
-
   auto_scaler_profile_map = (
     local.is_automatic || !var.default_node_pool.auto_scaling_enabled || var.auto_scaler_profile == null
     ) ? null : {
@@ -111,7 +103,6 @@ locals {
     (contains(["patch"], var.automatic_upgrade_channel) && can(regex("^[0-9]{1,}\\.[0-9]{1,}$", var.kubernetes_version)) && (can(regex("^[0-9]{1,}\\.[0-9]{1,}$", var.default_node_pool.orchestrator_version)) || var.default_node_pool.orchestrator_version == null)) ||
     (contains(["rapid", "stable", "node-image"], var.automatic_upgrade_channel) && var.kubernetes_version == null && var.default_node_pool.orchestrator_version == null)
   )
-
   default_node_pool_count     = var.default_node_pool.node_count == null ? null : tonumber(var.default_node_pool.node_count)
   default_node_pool_max_count = var.default_node_pool.max_count == null ? null : tonumber(var.default_node_pool.max_count)
   default_node_pool_min_count = var.default_node_pool.min_count == null ? null : tonumber(var.default_node_pool.min_count)
@@ -126,7 +117,6 @@ locals {
     } : null
   } : null
   is_automatic = var.sku.name == "Automatic"
-
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
       this = {
@@ -146,7 +136,6 @@ locals {
       }
     } : {}
   }
-
   monitor_profile = local.monitor_profile_enabled ? {
     metrics = local.monitor_profile_metrics
   } : null
@@ -163,7 +152,6 @@ locals {
       kubeStateMetrics = local.monitor_profile_kube_state_metrics
     } : {}
   )
-
   private_endpoint_application_security_group_associations = { for assoc in flatten([
     for pe_k, pe_v in var.private_endpoints : [
       for asg_k, asg_v in pe_v.application_security_group_associations : {
@@ -173,7 +161,6 @@ locals {
       }
     ]
   ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
-
   properties_base = {
     addonProfiles          = local.addon_profiles
     agentPoolProfiles      = local.agent_pool_profiles
