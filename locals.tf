@@ -116,7 +116,16 @@ locals {
   default_node_pool_max_count = var.default_node_pool.max_count == null ? null : tonumber(var.default_node_pool.max_count)
   default_node_pool_min_count = var.default_node_pool.min_count == null ? null : tonumber(var.default_node_pool.min_count)
   default_node_pool_name      = coalesce(try(var.default_node_pool.name, null), "systempool")
-  is_automatic                = var.sku.name == "Automatic"
+  ingress_profile = var.ingress_profile != null ? {
+    webAppRouting = var.ingress_profile.web_app_routing != null ? {
+      nginx = var.ingress_profile.web_app_routing.nginx != null ? {
+        defaultIngressControllerType = var.ingress_profile.web_app_routing.nginx.default_ingress_controller_type
+      } : null
+      dnsZoneResourceIds = var.ingress_profile.web_app_routing.dns_zone_resource_ids
+      enabled            = var.ingress_profile.web_app_routing.enabled
+    } : null
+  } : null
+  is_automatic = var.sku.name == "Automatic"
 
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
@@ -173,6 +182,7 @@ locals {
     diskEncryptionSetID    = var.disk_encryption_set_id
     kubernetesVersion      = var.kubernetes_version
     networkProfile         = local.network_profile_map
+    ingressProfile         = local.ingress_profile
     # Placeholders (null) for non-Automatic-only attributes so object type remains consistent across ternary
     autoScalerProfile  = null
     autoUpgradeProfile = null
