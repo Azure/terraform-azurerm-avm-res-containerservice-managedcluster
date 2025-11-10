@@ -203,16 +203,9 @@ module "automatic" {
     private_dns_zone_id    = azurerm_private_dns_zone.this.id
     run_command_enabled    = false
   }
+  default_nginx_controller = "Internal"
   default_node_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
-  }
-  ingress_profile = {
-    web_app_routing = {
-      enabled = true
-      nginx = {
-        default_ingress_controller_type = "Internal"
-      }
-    }
   }
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
   maintenance_window_auto_upgrade = {

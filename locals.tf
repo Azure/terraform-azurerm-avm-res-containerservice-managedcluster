@@ -107,15 +107,15 @@ locals {
   default_node_pool_max_count = var.default_node_pool.max_count == null ? null : tonumber(var.default_node_pool.max_count)
   default_node_pool_min_count = var.default_node_pool.min_count == null ? null : tonumber(var.default_node_pool.min_count)
   default_node_pool_name      = coalesce(try(var.default_node_pool.name, null), "systempool")
-  ingress_profile = var.ingress_profile != null ? {
-    webAppRouting = var.ingress_profile.web_app_routing != null ? {
-      nginx = var.ingress_profile.web_app_routing.nginx != null ? {
-        defaultIngressControllerType = var.ingress_profile.web_app_routing.nginx.default_ingress_controller_type
-      } : null
-      dnsZoneResourceIds = var.ingress_profile.web_app_routing.dns_zone_resource_ids
-      enabled            = var.ingress_profile.web_app_routing.enabled
-    } : null
-  } : null
+  ingress_profile = {
+    webAppRouting = {
+      nginx = {
+        defaultIngressControllerType = var.default_nginx_controller
+      }
+      dnsZoneResourceIds = distinct(concat(values(var.web_app_routing_dns_zone_ids)))
+      enabled            = true
+    }
+  }
   is_automatic = var.sku.name == "Automatic"
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {

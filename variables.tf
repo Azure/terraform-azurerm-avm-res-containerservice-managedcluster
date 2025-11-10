@@ -162,6 +162,11 @@ variable "default_nginx_controller" {
   type        = string
   default     = "AnnotationControlled"
   description = "Specifies the ingress type for the default nginx ingress controller."
+
+  validation {
+    condition     = can(index(["AnnotationControlled", "External", "Internal", "None"], var.default_nginx_controller))
+    error_message = "The default_nginx_controller profile must be one of: 'AnnotationControlled', 'External', 'Internal', or 'None'."
+  }
 }
 
 variable "default_node_pool" {
@@ -408,25 +413,6 @@ variable "ingress_application_gateway" {
   })
   default     = null
   description = "The ingress application gateway for the Kubernetes cluster."
-}
-
-variable "ingress_profile" {
-  type = object({
-    web_app_routing = object({
-      enabled               = bool
-      dns_zone_resource_ids = optional(list(string))
-      nginx = object({
-        default_ingress_controller_type = string
-      })
-    })
-  })
-  default     = null
-  description = "The ingress profile for the Kubernetes cluster."
-
-  validation {
-    condition     = var.ingress_profile == null || can(index(["AnnotationControlled", "External", "Internal", "None"], var.ingress_profile.web_app_routing.nginx.default_ingress_controller_type))
-    error_message = "The default_ingress_controller_type profile must be one of: 'AnnotationControlled', 'External', 'Internal', or 'None'."
-  }
 }
 
 variable "key_management_service" {
