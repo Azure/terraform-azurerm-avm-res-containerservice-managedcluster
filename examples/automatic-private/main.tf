@@ -206,6 +206,14 @@ module "automatic" {
   default_node_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
   }
+  ingress_profile = {
+    web_app_routing = {
+      enabled = true
+      nginx = {
+        default_ingress_controller_type = "Internal"
+      }
+    }
+  }
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
@@ -228,14 +236,6 @@ module "automatic" {
   sku = {
     name = "Automatic"
     tier = "Standard"
-  }
-  ingress_profile = {
-    web_app_routing = {
-      enabled = true
-      nginx = {
-        default_ingress_controller_type = "Internal"
-      }
-    }
   }
 
   depends_on = [
