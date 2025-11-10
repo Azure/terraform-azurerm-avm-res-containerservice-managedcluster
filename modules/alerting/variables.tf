@@ -15,3 +15,9 @@ variable "parent_id" {
   description = "The parent resource group ID"
   nullable    = false
 }
+
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "(Optional) Tags of the resource."
+}
