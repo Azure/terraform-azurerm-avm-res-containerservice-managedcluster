@@ -157,7 +157,6 @@ variable "create_nodepools_before_destroy" {
   nullable    = false
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "default_nginx_controller" {
   type        = string
   default     = "AnnotationControlled"
