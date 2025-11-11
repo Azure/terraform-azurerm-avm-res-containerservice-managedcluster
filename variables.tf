@@ -752,6 +752,12 @@ variable "node_pools" {
   description = "Optional. The additional node pools for the Kubernetes cluster."
 }
 
+variable "node_resource_group_name" {
+  type        = string
+  default     = null
+  description = "The resource group name for the node pool."
+}
+
 variable "oidc_issuer_enabled" {
   type        = bool
   default     = false

@@ -167,9 +167,10 @@ locals {
     apiServerAccessProfile = local.api_server_access_profile
     azureMonitorProfile    = local.monitor_profile
     diskEncryptionSetID    = var.disk_encryption_set_id
+    ingressProfile         = local.ingress_profile
     kubernetesVersion      = var.kubernetes_version
     networkProfile         = local.network_profile_map
-    ingressProfile         = local.ingress_profile
+    nodeResourceGroup      = var.node_resource_group_name
     # Placeholders (null) for non-Automatic-only attributes so object type remains consistent across ternary
     autoScalerProfile  = null
     autoUpgradeProfile = null

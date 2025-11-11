@@ -10,6 +10,9 @@ resource "azapi_resource" "this" {
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_external_values = [
+    var.node_resource_group_name,
+  ]
   response_export_values = [
     "properties.oidcIssuerProfile.issuerURL",
     "properties.identityProfile",

@@ -864,6 +864,14 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_node_resource_group_name"></a> [node\_resource\_group\_name](#input\_node\_resource\_group\_name)
+
+Description: The resource group name for the node pool.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_oidc_issuer_enabled"></a> [oidc\_issuer\_enabled](#input\_oidc\_issuer\_enabled)
 
 Description: Whether or not the OIDC issuer is enabled for the Kubernetes cluster.
