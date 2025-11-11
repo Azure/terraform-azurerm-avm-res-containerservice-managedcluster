@@ -1133,9 +1133,9 @@ Default: `null`
 
 Description: The web app routing DNS zone IDs for the Kubernetes cluster.
 
-Type: `map(list(string))`
+Type: `list(string)`
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_windows_profile"></a> [windows\_profile](#input\_windows\_profile)
 

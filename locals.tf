@@ -112,7 +112,7 @@ locals {
       nginx = {
         defaultIngressControllerType = var.default_nginx_controller
       }
-      dnsZoneResourceIds = distinct(concat(flatten(values(var.web_app_routing_dns_zone_ids))))
+      dnsZoneResourceIds = var.web_app_routing_dns_zone_ids
       enabled            = true
     }
   }
