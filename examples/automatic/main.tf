@@ -22,8 +22,9 @@ provider "azurerm" {
 }
 
 module "regions" {
-  source         = "Azure/avm-utl-regions/azurerm"
-  version        = "0.9.0"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.9.0"
+
   is_recommended = true
   region_filter  = ["swedencentral"]
 }

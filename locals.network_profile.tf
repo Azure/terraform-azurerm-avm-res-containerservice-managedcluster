@@ -25,9 +25,7 @@ locals {
       natGatewayProfile   = local.network_profile_nat_gateway_profile
     }
   )
-
   network_profile_filtered = { for k, v in local.network_profile_combined : k => v if v != null }
-
   network_profile_load_balancer_profile = var.network_profile.load_balancer_profile == null ? null : {
     managedOutboundIPs = (
       var.network_profile.load_balancer_profile.managed_outbound_ip_count == null &&
@@ -45,11 +43,9 @@ locals {
     allocatedOutboundPorts = try(var.network_profile.load_balancer_profile.outbound_ports_allocated, null)
     idleTimeoutInMinutes   = try(var.network_profile.load_balancer_profile.idle_timeout_in_minutes, null)
   }
-
   network_profile_map = local.is_automatic ? (
     var.network_profile.outbound_type != null && var.network_profile.outbound_type != "loadBalancer" ? local.network_profile_filtered : null
   ) : local.network_profile_filtered
-
   network_profile_nat_gateway_profile = var.network_profile.nat_gateway_profile == null ? null : {
     managedOutboundIPProfile = (
       try(var.network_profile.nat_gateway_profile.managed_outbound_ip_count, null) == null
@@ -58,7 +54,6 @@ locals {
     }
     idleTimeoutInMinutes = try(var.network_profile.nat_gateway_profile.idle_timeout_in_minutes, null)
   }
-
   network_profile_template = {
     networkPlugin       = null
     dnsServiceIP        = null

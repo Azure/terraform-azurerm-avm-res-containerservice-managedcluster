@@ -8,6 +8,7 @@ resource "azapi_resource" "dce_msprom" {
     kind       = "Linux"
     properties = {}
   }
+  tags = var.tags
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionrules?pivots=deployment-language-terraform
@@ -50,6 +51,7 @@ resource "azapi_resource" "dcr_msprom" {
       ]
     }
   }
+  tags = var.tags
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionruleassociations?pivots=deployment-language-terraform
@@ -136,6 +138,7 @@ resource "azapi_resource" "prg_node" {
       ]
     }
   }
+  tags = var.tags
 }
 
 # https://learn.microsoft.com/azure/azure-monitor/containers/prometheus-metrics-scrape-default
@@ -230,6 +233,7 @@ resource "azapi_resource" "prg_ux" {
       ]
     }
   }
+  tags = var.tags
 }
 
 resource "azapi_resource" "prg_k8s" {
@@ -337,6 +341,7 @@ resource "azapi_resource" "prg_k8s" {
       ]
     }
   }
+  tags = var.tags
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionrules?pivots=deployment-language-terraform
@@ -393,6 +398,7 @@ resource "azapi_resource" "dcr_msci" {
       ]
     }
   }
+  tags = var.tags
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionruleassociations?pivots=deployment-language-terraform

@@ -17,6 +17,7 @@ resource "azapi_resource" "ag" {
       ]
     }
   }
+  tags = var.tags
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/metricalerts?pivots=deployment-language-terraform
@@ -55,6 +56,7 @@ resource "azapi_resource" "metricalert_cpu" {
       ]
     }
   }
+  tags = var.tags
 }
 
 resource "azapi_resource" "metricalert_memory" {
@@ -92,4 +94,5 @@ resource "azapi_resource" "metricalert_memory" {
       ]
     }
   }
+  tags = var.tags
 }

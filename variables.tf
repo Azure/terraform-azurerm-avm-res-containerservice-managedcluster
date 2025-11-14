@@ -157,11 +157,15 @@ variable "create_nodepools_before_destroy" {
   nullable    = false
 }
 
-# tflint-ignore: terraform_unused_declarations
 variable "default_nginx_controller" {
   type        = string
   default     = "AnnotationControlled"
   description = "Specifies the ingress type for the default nginx ingress controller."
+
+  validation {
+    condition     = can(index(["AnnotationControlled", "External", "Internal", "None"], var.default_nginx_controller))
+    error_message = "The default_nginx_controller profile must be one of: 'AnnotationControlled', 'External', 'Internal', or 'None'."
+  }
 }
 
 variable "default_node_pool" {
@@ -748,6 +752,12 @@ variable "node_pools" {
   description = "Optional. The additional node pools for the Kubernetes cluster."
 }
 
+variable "node_resource_group_name" {
+  type        = string
+  default     = null
+  description = "The resource group name for the node pool."
+}
+
 variable "oidc_issuer_enabled" {
   type        = bool
   default     = false
@@ -981,8 +991,8 @@ variable "upgrade_override" {
 }
 
 variable "web_app_routing_dns_zone_ids" {
-  type        = map(list(string))
-  default     = {}
+  type        = list(string)
+  default     = null
   description = "The web app routing DNS zone IDs for the Kubernetes cluster."
 }
 

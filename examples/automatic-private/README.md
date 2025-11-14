@@ -210,6 +210,7 @@ module "automatic" {
     private_dns_zone_id    = azurerm_private_dns_zone.this.id
     run_command_enabled    = false
   }
+  default_nginx_controller = "Internal"
   default_node_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
   }

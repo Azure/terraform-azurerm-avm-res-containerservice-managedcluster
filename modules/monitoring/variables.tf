@@ -27,3 +27,9 @@ variable "prometheus_workspace_id" {
   description = "The resource ID of the Azure Monitor workspace for managed Prometheus"
   nullable    = false
 }
+
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "(Optional) Tags of the resource."
+}
