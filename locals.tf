@@ -171,6 +171,7 @@ locals {
     kubernetesVersion      = var.kubernetes_version
     networkProfile         = local.network_profile_map
     nodeResourceGroup      = var.node_resource_group_name
+    serviceMeshProfile     = var.service_mesh_profile
     # Placeholders (null) for non-Automatic-only attributes so object type remains consistent across ternary
     autoScalerProfile  = null
     autoUpgradeProfile = null

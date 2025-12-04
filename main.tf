@@ -62,8 +62,8 @@ resource "azapi_resource" "this" {
       error_message = "`oidc_issuer_enabled` must be set to `true` to enable Azure AD Workload Identity"
     }
     precondition {
-      condition     = local.is_automatic || (var.dns_prefix != null) != (var.dns_prefix_private_cluster != null)
-      error_message = "Exactly one of `dns_prefix` or `dns_prefix_private_cluster` must be specified (non-null and non-empty)."
+      condition     = local.is_automatic || (var.dns_prefix == null) || (var.dns_prefix_private_cluster == null)
+      error_message = "Only one of `dns_prefix` or `dns_prefix_private_cluster` can be specified. If neither is specified, a random prefix will be generated."
     }
     precondition {
       condition     = local.is_automatic || (var.dns_prefix_private_cluster == null) || (var.api_server_access_profile.private_dns_zone_id != null)
