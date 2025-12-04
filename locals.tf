@@ -2,7 +2,7 @@ locals {
   aad_profile = var.azure_active_directory_role_based_access_control != null ? {
     adminGroupObjectIDs = var.azure_active_directory_role_based_access_control.admin_group_object_ids
     managed             = true
-    enableAzureRBAC     = var.azure_active_directory_role_based_access_control.enable_azure_rbac
+    enableAzureRBAC     = var.azure_active_directory_role_based_access_control.azure_rbac_enabled
     tenantID            = var.azure_active_directory_role_based_access_control.tenant_id
   } : null
   advanced_networking = var.advanced_networking != null ? {

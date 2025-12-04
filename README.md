@@ -83,7 +83,15 @@ The following input variables are optional (have default values):
 
 ### <a name="input_advanced_networking"></a> [advanced\_networking](#input\_advanced\_networking)
 
-Description: Advanced networking feature toggles: observability, performance, and security sub-features.
+Description: Advanced networking feature toggles: observability, and security sub-features.
+
+## Security
+
+This allows users to configure Layer 7 network policies (FQDN, HTTP, Kafka).  
+Policies themselves must be configured via the Cilium Network Policy resources,  
+see <https://docs.cilium.io/en/latest/security/policy/index.html>.  
+This can be enabled only on cilium-based clusters.  
+If not specified, the default value is FQDN if `security.enabled` is set to true.
 
 Type:
 
@@ -96,12 +104,6 @@ object({
     security = optional(object({
       advanced_network_policies = optional(string, null)
       enabled                   = optional(bool, false)
-      transit_encryption = optional(object({
-        type = optional(string, null)
-      }), null)
-    }), null)
-    performance = optional(object({
-      acceleration_mode = optional(string, null)
     }), null)
   })
 ```
@@ -1026,14 +1028,6 @@ map(object({
 ```
 
 Default: `{}`
-
-### <a name="input_role_based_access_control_enabled"></a> [role\_based\_access\_control\_enabled](#input\_role\_based\_access\_control\_enabled)
-
-Description: Whether or not role-based access control is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `true`
 
 ### <a name="input_service_mesh_profile"></a> [service\_mesh\_profile](#input\_service\_mesh\_profile)
 
