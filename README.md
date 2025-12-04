@@ -190,8 +190,8 @@ Type:
 
 ```hcl
 object({
-    tenant_id              = optional(string)
-    admin_group_object_ids = optional(list(string))
+    tenant_id              = string
+    admin_group_object_ids = list(string)
     azure_rbac_enabled     = optional(bool)
   })
 ```
@@ -410,6 +410,14 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_disable_local_accounts"></a> [disable\_local\_accounts](#input\_disable\_local\_accounts)
+
+Description: Whether or not to disable local accounts on the Kubernetes cluster.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_disk_encryption_set_id"></a> [disk\_encryption\_set\_id](#input\_disk\_encryption\_set\_id)
 
 Description: The disk encryption set resource ID for the Kubernetes cluster. The managed identity assigned to the cluster must have 'Contributor' role on the disk encryption set.
@@ -433,6 +441,14 @@ Description: The Private Cluster DNS prefix specified when creating a private cl
 Type: `string`
 
 Default: `null`
+
+### <a name="input_enable_role_based_access_control"></a> [enable\_role\_based\_access\_control](#input\_enable\_role\_based\_access\_control)
+
+Description: Whether or not to enable role based access control on the Kubernetes cluster.
+
+Type: `bool`
+
+Default: `true`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 

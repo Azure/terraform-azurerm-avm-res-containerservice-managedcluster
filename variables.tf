@@ -118,8 +118,8 @@ variable "automatic_upgrade_channel" {
 
 variable "azure_active_directory_role_based_access_control" {
   type = object({
-    tenant_id              = optional(string)
-    admin_group_object_ids = optional(list(string))
+    tenant_id              = string
+    admin_group_object_ids = list(string)
     azure_rbac_enabled     = optional(bool)
   })
   default     = null
@@ -340,6 +340,18 @@ DESCRIPTION
   }
 }
 
+variable "disable_local_accounts" {
+  type        = bool
+  default     = false
+  description = "Whether or not to disable local accounts on the Kubernetes cluster."
+  nullable    = false
+
+  validation {
+    condition     = var.disable_local_accounts ? var.azure_active_directory_role_based_access_control != null : true
+    error_message = "Disabling local accounts requires Azure role based access control to be enabled."
+  }
+}
+
 variable "disk_encryption_set_id" {
   type        = string
   default     = null
@@ -366,6 +378,13 @@ variable "dns_prefix_private_cluster" {
     condition     = var.dns_prefix_private_cluster == null || can(regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,52}[a-zA-Z0-9])?$", var.dns_prefix_private_cluster))
     error_message = "The DNS prefix must be between 1 and 54 characters long and can only contain letters, numbers and hyphens. Must begin and end with a letter or number."
   }
+}
+
+variable "enable_role_based_access_control" {
+  type        = bool
+  default     = true
+  description = "Whether or not to enable role based access control on the Kubernetes cluster."
+  nullable    = false
 }
 
 variable "enable_telemetry" {

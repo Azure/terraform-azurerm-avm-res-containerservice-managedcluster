@@ -174,21 +174,25 @@ locals {
     nodeResourceGroup      = var.node_resource_group_name
     serviceMeshProfile     = var.service_mesh_profile
     # Placeholders (null) for non-Automatic-only attributes so object type remains consistent across ternary
-    aadProfile         = null
-    autoScalerProfile  = null
-    autoUpgradeProfile = null
-    dnsPrefix          = null
-    httpProxyConfig    = null
-    oidcIssuerProfile  = null
-    securityProfile    = null
-    windowsProfile     = null
-    storageProfile     = null
-    supportPlan        = null
+    aadProfile           = null
+    autoScalerProfile    = null
+    autoUpgradeProfile   = null
+    dnsPrefix            = null
+    disableLocalAccounts = null
+    enableRBAC           = null
+    httpProxyConfig      = null
+    oidcIssuerProfile    = null
+    securityProfile      = null
+    storageProfile       = null
+    supportPlan          = null
+    windowsProfile       = null
   }
   properties_final          = { for k, v in local.properties_final_preclean : k => v if v != null }
   properties_final_preclean = local.is_automatic ? local.properties_base : merge(local.properties_base, local.properties_standard_only)
   properties_standard_only = {
-    aadProfile = local.aad_profile
+    enableRBAC           = var.enable_role_based_access_control
+    disableLocalAccounts = var.disable_local_accounts
+    aadProfile           = local.aad_profile
     httpProxyConfig = var.http_proxy_config != null ? {
       enabled    = true
       httpProxy  = var.http_proxy_config.http_proxy
