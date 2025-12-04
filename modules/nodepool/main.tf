@@ -146,7 +146,7 @@ resource "azapi_resource" "this" {
 
   name      = var.name
   parent_id = var.parent_id
-  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-07-01"
+  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
   body = merge({
     properties = local.agent_pool_properties
   }, var.tags == null ? {} : { tags = var.tags })

@@ -2,7 +2,7 @@ resource "azapi_resource" "this" {
   location  = var.location
   name      = "${var.name}${var.cluster_suffix}"
   parent_id = var.parent_id
-  type      = "Microsoft.ContainerService/managedClusters@2025-07-01"
+  type      = "Microsoft.ContainerService/managedClusters@2025-10-01"
   body = {
     properties = local.properties_final
     sku        = var.sku
