@@ -6,7 +6,7 @@ locals {
     tenantID            = var.azure_active_directory_role_based_access_control.tenant_id
   } : null
   advanced_networking = var.advanced_networking != null ? {
-    enabled = true
+    enabled = var.advanced_networking.enabled
     observability = var.advanced_networking.observability != null ? {
       enabled = var.advanced_networking.observability.enabled
     } : null
@@ -70,6 +70,7 @@ locals {
   api_server_access_profile = var.api_server_access_profile != null ? {
     authorizedIPRanges             = var.api_server_access_profile.authorized_ip_ranges
     enablePrivateCluster           = var.api_server_access_profile.enable_private_cluster
+    enableVnetIntegration          = var.api_server_access_profile.enable_vnet_integration
     enablePrivateClusterPublicFQDN = var.api_server_access_profile.enable_private_cluster_public_fqdn
     privateDnsZone                 = var.api_server_access_profile.private_dns_zone_id
     subnetId                       = var.api_server_access_profile.subnet_id

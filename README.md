@@ -131,6 +131,7 @@ Type:
 object({
     authorized_ip_ranges               = optional(list(string))
     subnet_id                          = optional(string)
+    enable_vnet_integration            = optional(bool)
     enable_private_cluster             = optional(bool)
     enable_private_cluster_public_fqdn = optional(bool)
     private_dns_zone_id                = optional(string)
