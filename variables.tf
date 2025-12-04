@@ -916,20 +916,43 @@ variable "role_based_access_control_enabled" {
 
 variable "service_mesh_profile" {
   type = object({
-    mode                             = string
-    internal_ingress_gateway_enabled = optional(bool)
-    external_ingress_gateway_enabled = optional(bool)
-    revisions                        = optional(list(string), [])
-    certificate_authority = optional(object({
-      key_vault_id           = string
-      root_cert_object_name  = string
-      cert_chain_object_name = string
-      cert_object_name       = string
-      key_object_name        = string
+    mode = string
+    istio = optional(object({
+      certificateAuthority = optional(object({
+        plugin = optional(object({
+          certChainObjectName = optional(string)
+          certObjectName      = optional(string)
+          keyObjectName       = optional(string)
+          keyVaultId          = optional(string)
+          rootCertObjectName  = optional(string)
+        }))
+      }))
+      components = optional(object({
+        egressGateways = optional(object({
+          enabled                  = bool
+          gatewayConfigurationName = optional(string)
+          name                     = optional(string)
+          namespace                = optional(string)
+        }))
+        ingressGateways = optional(object({
+          enabled = bool
+          mode    = optional(string)
+        }))
+      }))
+      revisions = optional(list(string))
     }))
   })
   default     = null
   description = "The service mesh profile for the Kubernetes cluster."
+
+  validation {
+    condition     = var.service_mesh_profile == null || try(var.service_mesh_profile.istio.components.ingressGateways.mode, null) == null || contains(["Internal", "External"], var.service_mesh_profile.istio.components.ingressGateways.mode)
+    error_message = "The ingressGateways mode must be one of: 'Internal' or 'External'."
+  }
+  validation {
+    condition     = var.service_mesh_profile == null || try(var.service_mesh_profile.istio.components.egressGateways.name, null) == null || can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$", var.service_mesh_profile.istio.components.egressGateways.name))
+    error_message = "The egressGateways name must match the pattern: [a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"
+  }
 }
 
 variable "sku" {

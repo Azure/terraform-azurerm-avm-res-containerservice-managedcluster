@@ -1043,16 +1043,30 @@ Type:
 
 ```hcl
 object({
-    mode                             = string
-    internal_ingress_gateway_enabled = optional(bool)
-    external_ingress_gateway_enabled = optional(bool)
-    revisions                        = optional(list(string), [])
-    certificate_authority = optional(object({
-      key_vault_id           = string
-      root_cert_object_name  = string
-      cert_chain_object_name = string
-      cert_object_name       = string
-      key_object_name        = string
+    mode = string
+    istio = optional(object({
+      certificateAuthority = optional(object({
+        plugin = optional(object({
+          certChainObjectName = optional(string)
+          certObjectName      = optional(string)
+          keyObjectName       = optional(string)
+          keyVaultId          = optional(string)
+          rootCertObjectName  = optional(string)
+        }))
+      }))
+      components = optional(object({
+        egressGateways = optional(object({
+          enabled                  = bool
+          gatewayConfigurationName = optional(string)
+          name                     = optional(string)
+          namespace                = optional(string)
+        }))
+        ingressGateways = optional(object({
+          enabled = bool
+          mode    = optional(string)
+        }))
+      }))
+      revisions = optional(list(string))
     }))
   })
 ```
