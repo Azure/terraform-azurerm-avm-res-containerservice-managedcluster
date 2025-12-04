@@ -35,16 +35,20 @@ variable "advanced_networking" {
     security = optional(object({
       advanced_network_policies = optional(string, null)
       enabled                   = optional(bool, false)
-      transit_encryption = optional(object({
-        type = optional(string, null)
-      }), null)
-    }), null)
-    performance = optional(object({
-      acceleration_mode = optional(string, null)
     }), null)
   })
   default     = null
-  description = "Advanced networking feature toggles: observability, performance, and security sub-features."
+  description = <<DESCRIPTION
+Advanced networking feature toggles: observability, and security sub-features.
+
+## Security
+
+This allows users to configure Layer 7 network policies (FQDN, HTTP, Kafka).
+Policies themselves must be configured via the Cilium Network Policy resources,
+see <https://docs.cilium.io/en/latest/security/policy/index.html>.
+This can be enabled only on cilium-based clusters.
+If not specified, the default value is FQDN if `security.enabled` is set to true.
+DESCRIPTION
 }
 
 variable "alert_email" {
@@ -904,13 +908,6 @@ variable "role_assignments" {
 
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
   DESCRIPTION
-  nullable    = false
-}
-
-variable "role_based_access_control_enabled" {
-  type        = bool
-  default     = true
-  description = "Whether or not role-based access control is enabled for the Kubernetes cluster."
   nullable    = false
 }
 

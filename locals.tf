@@ -1,4 +1,10 @@
 locals {
+  aad_profile = var.azure_active_directory_role_based_access_control != null ? {
+    adminGroupObjectIDs = var.azure_active_directory_role_based_access_control.admin_group_object_ids
+    managed             = true
+    enableAzureRBAC     = var.azure_active_directory_role_based_access_control.enable_azure_rbac
+    tenantID            = var.azure_active_directory_role_based_access_control.tenant_id
+  } : null
   advanced_networking = var.advanced_networking != null ? {
     enabled = true
     observability = var.advanced_networking.observability != null ? {
@@ -7,12 +13,6 @@ locals {
     security = var.advanced_networking.security != null ? {
       enabled                 = var.advanced_networking.security.enabled
       advancedNetworkPolicies = var.advanced_networking.security.advanced_network_policies
-      transit_encryption = var.advanced_networking.security.transit_encryption != null ? {
-        type = var.advanced_networking.security.transit_encryption.type
-      } : null
-    } : null
-    performance = var.advanced_networking.performance != null ? {
-      accelerationMode = var.advanced_networking.performance.acceleration_mode
     } : null
   } : null
   agent_pool_profile_template = {
@@ -173,6 +173,7 @@ locals {
     nodeResourceGroup      = var.node_resource_group_name
     serviceMeshProfile     = var.service_mesh_profile
     # Placeholders (null) for non-Automatic-only attributes so object type remains consistent across ternary
+    aadProfile         = null
     autoScalerProfile  = null
     autoUpgradeProfile = null
     dnsPrefix          = null
@@ -186,6 +187,7 @@ locals {
   properties_final          = { for k, v in local.properties_final_preclean : k => v if v != null }
   properties_final_preclean = local.is_automatic ? local.properties_base : merge(local.properties_base, local.properties_standard_only)
   properties_standard_only = {
+    aadProfile = local.aad_profile
     httpProxyConfig = var.http_proxy_config != null ? {
       enabled    = true
       httpProxy  = var.http_proxy_config.http_proxy

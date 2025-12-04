@@ -50,10 +50,6 @@ resource "azapi_resource" "this" {
       error_message = "Either disable automatic upgrades, or specify `kubernetes_version` or `orchestrator_version` only up to the minor version when using `automatic_channel_upgrade=patch`. You don't need to specify `kubernetes_version` at all when using `automatic_channel_upgrade=stable|rapid|node-image`, where `orchestrator_version` always must be set to `null`."
     }
     precondition {
-      condition     = local.is_automatic || var.role_based_access_control_enabled || !(var.azure_active_directory_role_based_access_control != null)
-      error_message = "Enabling Azure Active Directory integration requires that `role_based_access_control_enabled` be set to true."
-    }
-    precondition {
       condition     = local.is_automatic || var.key_management_service == null || try(!var.managed_identities.system_assigned, false)
       error_message = "KMS etcd encryption doesn't work with system-assigned managed identity."
     }
