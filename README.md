@@ -102,7 +102,7 @@ object({
       enabled = optional(bool, false)
     }), null)
     security = optional(object({
-      advanced_network_policies = optional(string, null)
+      advanced_network_policies = optional(string, "FQDN")
       enabled                   = optional(bool, false)
     }), null)
   })
