@@ -5,26 +5,12 @@ output "aci_connector_object_id" {
 
 output "cluster_ca_certificate" {
   description = "Base64 cluster CA certificate from user kubeconfig."
-  sensitive   = true
-  value = try(
-    base64encode(
-      yamldecode(
-        try(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value, "")
-      ).clusters[0].cluster["certificate-authority-data"]
-    ),
-    null
-  )
+  value       = local.kubeconfig_user != null ? yamldecode(local.kubeconfig_user).clusters[0].cluster.certificate-authority-data : null
 }
 
 output "host" {
   description = "API server host from user kubeconfig."
-  sensitive   = true
-  value = try(
-    yamldecode(
-      try(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value, "")
-    ).clusters[0].cluster.server,
-    null
-  )
+  value       = local.kubeconfig_user != null ? yamldecode(local.kubeconfig_user).clusters[0].cluster.server : null
 }
 
 output "ingress_app_object_id" {
@@ -40,13 +26,13 @@ output "key_vault_secrets_provider_object_id" {
 output "kube_admin_config" {
   description = "Admin kubeconfig raw YAML (sensitive)."
   sensitive   = true
-  value       = try(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value, null)
+  value       = local.kubeconfig_admin
 }
 
 output "kube_config" {
   description = "User kubeconfig raw YAML (sensitive)."
   sensitive   = true
-  value       = try(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value, null)
+  value       = local.kubeconfig_user
 }
 
 output "kubelet_identity_id" {
