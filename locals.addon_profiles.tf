@@ -14,7 +14,7 @@ locals {
       } : {
       omsagent = {
         enabled = false
-        config  = null
+        config  = {}
       }
     },
     !local.is_automatic ? var.azure_policy_enabled ? {
