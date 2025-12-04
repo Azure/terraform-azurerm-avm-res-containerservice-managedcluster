@@ -9,7 +9,7 @@ output "cluster_ca_certificate" {
   value = try(
     base64encode(
       yamldecode(
-        try(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value, "")
+        try(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value, "")
       ).clusters[0].cluster["certificate-authority-data"]
     ),
     null
@@ -21,7 +21,7 @@ output "host" {
   sensitive   = true
   value = try(
     yamldecode(
-      try(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value, "")
+      try(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value, "")
     ).clusters[0].cluster.server,
     null
   )
