@@ -59,6 +59,12 @@ variable "fips_enabled" {
   description = "Optional. Whether or not FIPS is enabled."
 }
 
+variable "gpu_driver" {
+  type        = string
+  default     = null
+  description = "Optional. Specifies whether to install the GPU Driver for the nodes. Possible values are Install and None. Changing this forces a new resource to be created."
+}
+
 variable "gpu_instance" {
   type        = string
   default     = null

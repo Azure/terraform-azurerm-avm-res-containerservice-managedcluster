@@ -94,6 +94,14 @@ Type: `bool`
 
 Default: `null`
 
+### <a name="input_gpu_driver"></a> [gpu\_driver](#input\_gpu\_driver)
+
+Description: Optional. Specifies whether to install the GPU Driver for the nodes. Possible values are Install and None. Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_gpu_instance"></a> [gpu\_instance](#input\_gpu\_instance)
 
 Description: Optional. The GPU instance type for the nodepool.
