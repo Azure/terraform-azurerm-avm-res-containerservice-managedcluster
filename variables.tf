@@ -110,9 +110,9 @@ variable "automatic_upgrade_channel" {
 
   validation {
     condition = var.automatic_upgrade_channel == null ? true : contains([
-      "patch", "stable", "rapid", "node-image"
+      "none", "patch", "stable", "rapid", "node-image"
     ], var.automatic_upgrade_channel)
-    error_message = "`automatic_upgrade_channel`'s possible values are `patch`, `stable`, `rapid` or `node-image`."
+    error_message = "`automatic_upgrade_channel`'s possible values are `none`, `patch`, `stable`, `rapid` or `node-image`."
   }
 }
 
