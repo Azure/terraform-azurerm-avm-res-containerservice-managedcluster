@@ -120,6 +120,10 @@ resource "azurerm_container_registry_task_schedule_run_now" "this" {
 module "stateful_workloads" {
   source = "../.."
 
+  location                  = azurerm_resource_group.this.location
+  name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
+  parent_id                 = azurerm_resource_group.this.id
+  automatic_upgrade_channel = "stable"
   default_node_pool = {
     name                    = "systempool"
     node_count              = 3
@@ -127,7 +131,8 @@ module "stateful_workloads" {
     os_type                 = "Linux"
     auto_upgrade_channel    = "stable"
     node_os_upgrade_channel = "NodeImage"
-    zones                   = [2, 3]
+    # Provide zones as strings for consistency with variable type list(string)
+    zones = ["2", "3"]
 
     addon_profile = {
       azure_key_vault_secrets_provider = {
@@ -138,11 +143,7 @@ module "stateful_workloads" {
       max_surge = "10%"
     }
   }
-  location                  = azurerm_resource_group.this.location
-  name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
-  resource_group_name       = azurerm_resource_group.this.name
-  automatic_upgrade_channel = "stable"
-  dns_prefix                = "statefulworkloads"
+  dns_prefix = "statefulworkloads"
   key_vault_secrets_provider = {
     secret_rotation_enabled = true
   }
@@ -153,10 +154,13 @@ module "stateful_workloads" {
   network_profile = {
     network_plugin = "azure"
   }
-  node_os_channel_upgrade   = "NodeImage"
-  node_pools                = var.node_pools
-  oidc_issuer_enabled       = true
-  sku_tier                  = "Standard"
+  node_os_channel_upgrade = "NodeImage"
+  node_pools              = var.node_pools
+  oidc_issuer_enabled     = true
+  sku = {
+    name = "Base"
+    tier = "Standard"
+  }
   workload_identity_enabled = true
 }
 

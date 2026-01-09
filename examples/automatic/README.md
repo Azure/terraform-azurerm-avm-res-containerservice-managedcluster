@@ -28,29 +28,29 @@ provider "azurerm" {
   }
 }
 
+module "regions" {
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.9.0"
 
-locals {
-  locations = [
-    "eastus",
-    "eastus2",
-    "westus2",
-    "centralus",
-    "westeurope",
-    "northeurope",
-    "southeastasia",
-    "japaneast",
-  ]
+  is_recommended = true
+  region_filter  = ["swedencentral"]
 }
 
 # This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
-  max = length(local.locations) - 1
+  max = length(module.regions.regions) - 1
   min = 0
 }
 ## End of section to provide a random Azure region for the resource group
 
+resource "random_string" "suffix" {
+  length  = 4
+  special = false
+  upper   = false
+}
+
 locals {
-  location = local.locations[random_integer.region_index.result]
+  location = module.regions.regions[random_integer.region_index.result].name
 }
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -65,41 +65,43 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-data "azurerm_client_config" "current" {}
+resource "azurerm_monitor_workspace" "example" {
+  location            = azurerm_resource_group.this.location
+  name                = "prom-${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_log_analytics_workspace" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.log_analytics_workspace.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  retention_in_days   = 30
+  sku                 = "PerGB2018"
+}
 
 module "automatic" {
   source = "../.."
 
-  default_node_pool = {
-    name                 = "default"
-    vm_size              = "Standard_DS2_v2"
-    node_count           = 3
-    min_count            = 3
-    max_count            = 3
-    auto_scaling_enabled = true
-    upgrade_settings = {
-      max_surge = "10%"
-    }
-  }
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-  }
-  dns_prefix = "automaticexample"
+  location                   = azurerm_resource_group.this.location
+  name                       = module.naming.kubernetes_cluster.name_unique
+  parent_id                  = azurerm_resource_group.this.id
+  alert_email                = "test@example.com"
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
-    interval    = "1"
+    interval    = 1
     day_of_week = "Sunday"
     duration    = 4
     utc_offset  = "+00:00"
     start_time  = "00:00"
-    start_date  = "2024-10-15T00:00:00Z"
+    start_date  = "2025-09-27"
   }
-  managed_identities = {
-    system_assigned = true
+  onboard_alerts          = true
+  onboard_monitoring      = true
+  prometheus_workspace_id = azurerm_monitor_workspace.example.id
+  sku = {
+    name = "Automatic"
+    tier = "Standard"
   }
 }
 ```
@@ -119,9 +121,11 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
+- [azurerm_monitor_workspace.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_workspace) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -151,6 +155,12 @@ Version:
 Source: Azure/naming/azurerm
 
 Version: 0.4.2
+
+### <a name="module_regions"></a> [regions](#module\_regions)
+
+Source: Azure/avm-utl-regions/azurerm
+
+Version: 0.9.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

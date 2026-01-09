@@ -39,9 +39,9 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azapi_update_resource.aks_cluster_http_proxy_config_no_proxy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azapi_update_resource.aks_cluster_post_create](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource_action.this_admin_kubeconfig](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azapi_resource_action.this_user_kubeconfig](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
@@ -51,8 +51,6 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
-- [terraform_data.http_proxy_config_no_proxy_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
-- [terraform_data.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
@@ -61,16 +59,209 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_default_node_pool"></a> [default\_node\_pool](#input\_default\_node\_pool)
+### <a name="input_location"></a> [location](#input\_location)
 
-Description: Required. The default node pool for the Kubernetes cluster.
+Description: Azure region where the resource should be deployed.
+
+Type: `string`
+
+### <a name="input_name"></a> [name](#input\_name)
+
+Description: The name of this resource.
+
+Type: `string`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the parent resource.
+
+Type: `string`
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
+
+### <a name="input_advanced_networking"></a> [advanced\_networking](#input\_advanced\_networking)
+
+Description: Advanced networking feature toggles: observability, and security sub-features.
+
+## Security
+
+This allows users to configure Layer 7 network policies (FQDN, HTTP, Kafka).  
+Policies themselves must be configured via the Cilium Network Policy resources,  
+see <https://docs.cilium.io/en/latest/security/policy/index.html>.  
+This can be enabled only on cilium-based clusters.  
+If not specified, the default value is FQDN if `security.enabled` is set to true.
 
 Type:
 
 ```hcl
 object({
-    name                          = string
-    vm_size                       = string
+    enabled = optional(bool, false)
+    observability = optional(object({
+      enabled = optional(bool, false)
+    }), null)
+    security = optional(object({
+      advanced_network_policies = optional(string, "FQDN")
+      enabled                   = optional(bool, false)
+    }), null)
+  })
+```
+
+Default: `null`
+
+### <a name="input_alert_email"></a> [alert\_email](#input\_alert\_email)
+
+Description: The email address to send alerts to.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_api_server_access_profile"></a> [api\_server\_access\_profile](#input\_api\_server\_access\_profile)
+
+Description: - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
+- `vnet_subnet_id` - (Optional) The subnet ID for the API server.
+- `enable_private_cluster` - (Optional) Whether to enable private cluster.
+- `private_dns_zone_id` - (Optional) The private DNS zone ID for the API server. Required if `enable_private_cluster`
+
+Type:
+
+```hcl
+object({
+    authorized_ip_ranges               = optional(list(string))
+    subnet_id                          = optional(string)
+    enable_vnet_integration            = optional(bool)
+    enable_private_cluster             = optional(bool)
+    enable_private_cluster_public_fqdn = optional(bool)
+    private_dns_zone_id                = optional(string)
+    run_command_enabled                = optional(bool)
+  })
+```
+
+Default: `null`
+
+### <a name="input_auto_scaler_profile"></a> [auto\_scaler\_profile](#input\_auto\_scaler\_profile)
+
+Description: The auto scaler profile for the Kubernetes cluster.
+
+Type:
+
+```hcl
+object({
+    balance_similar_node_groups                   = optional(string)
+    daemonset_eviction_for_empty_nodes_enabled    = optional(string)
+    daemonset_eviction_for_occupied_nodes_enabled = optional(string)
+    empty_bulk_delete_max                         = optional(string)
+    expander                                      = optional(string)
+    ignore_daemonsets_utilization_enabled         = optional(string)
+    max_graceful_termination_sec                  = optional(string)
+    max_node_provisioning_time                    = optional(string)
+    max_unready_nodes                             = optional(string)
+    max_unready_percentage                        = optional(string)
+    new_pod_scale_up_delay                        = optional(string)
+    scale_down_delay_after_add                    = optional(string)
+    scale_down_delay_after_delete                 = optional(string)
+    scale_down_delay_after_failure                = optional(string)
+    scale_down_unneeded                           = optional(string)
+    scale_down_unready                            = optional(string)
+    scale_down_utilization_threshold              = optional(string)
+    scan_interval                                 = optional(string)
+    skip_nodes_with_local_storage                 = optional(string)
+    skip_nodes_with_system_pods                   = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_automatic_upgrade_channel"></a> [automatic\_upgrade\_channel](#input\_automatic\_upgrade\_channel)
+
+Description: (Optional) The upgrade channel for this Kubernetes Cluster. Possible values are `patch`, `rapid`, `node-image` and `stable`. By default automatic-upgrades are turned off. Note that you cannot specify the patch version using `kubernetes_version` or `orchestrator_version` when using the `patch` upgrade channel. See [the documentation](https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-cluster) for more information
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_azure_active_directory_role_based_access_control"></a> [azure\_active\_directory\_role\_based\_access\_control](#input\_azure\_active\_directory\_role\_based\_access\_control)
+
+Description: The Azure Active Directory role-based access control for the Kubernetes cluster.
+
+Type:
+
+```hcl
+object({
+    tenant_id              = string
+    admin_group_object_ids = list(string)
+    azure_rbac_enabled     = optional(bool)
+  })
+```
+
+Default: `null`
+
+### <a name="input_azure_policy_enabled"></a> [azure\_policy\_enabled](#input\_azure\_policy\_enabled)
+
+Description: Whether or not Azure Policy is enabled for the Kubernetes cluster.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_cluster_suffix"></a> [cluster\_suffix](#input\_cluster\_suffix)
+
+Description: Optional. The suffix to append to the Kubernetes cluster name if create\_before\_destroy is set to true on the nodepools.
+
+Type: `string`
+
+Default: `""`
+
+### <a name="input_confidential_computing"></a> [confidential\_computing](#input\_confidential\_computing)
+
+Description: - `sgx_quote_helper_enabled` - (Required) Should the SGX quote helper be enabled?
+
+Type:
+
+```hcl
+object({
+    sgx_quote_helper_enabled = bool
+  })
+```
+
+Default: `null`
+
+### <a name="input_cost_analysis_enabled"></a> [cost\_analysis\_enabled](#input\_cost\_analysis\_enabled)
+
+Description: Whether or not cost analysis is enabled for the Kubernetes cluster. SKU must be Standard or Premium.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_create_nodepools_before_destroy"></a> [create\_nodepools\_before\_destroy](#input\_create\_nodepools\_before\_destroy)
+
+Description: Whether or not to create node pools before destroying the old ones. This is the opposite of the default behavior. Set this to true if zero downtime is required during nodepool redeployments such as changes to snapshot\_id.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_default_nginx_controller"></a> [default\_nginx\_controller](#input\_default\_nginx\_controller)
+
+Description: Specifies the ingress type for the default nginx ingress controller.
+
+Type: `string`
+
+Default: `"AnnotationControlled"`
+
+### <a name="input_default_node_pool"></a> [default\_node\_pool](#input\_default\_node\_pool)
+
+Description: The default node pool for the Kubernetes cluster.
+
+Type:
+
+```hcl
+object({
+    name                          = optional(string, "systempool")
+    vm_size                       = optional(string)
     capacity_reservation_group_id = optional(string)
     auto_scaling_enabled          = optional(bool, false)
     host_encryption_enabled       = optional(bool)
@@ -100,7 +291,7 @@ object({
     zones                         = optional(list(string))
     max_count                     = optional(number)
     min_count                     = optional(number)
-    node_count                    = optional(number)
+    node_count                    = optional(number, 3)
     kubelet_config = optional(object({
       cpu_manager_policy        = optional(string)
       cpu_cfs_quota_enabled     = optional(bool, true)
@@ -168,164 +359,14 @@ object({
   })
 ```
 
-### <a name="input_location"></a> [location](#input\_location)
+Default:
 
-Description: Azure region where the resource should be deployed.
-
-Type: `string`
-
-### <a name="input_name"></a> [name](#input\_name)
-
-Description: The name of this resource.
-
-Type: `string`
-
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: The resource group where the resources will be deployed.
-
-Type: `string`
-
-## Optional Inputs
-
-The following input variables are optional (have default values):
-
-### <a name="input_aci_connector_linux_subnet_name"></a> [aci\_connector\_linux\_subnet\_name](#input\_aci\_connector\_linux\_subnet\_name)
-
-Description: The subnet name for the ACI connector Linux.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_api_server_access_profile"></a> [api\_server\_access\_profile](#input\_api\_server\_access\_profile)
-
-Description: - `authorized_ip_ranges` - (Optional) Set of authorized IP ranges to allow access to API server, e.g. ["198.51.100.0/24"].
-- `subnet_id` - (Optional) The ID of the Subnet where the API server endpoint is delegated to.
-- `virtual_network_integration_enabled` - (Optional) Whether to enable virtual network integration for the API Server. Defaults to false.
-
-Type:
-
-```hcl
-object({
-    authorized_ip_ranges                = optional(set(string))
-    subnet_id                           = optional(string)
-    virtual_network_integration_enabled = optional(bool, false)
-  })
+```json
+{
+  "name": "systempool",
+  "node_count": 3
+}
 ```
-
-Default: `null`
-
-### <a name="input_auto_scaler_profile"></a> [auto\_scaler\_profile](#input\_auto\_scaler\_profile)
-
-Description: The auto scaler profile for the Kubernetes cluster.
-
-Type:
-
-```hcl
-object({
-    balance_similar_node_groups                   = optional(string)
-    daemonset_eviction_for_empty_nodes_enabled    = optional(string)
-    daemonset_eviction_for_occupied_nodes_enabled = optional(string)
-    empty_bulk_delete_max                         = optional(string)
-    expander                                      = optional(string)
-    ignore_daemonsets_utilization_enabled         = optional(string)
-    max_graceful_termination_sec                  = optional(string)
-    max_node_provisioning_time                    = optional(string)
-    max_unready_nodes                             = optional(string)
-    max_unready_percentage                        = optional(string)
-    new_pod_scale_up_delay                        = optional(string)
-    scale_down_delay_after_add                    = optional(string)
-    scale_down_delay_after_delete                 = optional(string)
-    scale_down_delay_after_failure                = optional(string)
-    scale_down_unneeded                           = optional(string)
-    scale_down_unready                            = optional(string)
-    scale_down_utilization_threshold              = optional(string)
-    scan_interval                                 = optional(string)
-    skip_nodes_with_local_storage                 = optional(string)
-    skip_nodes_with_system_pods                   = optional(string)
-  })
-```
-
-Default: `null`
-
-### <a name="input_automatic_upgrade_channel"></a> [automatic\_upgrade\_channel](#input\_automatic\_upgrade\_channel)
-
-Description: (Optional) The upgrade channel for this Kubernetes Cluster. Possible values are `patch`, `rapid`, `node-image` and `stable`. By default automatic-upgrades are turned off. Note that you cannot specify the patch version using `kubernetes_version` or `orchestrator_version` when using the `patch` upgrade channel. See [the documentation](https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-cluster) for more information
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_azure_active_directory_role_based_access_control"></a> [azure\_active\_directory\_role\_based\_access\_control](#input\_azure\_active\_directory\_role\_based\_access\_control)
-
-Description: The Azure Active Directory role-based access control for the Kubernetes cluster.
-
-Type:
-
-```hcl
-object({
-    tenant_id              = optional(string)
-    admin_group_object_ids = optional(list(string))
-    azure_rbac_enabled     = optional(bool)
-  })
-```
-
-Default: `null`
-
-### <a name="input_azure_policy_enabled"></a> [azure\_policy\_enabled](#input\_azure\_policy\_enabled)
-
-Description: Whether or not Azure Policy is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `true`
-
-### <a name="input_cluster_suffix"></a> [cluster\_suffix](#input\_cluster\_suffix)
-
-Description: Optional. The suffix to append to the Kubernetes cluster name if create\_before\_destroy is set to true on the nodepools.
-
-Type: `string`
-
-Default: `""`
-
-### <a name="input_confidential_computing"></a> [confidential\_computing](#input\_confidential\_computing)
-
-Description: - `sgx_quote_helper_enabled` - (Required) Should the SGX quote helper be enabled?
-
-Type:
-
-```hcl
-object({
-    sgx_quote_helper_enabled = bool
-  })
-```
-
-Default: `null`
-
-### <a name="input_cost_analysis_enabled"></a> [cost\_analysis\_enabled](#input\_cost\_analysis\_enabled)
-
-Description: Whether or not cost analysis is enabled for the Kubernetes cluster. SKU must be Standard or Premium.
-
-Type: `bool`
-
-Default: `false`
-
-### <a name="input_create_nodepools_before_destroy"></a> [create\_nodepools\_before\_destroy](#input\_create\_nodepools\_before\_destroy)
-
-Description: Whether or not to create node pools before destroying the old ones. This is the opposite of the default behavior. Set this to true if zero downtime is required during nodepool redeployments such as changes to snapshot\_id.
-
-Type: `bool`
-
-Default: `false`
-
-### <a name="input_default_nginx_controller"></a> [default\_nginx\_controller](#input\_default\_nginx\_controller)
-
-Description: Specifies the ingress type for the default nginx ingress controller.
-
-Type: `string`
-
-Default: `"AnnotationControlled"`
 
 ### <a name="input_defender_log_analytics_workspace_id"></a> [defender\_log\_analytics\_workspace\_id](#input\_defender\_log\_analytics\_workspace\_id)
 
@@ -369,9 +410,17 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_disable_local_accounts"></a> [disable\_local\_accounts](#input\_disable\_local\_accounts)
+
+Description: Whether or not to disable local accounts on the Kubernetes cluster.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_disk_encryption_set_id"></a> [disk\_encryption\_set\_id](#input\_disk\_encryption\_set\_id)
 
-Description: The disk encryption set ID for the Kubernetes cluster.
+Description: The disk encryption set resource ID for the Kubernetes cluster. The managed identity assigned to the cluster must have 'Contributor' role on the disk encryption set.
 
 Type: `string`
 
@@ -393,13 +442,13 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_edge_zone"></a> [edge\_zone](#input\_edge\_zone)
+### <a name="input_enable_role_based_access_control"></a> [enable\_role\_based\_access\_control](#input\_enable\_role\_based\_access\_control)
 
-Description: (Optional) Specifies the Extended Zone (formerly called Edge Zone) within the Azure Region where this Managed Kubernetes Cluster should exist. Changing this forces a new resource to be created.
+Description: Whether or not to enable role based access control on the Kubernetes cluster.
 
-Type: `string`
+Type: `bool`
 
-Default: `null`
+Default: `true`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -411,14 +460,6 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_http_application_routing_enabled"></a> [http\_application\_routing\_enabled](#input\_http\_application\_routing\_enabled)
-
-Description: Whether or not HTTP application routing is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `false`
-
 ### <a name="input_http_proxy_config"></a> [http\_proxy\_config](#input\_http\_proxy\_config)
 
 Description: The HTTP proxy configuration for the Kubernetes cluster.
@@ -429,7 +470,7 @@ Type:
 object({
     http_proxy  = optional(string)
     https_proxy = optional(string)
-    no_proxy    = optional(set(string))
+    no_proxy    = optional(list(string))
     trusted_ca  = optional(string)
   })
 ```
@@ -494,22 +535,6 @@ Type:
 object({
     secret_rotation_enabled  = optional(bool)
     secret_rotation_interval = optional(string)
-  })
-```
-
-Default: `null`
-
-### <a name="input_kubelet_identity"></a> [kubelet\_identity](#input\_kubelet\_identity)
-
-Description: The kubelet identity for the Kubernetes cluster.
-
-Type:
-
-```hcl
-object({
-    client_id                 = optional(string)
-    object_id                 = optional(string)
-    user_assigned_identity_id = optional(string)
   })
 ```
 
@@ -604,6 +629,14 @@ object({
 
 Default: `null`
 
+### <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id)
+
+Description: The Log Analytics Workspace Resource ID for container logging.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_maintenance_window"></a> [maintenance\_window](#input\_maintenance\_window)
 
 Description: The maintenance window for the Kubernetes cluster.
@@ -634,33 +667,7 @@ Type:
 ```hcl
 object({
     frequency    = string
-    interval     = string
-    duration     = number
-    day_of_week  = optional(string)
-    day_of_month = optional(number)
-    week_index   = optional(string)
-    start_time   = optional(string)
-    utc_offset   = optional(string)
-    start_date   = optional(string)
-    not_allowed = optional(object({
-      start = string
-      end   = string
-    }))
-  })
-```
-
-Default: `null`
-
-### <a name="input_maintenance_window_node_os"></a> [maintenance\_window\_node\_os](#input\_maintenance\_window\_node\_os)
-
-Description: values for maintenance window node os
-
-Type:
-
-```hcl
-object({
-    frequency    = string
-    interval     = string
+    interval     = number
     duration     = number
     day_of_week  = optional(string)
     day_of_month = optional(number)
@@ -718,7 +725,7 @@ Type:
 
 ```hcl
 object({
-    network_plugin      = string
+    network_plugin      = optional(string)
     network_mode        = optional(string)
     network_policy      = optional(string)
     dns_service_ip      = optional(string)
@@ -895,50 +902,33 @@ Default: `false`
 
 ### <a name="input_oms_agent"></a> [oms\_agent](#input\_oms\_agent)
 
-Description: Optional. The OMS agent for the Kubernetes cluster.
+Description: The OMS agent configuration for the Kubernetes cluster. Uses `var.log_analytics_workspace_id` for the Log Analytics Workspace. Omit or set to `null` to disable.
 
 Type:
 
 ```hcl
 object({
-    log_analytics_workspace_id      = string
     msi_auth_for_monitoring_enabled = optional(bool)
   })
 ```
 
 Default: `null`
 
-### <a name="input_open_service_mesh_enabled"></a> [open\_service\_mesh\_enabled](#input\_open\_service\_mesh\_enabled)
+### <a name="input_onboard_alerts"></a> [onboard\_alerts](#input\_onboard\_alerts)
 
-Description: Whether or not open service mesh is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `false`
-
-### <a name="input_private_cluster_enabled"></a> [private\_cluster\_enabled](#input\_private\_cluster\_enabled)
-
-Description: Whether or not the Kubernetes cluster is private.
+Description: Whether to enable recommended alerts. Set to false to disable alerts even if monitoring is enabled and alert\_email is provided.
 
 Type: `bool`
 
 Default: `false`
 
-### <a name="input_private_cluster_public_fqdn_enabled"></a> [private\_cluster\_public\_fqdn\_enabled](#input\_private\_cluster\_public\_fqdn\_enabled)
+### <a name="input_onboard_monitoring"></a> [onboard\_monitoring](#input\_onboard\_monitoring)
 
-Description: Whether or not the private cluster public FQDN is enabled for the Kubernetes cluster.
+Description: Whether to enable monitoring resources. Set to false to disable monitoring even if workspace IDs are provided.
 
 Type: `bool`
 
 Default: `false`
-
-### <a name="input_private_dns_zone_id"></a> [private\_dns\_zone\_id](#input\_private\_dns\_zone\_id)
-
-Description: The private DNS zone ID for the Kubernetes cluster.
-
-Type: `string`
-
-Default: `null`
 
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
@@ -1017,6 +1007,14 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_prometheus_workspace_id"></a> [prometheus\_workspace\_id](#input\_prometheus\_workspace\_id)
+
+Description: The monitor workspace resource ID for managed Prometheus.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description:   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -1049,22 +1047,6 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_role_based_access_control_enabled"></a> [role\_based\_access\_control\_enabled](#input\_role\_based\_access\_control\_enabled)
-
-Description: Whether or not role-based access control is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `true`
-
-### <a name="input_run_command_enabled"></a> [run\_command\_enabled](#input\_run\_command\_enabled)
-
-Description: Whether or not the run command is enabled for the Kubernetes cluster.
-
-Type: `bool`
-
-Default: `false`
-
 ### <a name="input_service_mesh_profile"></a> [service\_mesh\_profile](#input\_service\_mesh\_profile)
 
 Description: The service mesh profile for the Kubernetes cluster.
@@ -1073,44 +1055,57 @@ Type:
 
 ```hcl
 object({
-    mode                             = string
-    internal_ingress_gateway_enabled = optional(bool)
-    external_ingress_gateway_enabled = optional(bool)
-    revisions                        = optional(list(string), [])
-    certificate_authority = optional(object({
-      key_vault_id           = string
-      root_cert_object_name  = string
-      cert_chain_object_name = string
-      cert_object_name       = string
-      key_object_name        = string
+    mode = string
+    istio = optional(object({
+      certificateAuthority = optional(object({
+        plugin = optional(object({
+          certChainObjectName = optional(string)
+          certObjectName      = optional(string)
+          keyObjectName       = optional(string)
+          keyVaultId          = optional(string)
+          rootCertObjectName  = optional(string)
+        }))
+      }))
+      components = optional(object({
+        egressGateways = optional(object({
+          enabled                  = bool
+          gatewayConfigurationName = optional(string)
+          name                     = optional(string)
+          namespace                = optional(string)
+        }))
+        ingressGateways = optional(object({
+          enabled = bool
+          mode    = optional(string)
+        }))
+      }))
+      revisions = optional(list(string))
     }))
   })
 ```
 
 Default: `null`
 
-### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
+### <a name="input_sku"></a> [sku](#input\_sku)
 
-Description: The service principal for the Kubernetes cluster. Only specify this or identity, not both.
+Description: The SKU configuration for the cluster, including name and tier.
 
 Type:
 
 ```hcl
 object({
-    client_id     = string
-    client_secret = string
+    name = string
+    tier = string
   })
 ```
 
-Default: `null`
+Default:
 
-### <a name="input_sku_tier"></a> [sku\_tier](#input\_sku\_tier)
-
-Description: The SKU tier of the Kubernetes Cluster. Possible values are Free, Standard, and Premium.
-
-Type: `string`
-
-Default: `"Standard"`
+```json
+{
+  "name": "Base",
+  "tier": "Standard"
+}
+```
 
 ### <a name="input_storage_profile"></a> [storage\_profile](#input\_storage\_profile)
 
@@ -1164,9 +1159,9 @@ Default: `null`
 
 Description: The web app routing DNS zone IDs for the Kubernetes cluster.
 
-Type: `map(list(string))`
+Type: `list(string)`
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_windows_profile"></a> [windows\_profile](#input\_windows\_profile)
 
@@ -1176,8 +1171,9 @@ Type:
 
 ```hcl
 object({
-    admin_username = string
-    license        = optional(string)
+    admin_username    = string
+    license           = optional(string)
+    csi_proxy_enabled = optional(bool, false)
     gmsa = optional(object({
       root_domain = string
       dns_server  = string
@@ -1190,6 +1186,14 @@ Default: `null`
 ### <a name="input_windows_profile_password"></a> [windows\_profile\_password](#input\_windows\_profile\_password)
 
 Description: (Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_windows_profile_password_version"></a> [windows\_profile\_password\_version](#input\_windows\_profile\_password\_version)
+
+Description: (Optional) The version of the Admin Password for Windows VM.
 
 Type: `string`
 
@@ -1224,35 +1228,35 @@ The following outputs are exported:
 
 ### <a name="output_aci_connector_object_id"></a> [aci\_connector\_object\_id](#output\_aci\_connector\_object\_id)
 
-Description: The object ID of the ACI Connector identity
+Description: (Not directly available via azapi without extra GET)
 
 ### <a name="output_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#output\_cluster\_ca\_certificate)
 
-Description: The CA certificate of the AKS cluster.
+Description: Base64 cluster CA certificate from user kubeconfig.
 
 ### <a name="output_host"></a> [host](#output\_host)
 
-Description: AKS API host — returns .fqdn when public\_fqdn\_enabled, otherwise kube\_config[0].host
+Description: API server host from user kubeconfig.
 
 ### <a name="output_ingress_app_object_id"></a> [ingress\_app\_object\_id](#output\_ingress\_app\_object\_id)
 
-Description: The object ID of the Ingress Application identity
+Description: Ingress Application identity object id (not currently extracted).
 
 ### <a name="output_key_vault_secrets_provider_object_id"></a> [key\_vault\_secrets\_provider\_object\_id](#output\_key\_vault\_secrets\_provider\_object\_id)
 
-Description: The object ID of the key vault secrets provider.
+Description: Key vault secrets provider identity object id (not currently extracted).
 
 ### <a name="output_kube_admin_config"></a> [kube\_admin\_config](#output\_kube\_admin\_config)
 
-Description: The kube\_admin\_config block of the AKS cluster, only available when Local Accounts & Role-Based Access Control (RBAC) with AAD are enabled.
+Description: Admin kubeconfig raw YAML (sensitive).
 
 ### <a name="output_kube_config"></a> [kube\_config](#output\_kube\_config)
 
-Description: The kube\_config block of the AKS cluster
+Description: User kubeconfig raw YAML (sensitive).
 
 ### <a name="output_kubelet_identity_id"></a> [kubelet\_identity\_id](#output\_kubelet\_identity\_id)
 
-Description: The identity ID of the kubelet identity.
+Description: Kubelet identity object id (not currently extracted).
 
 ### <a name="output_name"></a> [name](#output\_name)
 
@@ -1260,7 +1264,11 @@ Description: Name of the Kubernetes cluster.
 
 ### <a name="output_node_resource_group_id"></a> [node\_resource\_group\_id](#output\_node\_resource\_group\_id)
 
-Description: The resource group ID of the node resource group.
+Description: Node resource group name not exported; manual lookup required.
+
+### <a name="output_node_resource_group_name"></a> [node\_resource\_group\_name](#output\_node\_resource\_group\_name)
+
+Description: Name of the automatically created node resource group.
 
 ### <a name="output_nodepool_resource_ids"></a> [nodepool\_resource\_ids](#output\_nodepool\_resource\_ids)
 
@@ -1268,7 +1276,7 @@ Description: A map of nodepool keys to resource ids.
 
 ### <a name="output_oidc_issuer_url"></a> [oidc\_issuer\_url](#output\_oidc\_issuer\_url)
 
-Description: The OIDC issuer URL of the Kubernetes cluster.
+Description: OIDC issuer URL from GET export values.
 
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
@@ -1282,17 +1290,43 @@ Description: Returns .fqdn when both private\_cluster\_enabled and private\_clus
 
 Description: Resource ID of the Kubernetes cluster.
 
+### <a name="output_user_assigned_identity_client_ids"></a> [user\_assigned\_identity\_client\_ids](#output\_user\_assigned\_identity\_client\_ids)
+
+Description: Map of identity profile keys to clientIds.
+
+### <a name="output_user_assigned_identity_object_ids"></a> [user\_assigned\_identity\_object\_ids](#output\_user\_assigned\_identity\_object\_ids)
+
+Description: Map of identity profile keys to principalIds.
+
 ### <a name="output_web_app_routing_client_id"></a> [web\_app\_routing\_client\_id](#output\_web\_app\_routing\_client\_id)
 
 Description: The object ID of the web app routing identity
 
 ### <a name="output_web_app_routing_object_id"></a> [web\_app\_routing\_object\_id](#output\_web\_app\_routing\_object\_id)
 
-Description: The object ID of the web app routing identity
+Description: Web app routing identity object id (not currently extracted).
 
 ## Modules
 
 The following Modules are called:
+
+### <a name="module_alerting"></a> [alerting](#module\_alerting)
+
+Source: ./modules/alerting
+
+Version:
+
+### <a name="module_maintenance_auto_upgrade"></a> [maintenance\_auto\_upgrade](#module\_maintenance\_auto\_upgrade)
+
+Source: ./modules/maintenanceconfiguration
+
+Version:
+
+### <a name="module_monitoring"></a> [monitoring](#module\_monitoring)
+
+Source: ./modules/monitoring
+
+Version:
 
 ### <a name="module_nodepools"></a> [nodepools](#module\_nodepools)
 

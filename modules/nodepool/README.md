@@ -11,26 +11,20 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.0.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 2.0.0)
 
 ## Resources
 
 The following resources are used by this module:
 
-- [azurerm_kubernetes_cluster_node_pool.create_before_destroy_node_pool](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
-- [azurerm_kubernetes_cluster_node_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
+- [azapi_resource.create_before_destroy_node_pool](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [terraform_data.pool_name_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_cluster_resource_id"></a> [cluster\_resource\_id](#input\_cluster\_resource\_id)
-
-Description: Resource ID of the existing Kubernetes cluster.
-
-Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
@@ -41,6 +35,12 @@ Type: `string`
 ### <a name="input_network_plugin_mode"></a> [network\_plugin\_mode](#input\_network\_plugin\_mode)
 
 Description: The network plugin mode for the nodepool.
+
+Type: `string`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: Resource ID of the existing Kubernetes cluster.
 
 Type: `string`
 
@@ -494,11 +494,11 @@ The following outputs are exported:
 
 ### <a name="output_name"></a> [name](#output\_name)
 
-Description: Name of the Kubernetes cluster.
+Description: Name of the Kubernetes node pool.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
-Description: Resource ID of the Kubernetes cluster.
+Description: Resource ID of the Kubernetes node pool.
 
 ## Modules
 

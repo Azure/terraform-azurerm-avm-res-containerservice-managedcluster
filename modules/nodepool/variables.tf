@@ -1,8 +1,3 @@
-variable "cluster_resource_id" {
-  type        = string
-  description = "Resource ID of the existing Kubernetes cluster."
-}
-
 # Main properties
 variable "name" {
   type        = string
@@ -21,6 +16,12 @@ variable "name" {
 variable "network_plugin_mode" {
   type        = string
   description = "The network plugin mode for the nodepool."
+}
+
+variable "parent_id" {
+  type        = string
+  description = "Resource ID of the existing Kubernetes cluster."
+  nullable    = false
 }
 
 variable "vm_size" {
@@ -305,10 +306,10 @@ variable "timeouts" {
   })
   default     = null
   description = <<-EOT
- - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
- - `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
- - `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
- - `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
+- `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
+- `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
+- `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
 EOT
 }
 

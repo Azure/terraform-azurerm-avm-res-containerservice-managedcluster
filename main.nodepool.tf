@@ -2,9 +2,9 @@ module "nodepools" {
   source   = "./modules/nodepool"
   for_each = var.node_pools
 
-  cluster_resource_id            = azurerm_kubernetes_cluster.this.id
   name                           = each.value.name
   network_plugin_mode            = var.network_profile.network_plugin_mode
+  parent_id                      = azapi_resource.this.id
   vm_size                        = each.value.vm_size
   auto_scaling_enabled           = each.value.auto_scaling_enabled
   capacity_reservation_group_id  = each.value.capacity_reservation_group_id
@@ -49,5 +49,5 @@ module "nodepools" {
   workload_runtime               = each.value.workload_runtime
   zones                          = each.value.zones
 
-  depends_on = [azapi_update_resource.aks_cluster_post_create]
+  depends_on = [azapi_resource.this]
 }

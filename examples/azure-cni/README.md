@@ -124,51 +124,45 @@ data "azurerm_client_config" "current" {}
 module "cni" {
   source = "../.."
 
+  location  = azurerm_resource_group.this.location
+  name      = module.naming.kubernetes_cluster.name_unique
+  parent_id = azurerm_resource_group.this.id
+  # Minimal autoscaler profile to expose autoscaler settings for policy evaluation
+  auto_scaler_profile = {
+    expander            = "least-waste"
+    scale_down_unneeded = "15m"
+  }
+  automatic_upgrade_channel = "stable"
+  azure_active_directory_role_based_access_control = {
+    azure_rbac_enabled     = true
+    tenant_id              = data.azurerm_client_config.current.tenant_id
+    admin_group_object_ids = []
+  }
   default_node_pool = {
-    name                         = "default"
-    vm_size                      = "Standard_DS2_v2"
-    vnet_subnet_id               = azurerm_subnet.default_subnet.id
-    auto_scaling_enabled         = true
-    max_count                    = 4
-    max_pods                     = 30
-    min_count                    = 2
+    name                 = "default"
+    vm_size              = "Standard_DS2_v2"
+    vnet_subnet_id       = azurerm_subnet.default_subnet.id
+    auto_scaling_enabled = true
+    max_count            = 4
+    max_pods             = 30
+    min_count            = 2
+    # Provide >=2 zones to satisfy APRL default node pool zone resiliency rule
+    zones                        = ["1", "2", "3"]
     only_critical_addons_enabled = true
     upgrade_settings = {
       max_surge = "10%"
     }
   }
-  location                  = azurerm_resource_group.this.location
-  name                      = module.naming.kubernetes_cluster.name_unique
-  resource_group_name       = azurerm_resource_group.this.name
-  automatic_upgrade_channel = "stable"
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled = true
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-  }
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   dns_prefix                          = "cniexample"
-  kubelet_identity = {
-    client_id                 = azurerm_user_assigned_identity.kubelet_identity.client_id
-    object_id                 = azurerm_user_assigned_identity.kubelet_identity.principal_id
-    user_assigned_identity_id = azurerm_user_assigned_identity.kubelet_identity.id
-  }
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
-    interval    = "1"
+    interval    = 1
     day_of_week = "Sunday"
     duration    = 4
     utc_offset  = "+00:00"
     start_time  = "00:00"
-    start_date  = "2024-10-15T00:00:00Z"
-  }
-  maintenance_window_node_os = {
-    frequency   = "Weekly"
-    interval    = "1"
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2024-10-15T00:00:00Z"
+    start_date  = "2024-10-15"
   }
   managed_identities = {
     system_assigned            = false
@@ -212,7 +206,6 @@ module "cni" {
   oms_agent = {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   }
-  open_service_mesh_enabled = true
   storage_profile = {
     blob_driver_enabled         = true
     disk_driver_enabled         = true
