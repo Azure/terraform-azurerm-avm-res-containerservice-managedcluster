@@ -1258,6 +1258,12 @@ Description: The identity ID of the kubelet identity.
 
 Description: Name of the Kubernetes cluster.
 
+### <a name="output_node_pools"></a> [node\_pools](#output\_node\_pools)
+
+Description: Information about the node pools created in the module.
+
+Please refer to the nodepool module documentation for details of the outputs
+
 ### <a name="output_node_resource_group_id"></a> [node\_resource\_group\_id](#output\_node\_resource\_group\_id)
 
 Description: The resource group ID of the node resource group.
@@ -1277,6 +1283,10 @@ Description:   A map of the private endpoints created.
 ### <a name="output_public_fqdn"></a> [public\_fqdn](#output\_public\_fqdn)
 
 Description: Returns .fqdn when both private\_cluster\_enabled and private\_cluster\_public\_fqdn\_enabled are true, otherwise null
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: The Azure Kubernetes Cluster resource.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
