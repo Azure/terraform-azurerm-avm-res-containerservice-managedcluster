@@ -49,6 +49,16 @@ output "name" {
   value       = azurerm_kubernetes_cluster.this.name
 }
 
+output "node_pools" {
+  description = <<DESCRIPTION
+Information about the node pools created in the module.
+
+Please refer to the nodepool module documentation for details of the outputs
+DESCRIPTION
+  # All nodepools now use the nodepool module for consistent interface
+  value = module.nodepools
+}
+
 output "node_resource_group_id" {
   description = "The resource group ID of the node resource group."
   value       = azurerm_kubernetes_cluster.this.node_resource_group_id
@@ -80,6 +90,11 @@ output "public_fqdn" {
   value = (
     var.private_cluster_enabled && var.private_cluster_public_fqdn_enabled
   ) ? azurerm_kubernetes_cluster.this.fqdn : null
+}
+
+output "resource" {
+  description = "The Azure Kubernetes Cluster resource."
+  value       = azurerm_kubernetes_cluster.this
 }
 
 output "resource_id" {

@@ -496,6 +496,10 @@ The following outputs are exported:
 
 Description: Name of the Kubernetes cluster.
 
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: The node pool resource.
+
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: Resource ID of the Kubernetes cluster.
