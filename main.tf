@@ -618,7 +618,7 @@ resource "azapi_update_resource" "aks_cluster_advanced_networking" {
 
   lifecycle {
     ignore_changes       = all
-    replace_triggered_by = [for keeper in terraform_data.advanced_networking_keeper : keeper.id]
+    replace_triggered_by = [terraform_data.advanced_networking_keeper[0].id]
   }
 }
 
