@@ -415,8 +415,8 @@ resource "azurerm_kubernetes_cluster" "this" {
       for_each = var.advanced_networking != null ? [var.advanced_networking] : []
 
       content {
-        observability_enabled = try(advanced_networking.value.observability.enabled, null)
-        security_enabled      = try(advanced_networking.value.security.enabled, null)
+        observability_enabled = try(advanced_networking.value.observability.enabled, false)
+        security_enabled      = try(advanced_networking.value.security.enabled, false)
       }
     }
   }
@@ -618,7 +618,7 @@ resource "azapi_update_resource" "aks_cluster_advanced_networking" {
 
   lifecycle {
     ignore_changes       = all
-    replace_triggered_by = [terraform_data.advanced_networking_keeper[0].id]
+    replace_triggered_by = [for keeper in terraform_data.advanced_networking_keeper : keeper.id]
   }
 }
 

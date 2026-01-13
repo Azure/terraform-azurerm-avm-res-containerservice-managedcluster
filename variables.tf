@@ -565,7 +565,7 @@ variable "monitor_metrics" {
 
 variable "advanced_networking" {
   type = object({
-    enabled = bool
+
     observability = optional(object({
       enabled = bool
     }))
