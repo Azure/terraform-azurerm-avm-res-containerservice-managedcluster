@@ -123,9 +123,19 @@ module "advanced_networking" {
       max_surge = "10%"
     }
   }
-  location                  = azurerm_resource_group.this.location
-  name                      = module.naming.kubernetes_cluster.name_unique
-  resource_group_name       = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  # Enable Advanced Networking with observability and security features
+  advanced_networking = {
+    enabled = true
+    observability = {
+      enabled = true
+    }
+    security = {
+      enabled = true
+    }
+  }
   automatic_upgrade_channel = "stable"
   azure_active_directory_role_based_access_control = {
     azure_rbac_enabled = true
@@ -166,16 +176,6 @@ module "advanced_networking" {
     network_data_plane  = "cilium"
     network_plugin_mode = "overlay"
     network_policy      = "cilium"
-  }
-  # Enable Advanced Networking with observability and security features
-  advanced_networking = {
-    enabled = true
-    observability = {
-      enabled = true
-    }
-    security = {
-      enabled = true
-    }
   }
   node_os_channel_upgrade = "Unmanaged"
   node_pools = {

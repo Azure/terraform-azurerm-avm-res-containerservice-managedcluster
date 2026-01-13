@@ -391,6 +391,14 @@ resource "azurerm_kubernetes_cluster" "this" {
     service_cidr        = var.network_profile.service_cidr
     service_cidrs       = var.network_profile.service_cidrs
 
+    dynamic "advanced_networking" {
+      for_each = var.advanced_networking != null ? [var.advanced_networking] : []
+
+      content {
+        observability_enabled = try(advanced_networking.value.observability.enabled, false)
+        security_enabled      = try(advanced_networking.value.security.enabled, false)
+      }
+    }
     dynamic "load_balancer_profile" {
       for_each = var.network_profile.load_balancer_profile != null ? [var.network_profile.load_balancer_profile] : []
 
@@ -409,14 +417,6 @@ resource "azurerm_kubernetes_cluster" "this" {
       content {
         idle_timeout_in_minutes   = var.network_profile.nat_gateway_profile.idle_timeout_in_minutes
         managed_outbound_ip_count = var.network_profile.nat_gateway_profile.managed_outbound_ip_count
-      }
-    }
-    dynamic "advanced_networking" {
-      for_each = var.advanced_networking != null ? [var.advanced_networking] : []
-
-      content {
-        observability_enabled = try(advanced_networking.value.observability.enabled, false)
-        security_enabled      = try(advanced_networking.value.security.enabled, false)
       }
     }
   }

@@ -136,6 +136,30 @@ variable "aci_connector_linux_subnet_name" {
   description = "The subnet name for the ACI connector Linux."
 }
 
+variable "advanced_networking" {
+  type = object({
+
+    observability = optional(object({
+      enabled = bool
+    }))
+    security = optional(object({
+      enabled                   = bool
+      advanced_network_policies = optional(string)
+    }))
+  })
+  default     = null
+  description = "Optional. Advanced networking configuration for the Kubernetes cluster."
+
+  validation {
+    condition = var.advanced_networking == null ? true : (
+      var.advanced_networking.security == null ||
+      var.advanced_networking.security.advanced_network_policies == null ||
+      var.advanced_networking.security.enabled
+    )
+    error_message = "advanced_network_policies can only be set when advanced_networking.security.enabled is true."
+  }
+}
+
 variable "api_server_access_profile" {
   type = object({
     authorized_ip_ranges                = optional(set(string))
@@ -561,30 +585,6 @@ variable "monitor_metrics" {
   })
   default     = null
   description = "The monitor metrics for the Kubernetes cluster. Both required if enabling Prometheus"
-}
-
-variable "advanced_networking" {
-  type = object({
-
-    observability = optional(object({
-      enabled = bool
-    }))
-    security = optional(object({
-      enabled                   = bool
-      advanced_network_policies = optional(string)
-    }))
-  })
-  default     = null
-  description = "Optional. Advanced networking configuration for the Kubernetes cluster."
-
-  validation {
-    condition = var.advanced_networking == null ? true : (
-      var.advanced_networking.security == null ||
-      var.advanced_networking.security.advanced_network_policies == null ||
-      var.advanced_networking.security.enabled
-    )
-    error_message = "advanced_network_policies can only be set when advanced_networking.security.enabled is true."
-  }
 }
 
 variable "network_profile" {
