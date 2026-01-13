@@ -411,6 +411,14 @@ resource "azurerm_kubernetes_cluster" "this" {
         managed_outbound_ip_count = var.network_profile.nat_gateway_profile.managed_outbound_ip_count
       }
     }
+    dynamic "advanced_networking" {
+      for_each = var.advanced_networking != null ? [var.advanced_networking] : []
+
+      content {
+        observability_enabled = try(advanced_networking.value.observability.enabled, null)
+        security_enabled      = try(advanced_networking.value.security.enabled, null)
+      }
+    }
   }
   dynamic "oms_agent" {
     for_each = var.oms_agent != null ? [var.oms_agent] : []
@@ -580,6 +588,37 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
   lifecycle {
     ignore_changes       = all
     replace_triggered_by = [terraform_data.kubernetes_version_keeper.id]
+  }
+}
+
+resource "terraform_data" "advanced_networking_keeper" {
+  count = try(var.advanced_networking.security.advanced_network_policies, null) != null ? 1 : 0
+
+  triggers_replace = {
+    advanced_network_policies = var.advanced_networking.security.advanced_network_policies
+  }
+}
+
+resource "azapi_update_resource" "aks_cluster_advanced_networking" {
+  count = try(var.advanced_networking.security.advanced_network_policies, null) != null ? 1 : 0
+
+  resource_id = azurerm_kubernetes_cluster.this.id
+  type        = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  body = {
+    properties = {
+      networkProfile = {
+        advancedNetworking = local.advanced_networking_payload
+      }
+    }
+  }
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_update_resource.aks_cluster_post_create]
+
+  lifecycle {
+    ignore_changes       = all
+    replace_triggered_by = [terraform_data.advanced_networking_keeper[0].id]
   }
 }
 
