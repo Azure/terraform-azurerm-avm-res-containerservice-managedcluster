@@ -44,6 +44,7 @@ locals {
         mode         = "System"
         count        = local.default_node_pool_count != null ? local.default_node_pool_count : 3
         vnetSubnetID = var.default_node_pool.vnet_subnet_id
+        tags         = var.tags
       }
     )
   ] : []
@@ -64,6 +65,7 @@ locals {
         type              = var.default_node_pool.type
         vnetSubnetID      = var.default_node_pool.vnet_subnet_id
         availabilityZones = try(length(var.default_node_pool.zones) > 0 ? var.default_node_pool.zones : null, null)
+        tags              = var.tags
       }
     )
   ]
