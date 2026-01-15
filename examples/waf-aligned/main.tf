@@ -120,6 +120,19 @@ module "waf_aligned" {
   location  = azurerm_resource_group.this.location
   name      = module.naming.kubernetes_cluster.name_unique
   parent_id = azurerm_resource_group.this.id
+  aad_profile = {
+    tenant_id              = data.azurerm_client_config.current.tenant_id
+    enable_azure_rbac      = true
+    admin_group_object_ids = []
+    managed                = true
+  }
+  addon_profile_oms_agent = {
+    enabled = true
+    config = {
+      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.workspace.id
+      use_aad_auth                        = true
+    }
+  }
   agent_pools = {
     unp1 = {
       name                = "userpool1"
@@ -154,20 +167,18 @@ module "waf_aligned" {
   }
   api_server_access_profile = {
     enable_private_cluster = true
-    private_dns_zone_id    = azurerm_private_dns_zone.zone.id
+    private_dns_zone       = azurerm_private_dns_zone.zone.id
   }
   auto_scaler_profile = {
     expander                      = "random"
     scan_interval                 = "20s"
-    scale_down_unneeded           = "10m"
+    scale_down_unneeded_time      = "10m"
     scale_down_delay_after_add    = "10m"
     scale_down_delay_after_delete = "2m"
   }
-  automatic_upgrade_channel = "stable"
-  azure_active_directory_role_based_access_control = {
-    tenant_id              = data.azurerm_client_config.current.tenant_id
-    azure_rbac_enabled     = true
-    admin_group_object_ids = []
+  auto_upgrade_profile = {
+    upgrade_channel         = "stable"
+    node_os_upgrade_channel = "Unmanaged"
   }
   default_agent_pool = {
     name                = "default"
@@ -185,17 +196,23 @@ module "waf_aligned" {
       max_surge = "10%"
     }
   }
-  defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
-  dns_prefix_private_cluster          = random_string.dns_prefix.result
-  log_analytics_workspace_id          = azurerm_log_analytics_workspace.workspace.id
-  maintenance_window_auto_upgrade = {
-    frequency   = "Weekly"
-    interval    = 1
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2024-10-15"
+  fqdn_subdomain = random_string.dns_prefix.result
+  maintenanceconfiguration = {
+    aksManagedAutoUpgradeSchedule = {
+      name = "aksManagedAutoUpgradeSchedule"
+      maintenance_window = {
+        duration_hours = 4
+        start_time     = "00:00"
+        utc_offset     = "+00:00"
+        start_date     = "2024-10-15"
+        schedule = {
+          weekly = {
+            day_of_week    = "Sunday"
+            interval_weeks = 1
+          }
+        }
+      }
+    }
   }
   managed_identities = {
     system_assigned            = false
@@ -206,8 +223,14 @@ module "waf_aligned" {
     service_cidr   = "10.10.200.0/24"
     network_plugin = "azure"
   }
-  node_os_channel_upgrade = "Unmanaged"
-  oms_agent               = {}
+  security_profile = {
+    defender = {
+      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.workspace.id
+      security_monitoring = {
+        enabled = true
+      }
+    }
+  }
   sku = {
     name = "Base"
     tier = "Standard"

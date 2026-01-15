@@ -72,6 +72,12 @@ module "create_before_destroy" {
   location  = azurerm_resource_group.this.location
   name      = module.naming.kubernetes_cluster.name_unique
   parent_id = azurerm_resource_group.this.id
+  aad_profile = {
+    enable_azure_rbac      = true
+    tenant_id              = data.azurerm_client_config.current.tenant_id
+    admin_group_object_ids = []
+    managed                = true
+  }
   agent_pools = {
     unp1 = {
       name                = "unp1"
@@ -97,11 +103,6 @@ module "create_before_destroy" {
         max_surge = "10%"
       }
     }
-  }
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled     = true
-    tenant_id              = data.azurerm_client_config.current.tenant_id
-    admin_group_object_ids = []
   }
   create_agentpools_before_destroy = true
   default_agent_pool = {

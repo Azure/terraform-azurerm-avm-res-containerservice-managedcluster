@@ -11,15 +11,15 @@ output "aks_cluster_name" {
 }
 
 output "aks_kubelet_identity_id" {
-  value = module.stateful_workloads.kubelet_identity_id
+  value = module.stateful_workloads.kubelet_identity.objectId
 }
 
 output "aks_nodepool_resource_ids" {
-  value = module.stateful_workloads.nodepool_resource_ids
+  value = module.stateful_workloads.agentpool_resource_ids
 }
 
 output "aks_oidc_issuer_url" {
-  value = module.stateful_workloads.oidc_issuer_url
+  value = module.stateful_workloads.oidc_issuer_profile_issuer_url
 }
 
 output "identity_name" {

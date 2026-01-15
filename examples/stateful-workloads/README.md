@@ -127,54 +127,58 @@ resource "azurerm_container_registry_task_schedule_run_now" "this" {
 module "stateful_workloads" {
   source = "../.."
 
-  location                  = azurerm_resource_group.this.location
-  name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
-  parent_id                 = azurerm_resource_group.this.id
-  agent_pools               = var.agent_pools
-  automatic_upgrade_channel = "stable"
-  default_agent_pool = {
-    name                    = "systempool"
-    count_of                = 3
-    vm_size                 = "Standard_D2ds_v4"
-    os_type                 = "Linux"
-    auto_upgrade_channel    = "stable"
+  location  = azurerm_resource_group.this.location
+  name      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
+  parent_id = azurerm_resource_group.this.id
+  addon_profile_key_vault_secrets_provider = {
+    enabled = true
+    config = {
+      enable_secret_rotation = true
+    }
+  }
+  agent_pools = var.agent_pools
+  auto_upgrade_profile = {
+    upgrade_channel         = "stable"
     node_os_upgrade_channel = "NodeImage"
+  }
+  default_agent_pool = {
+    name     = "systempool"
+    count_of = 3
+    vm_size  = "Standard_D2ds_v4"
+    os_type  = "Linux"
     # Provide zones as strings for consistency with variable type list(string)
     availability_zones = ["2", "3"]
 
-    addon_profile = {
-      azure_key_vault_secrets_provider = {
-        enabled = true
-      }
-    }
     upgrade_settings = {
       max_surge = "10%"
     }
   }
   disable_local_accounts = false
   dns_prefix             = "statefulworkloads"
-  key_vault_secrets_provider = {
-    secret_rotation_enabled = true
-  }
   managed_identities = {
     system_assigned = true
   }
   network_profile = {
     network_plugin = "azure"
   }
-  node_os_channel_upgrade = "NodeImage"
-  oidc_issuer_enabled     = true
+  oidc_issuer_profile = {
+    enabled = true
+  }
+  security_profile = {
+    workload_identity = {
+      enabled = true
+    }
+  }
   sku = {
     name = "Base"
     tier = "Standard"
   }
-  workload_identity_enabled = true
 }
 
 ## Section to assign the role to the kubelet identity
 ######################################################################################################################
 resource "azurerm_role_assignment" "acr_role_assignment" {
-  principal_id         = module.stateful_workloads.kubelet_identity_id
+  principal_id         = module.stateful_workloads.kubelet_identity.objectId
   scope                = module.avm_res_containerregistry_registry.resource_id
   role_definition_name = "AcrPull"
 
@@ -188,7 +192,7 @@ module "valkey" {
   count  = var.valkey_enabled ? 1 : 0
 
   key_vault_id    = module.avm_res_keyvault_vault.resource_id
-  object_id       = module.stateful_workloads.key_vault_secrets_provider_object_id
+  object_id       = module.stateful_workloads.key_vault_secrets_provider_identity.objectId
   tenant_id       = data.azurerm_client_config.current.tenant_id
   valkey_password = var.valkey_password
 }
@@ -204,7 +208,7 @@ module "mongodb" {
   location             = azurerm_resource_group.this.location
   mongodb_kv_secrets   = var.mongodb_kv_secrets
   mongodb_namespace    = var.mongodb_namespace
-  oidc_issuer_url      = module.stateful_workloads.oidc_issuer_url
+  oidc_issuer_url      = module.stateful_workloads.oidc_issuer_profile_issuer_url
   principal_id         = data.azurerm_client_config.current.object_id
   resource_group_name  = azurerm_resource_group.this.name
   service_account_name = var.service_account_name

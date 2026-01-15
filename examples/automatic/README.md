@@ -82,19 +82,33 @@ resource "azurerm_log_analytics_workspace" "this" {
 module "automatic" {
   source = "../.."
 
-  location                   = azurerm_resource_group.this.location
-  name                       = module.naming.kubernetes_cluster.name_unique
-  parent_id                  = azurerm_resource_group.this.id
-  alert_email                = "test@example.com"
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
-  maintenance_window_auto_upgrade = {
-    frequency   = "Weekly"
-    interval    = 1
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2025-09-27"
+  location  = azurerm_resource_group.this.location
+  name      = module.naming.kubernetes_cluster.name_unique
+  parent_id = azurerm_resource_group.this.id
+  addon_profile_oms_agent = {
+    enabled = true
+    config = {
+      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.this.id
+      use_aad_auth                        = true
+    }
+  }
+  alert_email = "test@example.com"
+  maintenanceconfiguration = {
+    aksManagedAutoUpgradeSchedule = {
+      name = "aksManagedAutoUpgradeSchedule"
+      maintenance_window = {
+        duration_hours = 4
+        start_time     = "00:00"
+        utc_offset     = "+00:00"
+        start_date     = "2025-09-27"
+        schedule = {
+          weekly = {
+            day_of_week    = "Sunday"
+            interval_weeks = 1
+          }
+        }
+      }
+    }
   }
   onboard_alerts          = true
   onboard_monitoring      = true

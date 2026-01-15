@@ -1,44 +1,48 @@
 resource "azapi_resource" "this" {
-  location  = var.location
-  name      = "${var.name}${var.cluster_suffix}"
-  parent_id = var.parent_id
-  type      = "Microsoft.ContainerService/managedClusters@2025-10-01"
-  body = {
-    properties = local.properties_final
-    sku        = var.sku
-  }
+  location       = var.location
+  name           = var.name
+  parent_id      = var.parent_id
+  type           = "Microsoft.ContainerService/managedClusters@2025-10-01"
+  body           = local.resource_body_nulls_removed
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  replace_triggers_external_values = [
-    var.node_resource_group_name,
+  replace_triggers_refs = [
+    "properties.nodeResourceGroup",
   ]
   response_export_values = [
-    "properties.oidcIssuerProfile.issuerURL",
-    "properties.identityProfile",
-    "properties.nodeResourceGroup",
+    "properties.currentKubernetesVersion",
     "properties.fqdn",
+    "properties.ingressProfile.webAppRouting.identity",
+    "properties.maxAgentPools",
+    "properties.networkProfile.loadBalancerProfile.effectiveOutboundIPs",
+    "properties.networkProfile.natGatewayProfile.effectiveOutboundIPs",
+    "properties.oidcIssuerProfile.issuerURL",
+    "properties.privateFQDN",
   ]
-  schema_validation_enabled = false
-  sensitive_body            = local.sensitive_body
+  sensitive_body = local.sensitive_body
   sensitive_body_version = var.windows_profile == null ? null : {
     "properties.windowsProfile.adminPassword" = var.windows_profile_password_version
   }
   tags           = var.tags
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
-  identity {
-    type         = try(length(local.managed_identities.user_assigned.this.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned", "SystemAssigned")
-    identity_ids = try(length(local.managed_identities.user_assigned.this.user_assigned_resource_ids) > 0 ? local.managed_identities.user_assigned.this.user_assigned_resource_ids : null, null)
-  }
-  dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+  dynamic "identity" {
+    for_each = local.managed_identities.system_assigned_user_assigned
 
     content {
-      create = timeouts.value.create
-      delete = timeouts.value.delete
-      read   = timeouts.value.read
-      update = timeouts.value.update
+      type         = identity.value.type
+      identity_ids = identity.value.user_assigned_resource_ids
+    }
+  }
+  dynamic "timeouts" {
+    for_each = var.cluster_timeouts == null ? [] : [1]
+
+    content {
+      create = var.timeouts.create
+      delete = var.timeouts.delete
+      read   = var.timeouts.read
+      update = var.timeouts.update
     }
   }
 
@@ -46,70 +50,12 @@ resource "azapi_resource" "this" {
     ignore_changes = [
       body.properties.kubernetesVersion
     ]
-
-    precondition {
-      condition     = local.is_automatic || var.cost_analysis_enabled != true || (var.sku.tier == "Standard" || var.sku.tier == "Premium")
-      error_message = "`sku.tier` must be either `Standard` or `Premium` when cost analysis is enabled."
-    }
-    precondition {
-      condition     = !var.onboard_alerts || (var.alert_email != null && try(trimspace(var.alert_email), "") != "")
-      error_message = "`onboard_alerts` requires a non-empty `alert_email`."
-    }
-    precondition {
-      condition     = local.is_automatic || local.automatic_channel_upgrade_check
-      error_message = "Either disable automatic upgrades, or specify `kubernetes_version` or `orchestrator_version` only up to the minor version when using `automatic_channel_upgrade=patch`. You don't need to specify `kubernetes_version` at all when using `automatic_channel_upgrade=stable|rapid|node-image`, where `orchestrator_version` always must be set to `null`."
-    }
-    precondition {
-      condition     = local.is_automatic || var.key_management_service == null || try(!var.managed_identities.system_assigned, false)
-      error_message = "KMS etcd encryption doesn't work with system-assigned managed identity."
-    }
-    precondition {
-      condition     = local.is_automatic || !var.workload_identity_enabled || var.oidc_issuer_enabled
-      error_message = "`oidc_issuer_enabled` must be set to `true` to enable Azure AD Workload Identity"
-    }
-    precondition {
-      condition     = local.is_automatic || (var.dns_prefix == null) || (var.dns_prefix_private_cluster == null)
-      error_message = "Only one of `dns_prefix` or `dns_prefix_private_cluster` can be specified. If neither is specified, a random prefix will be generated."
-    }
-    precondition {
-      condition     = local.is_automatic || (var.dns_prefix_private_cluster == null) || (var.api_server_access_profile.private_dns_zone_id != null)
-      error_message = "When `dns_prefix_private_cluster` is set, `private_dns_zone_id` must be set."
-    }
-    precondition {
-      condition     = local.is_automatic || var.automatic_upgrade_channel != "node-image" || var.node_os_channel_upgrade == "NodeImage"
-      error_message = "`node_os_channel_upgrade` must be set to `NodeImage` if `automatic_channel_upgrade` has been set to `node-image`."
-    }
-    precondition {
-      condition     = local.is_automatic || var.agent_pools == null || var.default_agent_pool.type == "VirtualMachineScaleSets"
-      error_message = "The 'type' variable must be set to 'VirtualMachineScaleSets' if 'agent_pools' is not null."
-    }
   }
 }
 
 moved {
   from = azurerm_kubernetes_cluster.this
   to   = azapi_resource.this
-}
-
-# Retrieve kubeconfig(s) & full cluster for outputs
-resource "azapi_resource_action" "this_user_kubeconfig" {
-  count = local.is_automatic ? 0 : 1
-
-  action                 = "listClusterUserCredential"
-  method                 = "POST"
-  resource_id            = azapi_resource.this.id
-  type                   = azapi_resource.this.type
-  response_export_values = ["kubeconfigs"]
-}
-
-resource "azapi_resource_action" "this_admin_kubeconfig" {
-  count = local.is_automatic || var.disable_local_accounts ? 0 : 1
-
-  action                 = "listClusterAdminCredential"
-  method                 = "POST"
-  resource_id            = azapi_resource.this.id
-  type                   = azapi_resource.this.type
-  response_export_values = ["kubeconfigs"]
 }
 
 # required AVM resources interfaces
@@ -135,10 +81,27 @@ resource "azurerm_role_assignment" "this" {
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 }
 
-resource "random_string" "dns_prefix" {
-  length  = 10
-  lower   = true
-  numeric = true
-  special = false
-  upper   = false
+resource "azapi_resource_action" "this_user_kubeconfig" {
+  count = local.is_automatic ? 0 : 1
+
+  action                 = "listClusterUserCredential"
+  method                 = "POST"
+  resource_id            = azapi_resource.this.id
+  type                   = azapi_resource.this.type
+  response_export_values = ["kubeconfigs"]
+}
+
+resource "azapi_resource_action" "this_admin_kubeconfig" {
+  count = local.is_automatic || var.disable_local_accounts ? 0 : 1
+
+  action                 = "listClusterAdminCredential"
+  method                 = "POST"
+  resource_id            = azapi_resource.this.id
+  type                   = azapi_resource.this.type
+  response_export_values = ["kubeconfigs"]
+}
+# Outputs
+locals {
+  kubeconfig_admin = length(azapi_resource_action.this_admin_kubeconfig) == 1 ? base64decode(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value) : null
+  kubeconfig_user  = !local.is_automatic ? base64decode(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value) : null
 }

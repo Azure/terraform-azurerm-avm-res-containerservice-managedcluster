@@ -130,29 +130,50 @@ resource "azurerm_log_analytics_workspace" "this" {
 module "automatic" {
   source = "../.."
 
-  location    = azurerm_resource_group.this.location
-  name        = module.naming.kubernetes_cluster.name_unique
-  parent_id   = azurerm_resource_group.this.id
+  location  = azurerm_resource_group.this.location
+  name      = module.naming.kubernetes_cluster.name_unique
+  parent_id = azurerm_resource_group.this.id
+  addon_profile_oms_agent = {
+    enabled = true
+    config = {
+      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.this.id
+      use_aad_auth                        = true
+    }
+  }
   alert_email = "test@this.com"
   api_server_access_profile = {
     vnet_subnet_id         = azurerm_subnet.api_server.id
     enable_private_cluster = true
-    private_dns_zone_id    = azurerm_private_dns_zone.this.id
-    run_command_enabled    = false
+    private_dns_zone       = azurerm_private_dns_zone.this.id
+    disable_run_command    = true
   }
   default_agent_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
   }
-  default_nginx_controller   = "Internal"
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
-  maintenance_window_auto_upgrade = {
-    frequency   = "Weekly"
-    interval    = 1
-    day_of_week = "Sunday"
-    duration    = 4
-    utc_offset  = "+00:00"
-    start_time  = "00:00"
-    start_date  = "2025-09-27"
+  ingress_profile = {
+    web_app_routing = {
+      enabled = true
+      nginx = {
+        default_ingress_controller_type = "Internal"
+      }
+    }
+  }
+  maintenanceconfiguration = {
+    aksManagedAutoUpgradeSchedule = {
+      name = "aksManagedAutoUpgradeSchedule"
+      maintenance_window = {
+        duration_hours = 4
+        start_time     = "00:00"
+        utc_offset     = "+00:00"
+        start_date     = "2025-09-27"
+        schedule = {
+          weekly = {
+            day_of_week    = "Sunday"
+            interval_weeks = 1
+          }
+        }
+      }
+    }
   }
   managed_identities = {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.this.id]

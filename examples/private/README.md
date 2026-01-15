@@ -136,10 +136,11 @@ module "private" {
   location  = azurerm_resource_group.this.location
   name      = module.naming.kubernetes_cluster.name_unique
   parent_id = azurerm_resource_group.this.id
-  advanced_networking = {
-    observability = {
-      enabled = true
-    }
+  aad_profile = {
+    enable_azure_rbac      = true
+    tenant_id              = data.azurerm_client_config.current.tenant_id
+    admin_group_object_ids = []
+    managed                = true
   }
   agent_pools = {
     unp1 = {
@@ -159,12 +160,7 @@ module "private" {
   }
   api_server_access_profile = {
     enable_private_cluster = true
-    private_dns_zone_id    = azurerm_private_dns_zone.zone.id
-  }
-  azure_active_directory_role_based_access_control = {
-    azure_rbac_enabled     = true
-    tenant_id              = data.azurerm_client_config.current.tenant_id
-    admin_group_object_ids = []
+    private_dns_zone       = azurerm_private_dns_zone.zone.id
   }
   default_agent_pool = {
     name                = "default"
@@ -181,7 +177,7 @@ module "private" {
       max_surge = "10%"
     }
   }
-  dns_prefix_private_cluster = random_string.dns_prefix.result
+  fqdn_subdomain = random_string.dns_prefix.result
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
@@ -190,6 +186,11 @@ module "private" {
     dns_service_ip = "10.10.200.10"
     service_cidr   = "10.10.200.0/24"
     network_plugin = "azure"
+    advanced_networking = {
+      observability = {
+        enabled = true
+      }
+    }
   }
   sku = {
     name = "Base"
