@@ -17,6 +17,36 @@ EOF
   description = "The content of the ACR task"
 }
 
+variable "agent_pools" {
+  type = map(object({
+    name               = string
+    vm_size            = string
+    count_of           = number
+    availability_zones = optional(list(string))
+    os_type            = string
+    upgrade_settings = optional(object({
+      drain_timeout_in_minutes      = optional(number)
+      node_soak_duration_in_minutes = optional(number)
+      max_surge                     = string
+    }))
+  }))
+  default = {
+    # This is an example of a node pool for a stateful workload with minimal configuration
+    valkey = {
+      name     = "valkey"
+      vm_size  = "Standard_D2ds_v4"
+      count_of = 3
+      # Provide zones as strings (variable type list(string))
+      availability_zones = ["1", "2", "3"]
+      os_type            = "Linux"
+      upgrade_settings = {
+        max_surge = "10%"
+      }
+    }
+  }
+  description = "Optional. The additional agent pools for the Kubernetes cluster."
+}
+
 variable "aks_mongodb_backup_storage_account_name" {
   type        = string
   default     = null
@@ -63,36 +93,6 @@ variable "mongodb_namespace" {
   type        = string
   default     = null
   description = "The name of the mongodb namespace to create"
-}
-
-variable "agent_pools" {
-  type = map(object({
-    name               = string
-    vm_size            = string
-    count_of           = number
-    availability_zones = optional(list(string))
-    os_type            = string
-    upgrade_settings = optional(object({
-      drain_timeout_in_minutes      = optional(number)
-      node_soak_duration_in_minutes = optional(number)
-      max_surge                     = string
-    }))
-  }))
-  default = {
-    # This is an example of a node pool for a stateful workload with minimal configuration
-    valkey = {
-      name     = "valkey"
-      vm_size  = "Standard_D2ds_v4"
-      count_of = 3
-      # Provide zones as strings (variable type list(string))
-      availability_zones = ["1", "2", "3"]
-      os_type            = "Linux"
-      upgrade_settings = {
-        max_surge = "10%"
-      }
-    }
-  }
-  description = "Optional. The additional agent pools for the Kubernetes cluster."
 }
 
 variable "resource_group_name" {

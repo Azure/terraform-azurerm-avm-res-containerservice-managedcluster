@@ -134,6 +134,22 @@ module "private" {
       enabled = true
     }
   }
+  agent_pools = {
+    unp1 = {
+      name                = "userpool1"
+      vm_size             = "Standard_D2s_v6"
+      enable_auto_scaling = true
+      max_count           = 4
+      max_pods            = 30
+      min_count           = 2
+      os_disk_size_gb     = 128
+      vnet_subnet_id      = azurerm_subnet.unp1_subnet.id
+
+      upgrade_settings = {
+        max_surge = "10%"
+      }
+    }
+  }
   api_server_access_profile = {
     enable_private_cluster = true
     private_dns_zone_id    = azurerm_private_dns_zone.zone.id
@@ -167,22 +183,6 @@ module "private" {
     dns_service_ip = "10.10.200.10"
     service_cidr   = "10.10.200.0/24"
     network_plugin = "azure"
-  }
-  agent_pools = {
-    unp1 = {
-      name                = "userpool1"
-      vm_size             = "Standard_D2s_v6"
-      enable_auto_scaling = true
-      max_count           = 4
-      max_pods            = 30
-      min_count           = 2
-      os_disk_size_gb     = 128
-      vnet_subnet_id      = azurerm_subnet.unp1_subnet.id
-
-      upgrade_settings = {
-        max_surge = "10%"
-      }
-    }
   }
   sku = {
     name = "Base"

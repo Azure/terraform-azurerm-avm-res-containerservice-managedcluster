@@ -123,6 +123,7 @@ module "stateful_workloads" {
   location                  = azurerm_resource_group.this.location
   name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
   parent_id                 = azurerm_resource_group.this.id
+  agent_pools               = var.agent_pools
   automatic_upgrade_channel = "stable"
   default_agent_pool = {
     name                    = "systempool"
@@ -143,11 +144,11 @@ module "stateful_workloads" {
       max_surge = "10%"
     }
   }
-  dns_prefix = "statefulworkloads"
+  disable_local_accounts = false
+  dns_prefix             = "statefulworkloads"
   key_vault_secrets_provider = {
     secret_rotation_enabled = true
   }
-  disable_local_accounts = false
   managed_identities = {
     system_assigned = true
   }
@@ -155,7 +156,6 @@ module "stateful_workloads" {
     network_plugin = "azure"
   }
   node_os_channel_upgrade = "NodeImage"
-  agent_pools             = var.agent_pools
   oidc_issuer_enabled     = true
   sku = {
     name = "Base"

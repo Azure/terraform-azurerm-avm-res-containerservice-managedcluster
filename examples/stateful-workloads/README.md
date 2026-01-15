@@ -130,16 +130,17 @@ module "stateful_workloads" {
   location                  = azurerm_resource_group.this.location
   name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
   parent_id                 = azurerm_resource_group.this.id
+  agent_pools               = var.agent_pools
   automatic_upgrade_channel = "stable"
-  default_node_pool = {
+  default_agent_pool = {
     name                    = "systempool"
-    node_count              = 3
+    count_of                = 3
     vm_size                 = "Standard_D2ds_v4"
     os_type                 = "Linux"
     auto_upgrade_channel    = "stable"
     node_os_upgrade_channel = "NodeImage"
     # Provide zones as strings for consistency with variable type list(string)
-    zones = ["2", "3"]
+    availability_zones = ["2", "3"]
 
     addon_profile = {
       azure_key_vault_secrets_provider = {
@@ -150,11 +151,11 @@ module "stateful_workloads" {
       max_surge = "10%"
     }
   }
-  dns_prefix = "statefulworkloads"
+  disable_local_accounts = false
+  dns_prefix             = "statefulworkloads"
   key_vault_secrets_provider = {
     secret_rotation_enabled = true
   }
-  local_account_disabled = false
   managed_identities = {
     system_assigned = true
   }
@@ -162,7 +163,6 @@ module "stateful_workloads" {
     network_plugin = "azure"
   }
   node_os_channel_upgrade = "NodeImage"
-  node_pools              = var.node_pools
   oidc_issuer_enabled     = true
   sku = {
     name = "Base"
@@ -257,6 +257,48 @@ Type: `string`
 
 Default: `"version: v1.1.0\nsteps:\n  - cmd: bash echo Waiting 60 seconds the propagation of the Container Registry Data Importer and Data Reader role\n  - cmd: bash sleep 60\n  - cmd: az login --identity\n  - cmd: az acr import --name $RegistryName --source acrforavmexamples.azurecr.io/valkey:latest --image valkey:latest\n"`
 
+### <a name="input_agent_pools"></a> [agent\_pools](#input\_agent\_pools)
+
+Description: Optional. The additional agent pools for the Kubernetes cluster.
+
+Type:
+
+```hcl
+map(object({
+    name               = string
+    vm_size            = string
+    count_of           = number
+    availability_zones = optional(list(string))
+    os_type            = string
+    upgrade_settings = optional(object({
+      drain_timeout_in_minutes      = optional(number)
+      node_soak_duration_in_minutes = optional(number)
+      max_surge                     = string
+    }))
+  }))
+```
+
+Default:
+
+```json
+{
+  "valkey": {
+    "availability_zones": [
+      "1",
+      "2",
+      "3"
+    ],
+    "count_of": 3,
+    "name": "valkey",
+    "os_type": "Linux",
+    "upgrade_settings": {
+      "max_surge": "10%"
+    },
+    "vm_size": "Standard_D2ds_v4"
+  }
+}
+```
+
 ### <a name="input_aks_mongodb_backup_storage_account_name"></a> [aks\_mongodb\_backup\_storage\_account\_name](#input\_aks\_mongodb\_backup\_storage\_account\_name)
 
 Description: The name of the backup storage account
@@ -320,48 +362,6 @@ Description: The name of the mongodb namespace to create
 Type: `string`
 
 Default: `null`
-
-### <a name="input_node_pools"></a> [node\_pools](#input\_node\_pools)
-
-Description: Optional. The additional node pools for the Kubernetes cluster.
-
-Type:
-
-```hcl
-map(object({
-    name       = string
-    vm_size    = string
-    node_count = number
-    zones      = optional(list(string))
-    os_type    = string
-    upgrade_settings = optional(object({
-      drain_timeout_in_minutes      = optional(number)
-      node_soak_duration_in_minutes = optional(number)
-      max_surge                     = string
-    }))
-  }))
-```
-
-Default:
-
-```json
-{
-  "valkey": {
-    "name": "valkey",
-    "node_count": 3,
-    "os_type": "Linux",
-    "upgrade_settings": {
-      "max_surge": "10%"
-    },
-    "vm_size": "Standard_D2ds_v4",
-    "zones": [
-      "1",
-      "2",
-      "3"
-    ]
-  }
-}
-```
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 

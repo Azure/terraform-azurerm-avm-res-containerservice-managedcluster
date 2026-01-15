@@ -72,20 +72,47 @@ module "create_before_destroy" {
   location  = azurerm_resource_group.this.location
   name      = module.naming.kubernetes_cluster.name_unique
   parent_id = azurerm_resource_group.this.id
+  agent_pools = {
+    unp1 = {
+      name                = "unp1"
+      vm_size             = "Standard_DS2_v2"
+      enable_auto_scaling = true
+      max_count           = 4
+      max_pods            = 30
+      min_count           = 2
+      os_disk_size_gb     = 128
+      upgrade_settings = {
+        max_surge = "10%"
+      }
+    }
+    unp2 = {
+      name                = "unp2"
+      vm_size             = "Standard_DS2_v2"
+      enable_auto_scaling = true
+      max_count           = 4
+      max_pods            = 30
+      min_count           = 2
+      os_disk_size_gb     = 128
+      upgrade_settings = {
+        max_surge = "10%"
+      }
+    }
+  }
   azure_active_directory_role_based_access_control = {
     azure_rbac_enabled     = true
     tenant_id              = data.azurerm_client_config.current.tenant_id
     admin_group_object_ids = []
   }
-  create_nodepools_before_destroy = true
-  default_node_pool = {
-    name                         = "default"
-    vm_size                      = "Standard_DS2_v2"
-    auto_scaling_enabled         = true
-    max_count                    = 4
-    max_pods                     = 30
-    min_count                    = 2
-    only_critical_addons_enabled = true
+  create_agentpools_before_destroy = true
+  default_agent_pool = {
+    name                = "default"
+    vm_size             = "Standard_DS2_v2"
+    enable_auto_scaling = true
+    max_count           = 4
+    max_pods            = 30
+    min_count           = 2
+    mode                = "System"
+    node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
 
     upgrade_settings = {
       max_surge = "10%"
@@ -97,32 +124,6 @@ module "create_before_destroy" {
   }
   network_profile = {
     network_plugin = "kubenet"
-  }
-  node_pools = {
-    unp1 = {
-      name                 = "unp1"
-      vm_size              = "Standard_DS2_v2"
-      auto_scaling_enabled = true
-      max_count            = 4
-      max_pods             = 30
-      min_count            = 2
-      os_disk_size_gb      = 128
-      upgrade_settings = {
-        max_surge = "10%"
-      }
-    }
-    unp2 = {
-      name                 = "unp2"
-      vm_size              = "Standard_DS2_v2"
-      auto_scaling_enabled = true
-      max_count            = 4
-      max_pods             = 30
-      min_count            = 2
-      os_disk_size_gb      = 128
-      upgrade_settings = {
-        max_surge = "10%"
-      }
-    }
   }
 }
 ```

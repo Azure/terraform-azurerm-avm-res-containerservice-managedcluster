@@ -1626,10 +1626,6 @@ Default: `false`
 
 The following outputs are exported:
 
-### <a name="output_aci_connector_object_id"></a> [aci\_connector\_object\_id](#output\_aci\_connector\_object\_id)
-
-Description: (Not directly available via azapi without extra GET)
-
 ### <a name="output_agentpool_resource_ids"></a> [agentpool\_resource\_ids](#output\_agentpool\_resource\_ids)
 
 Description: A map of nodepool keys to resource ids.
@@ -1641,14 +1637,6 @@ Description: Base64 cluster CA certificate from user kubeconfig.
 ### <a name="output_host"></a> [host](#output\_host)
 
 Description: API server host from user kubeconfig.
-
-### <a name="output_ingress_app_object_id"></a> [ingress\_app\_object\_id](#output\_ingress\_app\_object\_id)
-
-Description: Ingress Application identity object id (not currently extracted).
-
-### <a name="output_key_vault_secrets_provider_object_id"></a> [key\_vault\_secrets\_provider\_object\_id](#output\_key\_vault\_secrets\_provider\_object\_id)
-
-Description: Key vault secrets provider identity object id (not currently extracted).
 
 ### <a name="output_kube_admin_config"></a> [kube\_admin\_config](#output\_kube\_admin\_config)
 
@@ -1669,10 +1657,6 @@ Description: Name of the Kubernetes cluster.
 ### <a name="output_namespace_resource_ids"></a> [namespace\_resource\_ids](#output\_namespace\_resource\_ids)
 
 Description: A map of namespace keys to resource ids.
-
-### <a name="output_node_resource_group_id"></a> [node\_resource\_group\_id](#output\_node\_resource\_group\_id)
-
-Description: Node resource group name not exported; manual lookup required.
 
 ### <a name="output_node_resource_group_name"></a> [node\_resource\_group\_name](#output\_node\_resource\_group\_name)
 
@@ -1705,10 +1689,6 @@ Description: Map of identity profile keys to principalIds.
 ### <a name="output_web_app_routing_client_id"></a> [web\_app\_routing\_client\_id](#output\_web\_app\_routing\_client\_id)
 
 Description: The object ID of the web app routing identity
-
-### <a name="output_web_app_routing_object_id"></a> [web\_app\_routing\_object\_id](#output\_web\_app\_routing\_object\_id)
-
-Description: Web app routing identity object id (not currently extracted).
 
 ## Modules
 

@@ -127,6 +127,38 @@ module "waf_aligned" {
   location  = azurerm_resource_group.this.location
   name      = module.naming.kubernetes_cluster.name_unique
   parent_id = azurerm_resource_group.this.id
+  agent_pools = {
+    unp1 = {
+      name                = "userpool1"
+      vm_size             = "Standard_DS2_v2"
+      availability_zones  = ["1", "2", "3"]
+      enable_auto_scaling = true
+      max_count           = 3
+      max_pods            = 50
+      min_count           = 3
+      os_disk_size_gb     = 60
+      vnet_subnet_id      = azurerm_subnet.unp1.id
+
+      upgrade_settings = {
+        max_surge = "10%"
+      }
+    }
+    unp2 = {
+      name                = "userpool2"
+      vm_size             = "Standard_DS2_v2"
+      count_of            = 3
+      availability_zones  = ["1", "2", "3"]
+      enable_auto_scaling = true
+      max_count           = 3
+      max_pods            = 50
+      min_count           = 3
+      os_disk_size_gb     = 60
+      vnet_subnet_id      = azurerm_subnet.unp2.id
+      upgrade_settings = {
+        max_surge = "10%"
+      }
+    }
+  }
   api_server_access_profile = {
     enable_private_cluster = true
     private_dns_zone_id    = azurerm_private_dns_zone.zone.id
@@ -144,23 +176,25 @@ module "waf_aligned" {
     azure_rbac_enabled     = true
     admin_group_object_ids = []
   }
-  default_node_pool = {
-    name                         = "default"
-    vm_size                      = "Standard_DS2_v2"
-    node_count                   = 3
-    zones                        = ["1", "2", "3"]
-    auto_scaling_enabled         = true
-    max_count                    = 5
-    max_pods                     = 50
-    min_count                    = 3
-    vnet_subnet_id               = azurerm_subnet.subnet.id
-    only_critical_addons_enabled = true
+  default_agent_pool = {
+    name                = "default"
+    vm_size             = "Standard_DS2_v2"
+    count_of            = 3
+    availability_zones  = ["1", "2", "3"]
+    enable_auto_scaling = true
+    max_count           = 5
+    max_pods            = 50
+    min_count           = 3
+    vnet_subnet_id      = azurerm_subnet.subnet.id
+    mode                = "System"
+    node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
     upgrade_settings = {
       max_surge = "10%"
     }
   }
   defender_log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
   dns_prefix_private_cluster          = random_string.dns_prefix.result
+  log_analytics_workspace_id          = azurerm_log_analytics_workspace.workspace.id
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
     interval    = 1
@@ -180,41 +214,7 @@ module "waf_aligned" {
     network_plugin = "azure"
   }
   node_os_channel_upgrade = "Unmanaged"
-  node_pools = {
-    unp1 = {
-      name                 = "userpool1"
-      vm_size              = "Standard_DS2_v2"
-      zones                = ["1", "2", "3"]
-      auto_scaling_enabled = true
-      max_count            = 3
-      max_pods             = 50
-      min_count            = 3
-      os_disk_size_gb      = 60
-      vnet_subnet_id       = azurerm_subnet.unp1.id
-
-      upgrade_settings = {
-        max_surge = "10%"
-      }
-    }
-    unp2 = {
-      name                 = "userpool2"
-      vm_size              = "Standard_DS2_v2"
-      node_count           = 3
-      zones                = ["1", "2", "3"]
-      auto_scaling_enabled = true
-      max_count            = 3
-      max_pods             = 50
-      min_count            = 3
-      os_disk_size_gb      = 60
-      vnet_subnet_id       = azurerm_subnet.unp2.id
-      upgrade_settings = {
-        max_surge = "10%"
-      }
-    }
-  }
-  oms_agent = {
-    log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
-  }
+  oms_agent               = {}
   sku = {
     name = "Base"
     tier = "Standard"

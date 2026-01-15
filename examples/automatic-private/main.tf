@@ -140,10 +140,10 @@ module "automatic" {
     private_dns_zone_id    = azurerm_private_dns_zone.this.id
     run_command_enabled    = false
   }
-  default_nginx_controller = "Internal"
   default_agent_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
   }
+  default_nginx_controller   = "Internal"
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
   maintenance_window_auto_upgrade = {
     frequency   = "Weekly"
