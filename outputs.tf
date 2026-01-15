@@ -57,11 +57,11 @@ output "node_resource_group_name" {
   value       = try(azapi_resource.this.output.properties.nodeResourceGroup, null)
 }
 
-output "nodepool_resource_ids" {
+output "agentpool_resource_ids" {
   description = "A map of nodepool keys to resource ids."
-  value = { for npk, np in module.nodepools : npk => {
-    resource_id = np.resource_id
-    name        = np.name
+  value = { for apk, ap in module.nodepools : apk => {
+    resource_id = ap.resource_id
+    name        = ap.name
     }
   }
 }

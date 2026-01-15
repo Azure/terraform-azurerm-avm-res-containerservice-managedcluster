@@ -15,60 +15,7 @@ locals {
       advancedNetworkPolicies = var.advanced_networking.security.advanced_network_policies
     } : null
   } : null
-  agent_pool_profile_template = {
-    availabilityZones = null
-    count             = null
-    enableAutoScaling = null
-    maxCount          = null
-    minCount          = null
-    mode              = null
-    name              = null
-    osType            = null
-    type              = null
-    vmSize            = null
-    vnetSubnetID      = null
-  }
-  agent_pool_profiles = local.agent_pool_profiles_raw == null ? null : [
-    for profile in local.agent_pool_profiles_raw : {
-      for k, v in merge(
-        profile,
-        profile.count == null ? {} : { count = tonumber(profile.count) }
-      ) : k => v if !(can(v == null) && v == null)
-    }
-  ]
-  agent_pool_profiles_automatic = local.is_automatic ? [
-    merge(
-      local.agent_pool_profile_template,
-      {
-        name         = local.default_node_pool_name
-        mode         = "System"
-        count        = local.default_node_pool_count != null ? local.default_node_pool_count : 3
-        vnetSubnetID = var.default_node_pool.vnet_subnet_id
-        tags         = var.tags
-      }
-    )
-  ] : []
-  agent_pool_profiles_combined = concat(local.agent_pool_profiles_automatic, local.agent_pool_profiles_standard)
-  agent_pool_profiles_raw      = length(local.agent_pool_profiles_combined) == 0 ? null : local.agent_pool_profiles_combined
-  agent_pool_profiles_standard = local.is_automatic ? [] : [
-    merge(
-      local.agent_pool_profile_template,
-      {
-        mode              = "System"
-        osType            = "Linux"
-        name              = local.default_node_pool_name
-        count             = local.default_node_pool_count
-        vmSize            = var.default_node_pool.vm_size
-        enableAutoScaling = var.default_node_pool.auto_scaling_enabled
-        minCount          = local.default_node_pool_min_count
-        maxCount          = local.default_node_pool_max_count
-        type              = var.default_node_pool.type
-        vnetSubnetID      = var.default_node_pool.vnet_subnet_id
-        availabilityZones = try(length(var.default_node_pool.zones) > 0 ? var.default_node_pool.zones : null, null)
-        tags              = var.tags
-      }
-    )
-  ]
+
   api_server_access_profile = var.api_server_access_profile != null ? {
     authorizedIPRanges             = var.api_server_access_profile.authorized_ip_ranges
     enablePrivateCluster           = var.api_server_access_profile.enable_private_cluster
@@ -79,7 +26,7 @@ locals {
     disableRunCommand              = !var.api_server_access_profile.run_command_enabled
   } : null
   auto_scaler_profile_map = (
-    local.is_automatic || !var.default_node_pool.auto_scaling_enabled || var.auto_scaler_profile == null
+    local.is_automatic || !var.default_agent_pool.auto_scaling_enabled || var.auto_scaler_profile == null
     ) ? null : {
     balanceSimilarNodeGroups                 = var.auto_scaler_profile.balance_similar_node_groups
     daemonsetEvictionForEmptyNodesEnabled    = var.auto_scaler_profile.daemonset_eviction_for_empty_nodes_enabled
@@ -103,13 +50,9 @@ locals {
     skipNodesWithSystemPods                  = var.auto_scaler_profile.skip_nodes_with_system_pods
   }
   automatic_channel_upgrade_check = var.automatic_upgrade_channel == null ? true : (
-    (contains(["patch"], var.automatic_upgrade_channel) && can(regex("^[0-9]{1,}\\.[0-9]{1,}$", var.kubernetes_version)) && (can(regex("^[0-9]{1,}\\.[0-9]{1,}$", var.default_node_pool.orchestrator_version)) || var.default_node_pool.orchestrator_version == null)) ||
-    (contains(["none", "rapid", "stable", "node-image"], var.automatic_upgrade_channel) && var.kubernetes_version == null && var.default_node_pool.orchestrator_version == null)
+    (contains(["patch"], var.automatic_upgrade_channel) && can(regex("^[0-9]{1,}\\.[0-9]{1,}$", var.kubernetes_version)) && (can(regex("^[0-9]{1,}\\.[0-9]{1,}$", var.default_agent_pool.orchestrator_version)) || var.default_agent_pool.orchestrator_version == null)) ||
+    (contains(["none", "rapid", "stable", "node-image"], var.automatic_upgrade_channel) && var.kubernetes_version == null && var.default_agent_pool.orchestrator_version == null)
   )
-  default_node_pool_count     = var.default_node_pool.node_count == null ? null : tonumber(var.default_node_pool.node_count)
-  default_node_pool_max_count = var.default_node_pool.max_count == null ? null : tonumber(var.default_node_pool.max_count)
-  default_node_pool_min_count = var.default_node_pool.min_count == null ? null : tonumber(var.default_node_pool.min_count)
-  default_node_pool_name      = coalesce(try(var.default_node_pool.name, null), "systempool")
   ingress_profile = {
     webAppRouting = {
       nginx = {

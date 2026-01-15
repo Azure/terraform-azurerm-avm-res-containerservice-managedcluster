@@ -70,8 +70,18 @@ resource "azapi_resource" "this" {
       error_message = "`node_os_channel_upgrade` must be set to `NodeImage` if `automatic_channel_upgrade` has been set to `node-image`."
     }
     precondition {
-      condition     = local.is_automatic || var.node_pools == null || var.default_node_pool.type == "VirtualMachineScaleSets"
-      error_message = "The 'type' variable must be set to 'VirtualMachineScaleSets' if 'node_pools' is not null."
+      condition     = local.is_automatic || var.agent_pools == null || var.default_agent_pool.type == "VirtualMachineScaleSets"
+      error_message = "The 'type' variable must be set to 'VirtualMachineScaleSets' if 'agent_pools' is not null."
+    }
+  }
+
+  dynamic "timeouts" {
+    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 }
