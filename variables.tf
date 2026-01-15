@@ -58,9 +58,8 @@ DESCRIPTION
 
 variable "addon_profile_azure_policy" {
   type = object({
-    config   = optional(map(string))
-    enabled  = bool
-    identity = optional(map(string))
+    config  = optional(map(string))
+    enabled = bool
   })
   default = {
     enabled = false
@@ -70,9 +69,8 @@ variable "addon_profile_azure_policy" {
 
 variable "addon_profile_confidential_computing" {
   type = object({
-    config   = optional(map(string))
-    enabled  = bool
-    identity = optional(map(string))
+    config  = optional(map(string))
+    enabled = bool
   })
   default     = null
   description = "Confidential Computing addon profile for the managed cluster."
@@ -86,8 +84,7 @@ variable "addon_profile_ingress_application_gateway" {
       subnet_cidr              = optional(string)
       subnet_id                = optional(string)
     }))
-    enabled  = bool
-    identity = optional(map(string))
+    enabled = bool
   })
   default     = null
   description = "Ingress Application Gateway addon profile for the managed cluster."
@@ -104,8 +101,7 @@ variable "addon_profile_key_vault_secrets_provider" {
       enable_secret_rotation = optional(bool, false)
       rotation_poll_interval = optional(string)
     }))
-    enabled  = bool
-    identity = optional(map(string))
+    enabled = bool
   })
   default     = null
   description = "Key Vault Secrets Provider addon profile for the managed cluster."
@@ -117,28 +113,24 @@ variable "addon_profile_oms_agent" {
       log_analytics_workspace_resource_id = string
       use_aad_auth                        = optional(bool, false)
     }))
-    enabled  = bool
-    identity = optional(map(string))
+    enabled = bool
   })
-  default = {
-    enabled = false
-  }
+  default     = null
   description = "OMS Agent addon profile for the managed cluster."
-  nullable    = false
 
   validation {
     error_message = "If addon_profile_oms_agent.enabled is true, then addon_profile_oms_agent.config.log_analytics_workspace_resource_id must be set."
-    condition     = !(var.addon_profile_oms_agent.enabled == true && (var.addon_profile_oms_agent.config == null || var.addon_profile_oms_agent.config.log_analytics_workspace_resource_id == ""))
+    condition     = var.addon_profile_oms_agent == null || !(var.addon_profile_oms_agent.enabled == true && (var.addon_profile_oms_agent.config == null || var.addon_profile_oms_agent.config.log_analytics_workspace_resource_id == ""))
   }
 }
 
 variable "addon_profiles_extra" {
   type = map(object({
-    config   = optional(map(string))
-    enabled  = bool
-    identity = optional(map(string))
+    config  = optional(map(string))
+    enabled = bool
   }))
-  default     = null
+  default     = {}
+  nullable    = false
   description = <<DESCRIPTION
 Additional addon profiles of managed cluster add-on.
 Will be merged with the predefined addon variables like `addon_profile_oms_agent` and `addon_profile_azure_policy`.
@@ -262,8 +254,8 @@ DESCRIPTION
 
 variable "auto_upgrade_profile" {
   type = object({
-    node_os_upgrade_channel = optional(string)
-    upgrade_channel         = optional(string)
+    node_os_upgrade_channel = optional(string, "NodeImage")
+    upgrade_channel         = optional(string, "none")
   })
   default     = null
   description = <<DESCRIPTION
@@ -569,7 +561,8 @@ DESCRIPTION
 
 variable "disable_local_accounts" {
   type        = bool
-  default     = null
+  default     = false
+  nullable    = false
   description = <<DESCRIPTION
 If local accounts should be disabled on the Managed Cluster. If set to true, getting static credentials will be disabled for this cluster. This must only be used on Managed Clusters that are AAD enabled. For more details see [disable local accounts](https://docs.microsoft.com/azure/aks/managed-aad#disable-local-accounts-preview).
 DESCRIPTION

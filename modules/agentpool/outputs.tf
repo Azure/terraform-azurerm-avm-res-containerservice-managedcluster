@@ -1,6 +1,6 @@
 output "body_properties" {
   description = "If output_data_only is set to true, this output will contain the properties of the resource as defined in the body. Otherwise, it will be null."
-  value       = var.output_data_only ? local.resource_body.properties : null
+  value       = var.output_data_only ? merge(local.resource_body.properties, { name = var.name }) : null
 }
 
 output "current_orchestrator_version" {

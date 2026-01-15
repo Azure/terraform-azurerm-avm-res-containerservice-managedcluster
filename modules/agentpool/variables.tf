@@ -641,7 +641,7 @@ variable "upgrade_settings" {
   type = object({
     drain_timeout_in_minutes      = optional(number)
     max_surge                     = optional(string)
-    max_unavailable               = optional(string)
+    max_unavailable               = optional(string, "0")
     node_soak_duration_in_minutes = optional(number)
     undrainable_node_behavior     = optional(string)
   })
