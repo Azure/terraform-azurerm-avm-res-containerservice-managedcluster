@@ -130,7 +130,6 @@ variable "addon_profiles_extra" {
     enabled = bool
   }))
   default     = {}
-  nullable    = false
   description = <<DESCRIPTION
 Additional addon profiles of managed cluster add-on.
 Will be merged with the predefined addon variables like `addon_profile_oms_agent` and `addon_profile_azure_policy`.
@@ -140,6 +139,7 @@ Map values:
 - `enabled` - Whether the add-on is enabled or not.
 - `identity` - The identity associated with the add-on.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "agentpool_timeouts" {
@@ -562,10 +562,10 @@ DESCRIPTION
 variable "disable_local_accounts" {
   type        = bool
   default     = false
-  nullable    = false
   description = <<DESCRIPTION
 If local accounts should be disabled on the Managed Cluster. If set to true, getting static credentials will be disabled for this cluster. This must only be used on Managed Clusters that are AAD enabled. For more details see [disable local accounts](https://docs.microsoft.com/azure/aks/managed-aad#disable-local-accounts-preview).
 DESCRIPTION
+  nullable    = false
 }
 
 variable "disk_encryption_set_id" {

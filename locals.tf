@@ -18,11 +18,9 @@ locals {
       }
     } : {}
   }
-
   private_endpoints = { for k, v in var.private_endpoints : k => merge(v, {
     subresource_name = coalesce(v.subresource_name, "management")
   }) }
-
   resource_body = {
     extendedLocation = var.extended_location == null ? null : {
       name = var.extended_location.name
@@ -269,11 +267,4 @@ locals {
     }
     tags = var.tags == null ? null : { for k, value in var.tags : k => value }
   }
-  resource_body_properties_nulls_removed = { for k, v in local.resource_body.properties : k => v if v != null }
-  resource_body_nulls_removed = merge(
-    { for k, v in local.resource_body : k => v if v != null },
-    {
-      properties = local.resource_body_properties_nulls_removed
-    }
-  )
 }

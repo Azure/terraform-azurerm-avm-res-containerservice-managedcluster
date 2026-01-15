@@ -11,10 +11,11 @@ moved {
 resource "azapi_resource" "this" {
   count = var.output_data_only ? 0 : var.create_before_destroy ? 0 : 1
 
-  name      = var.name
-  parent_id = var.parent_id
-  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
-  body      = local.resource_body
+  name                 = var.name
+  parent_id            = var.parent_id
+  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
+  body                 = local.resource_body
+  ignore_null_property = true
   response_export_values = [
     "properties.currentOrchestratorVersion",
     "properties.localDNSProfile.state",

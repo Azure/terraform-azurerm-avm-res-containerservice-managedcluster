@@ -116,9 +116,8 @@ Type:
 
 ```hcl
 object({
-    config   = optional(map(string))
-    enabled  = bool
-    identity = optional(map(string))
+    config  = optional(map(string))
+    enabled = bool
   })
 ```
 
@@ -138,9 +137,8 @@ Type:
 
 ```hcl
 object({
-    config   = optional(map(string))
-    enabled  = bool
-    identity = optional(map(string))
+    config  = optional(map(string))
+    enabled = bool
   })
 ```
 
@@ -160,8 +158,7 @@ object({
       subnet_cidr              = optional(string)
       subnet_id                = optional(string)
     }))
-    enabled  = bool
-    identity = optional(map(string))
+    enabled = bool
   })
 ```
 
@@ -179,8 +176,7 @@ object({
       enable_secret_rotation = optional(bool, false)
       rotation_poll_interval = optional(string)
     }))
-    enabled  = bool
-    identity = optional(map(string))
+    enabled = bool
   })
 ```
 
@@ -198,18 +194,11 @@ object({
       log_analytics_workspace_resource_id = string
       use_aad_auth                        = optional(bool, false)
     }))
-    enabled  = bool
-    identity = optional(map(string))
+    enabled = bool
   })
 ```
 
-Default:
-
-```json
-{
-  "enabled": false
-}
-```
+Default: `null`
 
 ### <a name="input_addon_profiles_extra"></a> [addon\_profiles\_extra](#input\_addon\_profiles\_extra)
 
@@ -225,13 +214,12 @@ Type:
 
 ```hcl
 map(object({
-    config   = optional(map(string))
-    enabled  = bool
-    identity = optional(map(string))
+    config  = optional(map(string))
+    enabled = bool
   }))
 ```
 
-Default: `null`
+Default: `{}`
 
 ### <a name="input_agent_pools"></a> [agent\_pools](#input\_agent\_pools)
 
@@ -760,8 +748,8 @@ Type:
 
 ```hcl
 object({
-    node_os_upgrade_channel = optional(string)
-    upgrade_channel         = optional(string)
+    node_os_upgrade_channel = optional(string, "NodeImage")
+    upgrade_channel         = optional(string, "none")
   })
 ```
 
@@ -1053,7 +1041,7 @@ Description: If local accounts should be disabled on the Managed Cluster. If set
 
 Type: `bool`
 
-Default: `null`
+Default: `false`
 
 ### <a name="input_disk_encryption_set_id"></a> [disk\_encryption\_set\_id](#input\_disk\_encryption\_set\_id)
 

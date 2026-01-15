@@ -145,14 +145,14 @@ module "private" {
   agent_pools = {
     unp1 = {
       name                = "userpool1"
-      vm_size             = "Standard_D2s_v6"
+      vm_size             = "Standard_DS2_v2"
+      mode                = "User"
       enable_auto_scaling = true
       max_count           = 4
       max_pods            = 30
       min_count           = 2
       os_disk_size_gb     = 128
       vnet_subnet_id      = azurerm_subnet.unp1_subnet.id
-
       upgrade_settings = {
         max_surge = "10%"
       }
@@ -170,7 +170,6 @@ module "private" {
     max_pods            = 30
     min_count           = 2
     vnet_subnet_id      = azurerm_subnet.subnet.id
-    mode                = "System"
     node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
 
     upgrade_settings = {
@@ -187,6 +186,7 @@ module "private" {
     service_cidr   = "10.10.200.0/24"
     network_plugin = "azure"
     advanced_networking = {
+      enabled = true
       observability = {
         enabled = true
       }

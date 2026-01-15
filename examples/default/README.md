@@ -88,13 +88,18 @@ module "default" {
     admin_group_object_ids = []
     managed                = true
   }
+  addon_profile_oms_agent = {
+    enabled = true
+    config = {
+      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.this.id
+      use_aad_auth                        = true
+    }
+  }
   auto_upgrade_profile = {
     upgrade_channel = "none"
   }
   default_agent_pool = {
-    name     = "default"
-    vm_size  = "Standard_DS2_v2"
-    count_of = 3
+    vm_size = "Standard_DS2_v2"
 
     upgrade_settings = {
       max_surge = "10%"

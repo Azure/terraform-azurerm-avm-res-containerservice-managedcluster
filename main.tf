@@ -1,12 +1,13 @@
 resource "azapi_resource" "this" {
-  location       = var.location
-  name           = var.name
-  parent_id      = var.parent_id
-  type           = "Microsoft.ContainerService/managedClusters@2025-10-01"
-  body           = local.resource_body_nulls_removed
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  location             = var.location
+  name                 = var.name
+  parent_id            = var.parent_id
+  type                 = "Microsoft.ContainerService/managedClusters@2025-10-01"
+  body                 = local.resource_body
+  create_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_null_property = true
+  read_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs = [
     "properties.nodeResourceGroup",
   ]
