@@ -180,6 +180,7 @@ module "private" {
     service_cidr   = "10.10.200.0/24"
     network_plugin = "azure"
     advanced_networking = {
+      enabled = true
       observability = {
         enabled = true
       }
