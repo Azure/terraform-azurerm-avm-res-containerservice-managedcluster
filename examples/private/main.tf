@@ -143,15 +143,16 @@ module "private" {
     tenant_id              = data.azurerm_client_config.current.tenant_id
     admin_group_object_ids = []
   }
-  default_node_pool = {
-    name                         = "default"
-    vm_size                      = "Standard_DS2_v2"
-    auto_scaling_enabled         = true
-    max_count                    = 4
-    max_pods                     = 30
-    min_count                    = 2
-    vnet_subnet_id               = azurerm_subnet.subnet.id
-    only_critical_addons_enabled = true
+  default_agent_pool = {
+    name                = "default"
+    vm_size             = "Standard_DS2_v2"
+    enable_auto_scaling = true
+    max_count           = 4
+    max_pods            = 30
+    min_count           = 2
+    vnet_subnet_id      = azurerm_subnet.subnet.id
+    mode                = "System"
+    node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
 
     upgrade_settings = {
       max_surge = "10%"
@@ -167,16 +168,16 @@ module "private" {
     service_cidr   = "10.10.200.0/24"
     network_plugin = "azure"
   }
-  node_pools = {
+  agent_pools = {
     unp1 = {
-      name                 = "userpool1"
-      vm_size              = "Standard_D2s_v6"
-      auto_scaling_enabled = true
-      max_count            = 4
-      max_pods             = 30
-      min_count            = 2
-      os_disk_size_gb      = 128
-      vnet_subnet_id       = azurerm_subnet.unp1_subnet.id
+      name                = "userpool1"
+      vm_size             = "Standard_D2s_v6"
+      enable_auto_scaling = true
+      max_count           = 4
+      max_pods            = 30
+      min_count           = 2
+      os_disk_size_gb     = 128
+      vnet_subnet_id      = azurerm_subnet.unp1_subnet.id
 
       upgrade_settings = {
         max_surge = "10%"

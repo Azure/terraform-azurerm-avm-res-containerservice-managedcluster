@@ -9,10 +9,11 @@ moved {
 }
 
 resource "azapi_resource" "this" {
-  count     = var.output_data_only ? 0 : var.create_before_destroy ? 0 : 1
-  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
+  count = var.output_data_only ? 0 : var.create_before_destroy ? 0 : 1
+
   name      = var.name
   parent_id = var.parent_id
+  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
   body      = local.resource_body
   response_export_values = [
     "properties.currentOrchestratorVersion",
@@ -24,6 +25,7 @@ resource "azapi_resource" "this" {
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
+
     content {
       create = timeouts.value.create
       delete = timeouts.value.delete
@@ -34,10 +36,11 @@ resource "azapi_resource" "this" {
 }
 
 resource "azapi_resource" "this_create_before_destroy" {
-  count     = var.output_data_only ? 0 : var.create_before_destroy ? 1 : 0
-  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
+  count = var.output_data_only ? 0 : var.create_before_destroy ? 1 : 0
+
   name      = "${var.name}${substr(sha256(uuid()), 0, 4)}"
   parent_id = var.parent_id
+  type      = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
   body      = local.resource_body
   response_export_values = [
     "properties.currentOrchestratorVersion",
@@ -47,22 +50,23 @@ resource "azapi_resource" "this_create_before_destroy" {
     "type"
   ]
 
-  lifecycle {
-    create_before_destroy = true
-    ignore_changes = [
-      name
-    ]
-    replace_triggered_by = [terraform_data.name_keeper]
-  }
-
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
+
     content {
       create = timeouts.value.create
       delete = timeouts.value.delete
       read   = timeouts.value.read
       update = timeouts.value.update
     }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [
+      name
+    ]
+    replace_triggered_by = [terraform_data.name_keeper]
   }
 }
 

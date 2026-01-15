@@ -65,13 +65,13 @@ variable "mongodb_namespace" {
   description = "The name of the mongodb namespace to create"
 }
 
-variable "node_pools" {
+variable "agent_pools" {
   type = map(object({
-    name       = string
-    vm_size    = string
-    node_count = number
-    zones      = optional(list(string))
-    os_type    = string
+    name               = string
+    vm_size            = string
+    count_of           = number
+    availability_zones = optional(list(string))
+    os_type            = string
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
@@ -81,18 +81,18 @@ variable "node_pools" {
   default = {
     # This is an example of a node pool for a stateful workload with minimal configuration
     valkey = {
-      name       = "valkey"
-      vm_size    = "Standard_D2ds_v4"
-      node_count = 3
+      name     = "valkey"
+      vm_size  = "Standard_D2ds_v4"
+      count_of = 3
       # Provide zones as strings (variable type list(string))
-      zones   = ["1", "2", "3"]
-      os_type = "Linux"
+      availability_zones = ["1", "2", "3"]
+      os_type            = "Linux"
       upgrade_settings = {
         max_surge = "10%"
       }
     }
   }
-  description = "Optional. The additional node pools for the Kubernetes cluster."
+  description = "Optional. The additional agent pools for the Kubernetes cluster."
 }
 
 variable "resource_group_name" {

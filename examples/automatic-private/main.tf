@@ -141,7 +141,7 @@ module "automatic" {
     run_command_enabled    = false
   }
   default_nginx_controller = "Internal"
-  default_node_pool = {
+  default_agent_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
   }
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id

@@ -1,12 +1,15 @@
 module "nodepools" {
-  source                        = "./modules/agentpool"
-  for_each                      = var.agent_pools
+  source   = "./modules/agentpool"
+  for_each = var.agent_pools
+
+  name                          = each.value.name
+  parent_id                     = azapi_resource.this.id
   availability_zones            = each.value.availability_zones
   capacity_reservation_group_id = each.value.capacity_reservation_group_id
   count_of                      = each.value.count_of
+  create_before_destroy         = var.create_agentpools_before_destroy
   creation_data                 = each.value.creation_data
   enable_auto_scaling           = each.value.enable_auto_scaling
-  create_before_destroy         = var.create_agentpools_before_destroy
   enable_encryption_at_host     = each.value.enable_encryption_at_host
   enable_fips                   = each.value.enable_fips
   enable_node_public_ip         = each.value.enable_node_public_ip
@@ -24,7 +27,6 @@ module "nodepools" {
   message_of_the_day            = each.value.message_of_the_day
   min_count                     = each.value.min_count
   mode                          = each.value.mode
-  name                          = each.value.name
   network_profile               = each.value.network_profile
   node_labels                   = each.value.node_labels
   node_public_ip_prefix_id      = each.value.node_public_ip_prefix_id
@@ -35,7 +37,6 @@ module "nodepools" {
   os_sku                        = each.value.os_sku
   os_type                       = each.value.os_type
   output_data_only              = each.value.output_data_only
-  parent_id                     = azapi_resource.this.id
   pod_ip_allocation_mode        = each.value.pod_ip_allocation_mode
   pod_subnet_id                 = each.value.pod_subnet_id
   proximity_placement_group_id  = each.value.proximity_placement_group_id

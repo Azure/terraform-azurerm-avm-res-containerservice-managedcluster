@@ -31,6 +31,16 @@ resource "azapi_resource" "this" {
     type         = try(length(local.managed_identities.user_assigned.this.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned", "SystemAssigned")
     identity_ids = try(length(local.managed_identities.user_assigned.this.user_assigned_resource_ids) > 0 ? local.managed_identities.user_assigned.this.user_assigned_resource_ids : null, null)
   }
+  dynamic "timeouts" {
+    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 
   lifecycle {
     ignore_changes = [
@@ -72,16 +82,6 @@ resource "azapi_resource" "this" {
     precondition {
       condition     = local.is_automatic || var.agent_pools == null || var.default_agent_pool.type == "VirtualMachineScaleSets"
       error_message = "The 'type' variable must be set to 'VirtualMachineScaleSets' if 'agent_pools' is not null."
-    }
-  }
-
-  dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
-    content {
-      create = timeouts.value.create
-      delete = timeouts.value.delete
-      read   = timeouts.value.read
-      update = timeouts.value.update
     }
   }
 }

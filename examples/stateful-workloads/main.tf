@@ -124,15 +124,15 @@ module "stateful_workloads" {
   name                      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
   parent_id                 = azurerm_resource_group.this.id
   automatic_upgrade_channel = "stable"
-  default_node_pool = {
+  default_agent_pool = {
     name                    = "systempool"
-    node_count              = 3
+    count_of                = 3
     vm_size                 = "Standard_D2ds_v4"
     os_type                 = "Linux"
     auto_upgrade_channel    = "stable"
     node_os_upgrade_channel = "NodeImage"
     # Provide zones as strings for consistency with variable type list(string)
-    zones = ["2", "3"]
+    availability_zones = ["2", "3"]
 
     addon_profile = {
       azure_key_vault_secrets_provider = {
@@ -147,7 +147,7 @@ module "stateful_workloads" {
   key_vault_secrets_provider = {
     secret_rotation_enabled = true
   }
-  local_account_disabled = false
+  disable_local_accounts = false
   managed_identities = {
     system_assigned = true
   }
@@ -155,7 +155,7 @@ module "stateful_workloads" {
     network_plugin = "azure"
   }
   node_os_channel_upgrade = "NodeImage"
-  node_pools              = var.node_pools
+  agent_pools             = var.agent_pools
   oidc_issuer_enabled     = true
   sku = {
     name = "Base"

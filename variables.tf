@@ -51,6 +51,22 @@ If not specified, the default value is FQDN if `security.enabled` is set to true
 DESCRIPTION
 }
 
+variable "agentpool_timeouts" {
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+  default     = null
+  description = <<EOT
+- `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
+- `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
+- `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
+EOT
+}
+
 variable "alert_email" {
   type        = string
   default     = null
@@ -138,6 +154,22 @@ variable "cluster_suffix" {
   description = "Optional. The suffix to append to the Kubernetes cluster name if create_before_destroy is set to true on the nodepools."
 }
 
+variable "cluster_timeouts" {
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+  default     = null
+  description = <<EOT
+- `create` - (Defaults to 90 minutes) Used when creating the Kubernetes Cluster.
+- `delete` - (Defaults to 90 minutes) Used when deleting the Kubernetes Cluster.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster.
+- `update` - (Defaults to 90 minutes) Used when updating the Kubernetes Cluster.
+EOT
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "confidential_computing" {
   type = object({
@@ -160,17 +192,6 @@ variable "create_agentpools_before_destroy" {
   default     = false
   description = "Whether or not to create node pools before destroying the old ones. This is the opposite of the default behavior. Set this to true if zero downtime is required during nodepool redeployments such as changes to snapshot_id."
   nullable    = false
-}
-
-variable "default_nginx_controller" {
-  type        = string
-  default     = "AnnotationControlled"
-  description = "Specifies the ingress type for the default nginx ingress controller."
-
-  validation {
-    condition     = can(index(["AnnotationControlled", "External", "Internal", "None"], var.default_nginx_controller))
-    error_message = "The default_nginx_controller profile must be one of: 'AnnotationControlled', 'External', 'Internal', or 'None'."
-  }
 }
 
 variable "default_agent_pool" {
@@ -344,6 +365,17 @@ DESCRIPTION
   nullable    = false
 }
 
+variable "default_nginx_controller" {
+  type        = string
+  default     = "AnnotationControlled"
+  description = "Specifies the ingress type for the default nginx ingress controller."
+
+  validation {
+    condition     = can(index(["AnnotationControlled", "External", "Internal", "None"], var.default_nginx_controller))
+    error_message = "The default_nginx_controller profile must be one of: 'AnnotationControlled', 'External', 'Internal', or 'None'."
+  }
+}
+
 variable "defender_log_analytics_workspace_id" {
   type        = string
   default     = null
@@ -509,38 +541,6 @@ variable "key_vault_secrets_provider" {
   })
   default     = null
   description = "The key vault secrets provider for the Kubernetes cluster. Either rotation enabled or rotation interval must be specified."
-}
-
-variable "agentpool_timeouts" {
-  type = object({
-    create = optional(string)
-    delete = optional(string)
-    read   = optional(string)
-    update = optional(string)
-  })
-  default     = null
-  description = <<EOT
-- `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
-- `delete` - (Defaults to 60 minutes) Used when deleting the Kubernetes Cluster Node Pool.
-- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster Node Pool.
-- `update` - (Defaults to 60 minutes) Used when updating the Kubernetes Cluster Node Pool.
-EOT
-}
-
-variable "cluster_timeouts" {
-  type = object({
-    create = optional(string)
-    delete = optional(string)
-    read   = optional(string)
-    update = optional(string)
-  })
-  default     = null
-  description = <<EOT
-- `create` - (Defaults to 90 minutes) Used when creating the Kubernetes Cluster.
-- `delete` - (Defaults to 90 minutes) Used when deleting the Kubernetes Cluster.
-- `read` - (Defaults to 5 minutes) Used when retrieving the Kubernetes Cluster.
-- `update` - (Defaults to 90 minutes) Used when updating the Kubernetes Cluster.
-EOT
 }
 
 variable "kubernetes_version" {

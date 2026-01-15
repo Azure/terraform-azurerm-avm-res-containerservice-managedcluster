@@ -81,10 +81,10 @@ module "default" {
     tenant_id              = data.azurerm_client_config.current.tenant_id
     admin_group_object_ids = []
   }
-  default_node_pool = {
-    name       = "default"
-    vm_size    = "Standard_DS2_v2"
-    node_count = 3
+  default_agent_pool = {
+    name     = "default"
+    vm_size  = "Standard_DS2_v2"
+    count_of = 3
 
     upgrade_settings = {
       max_surge = "10%"

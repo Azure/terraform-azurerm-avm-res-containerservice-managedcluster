@@ -1,8 +1,3 @@
-output "aci_connector_object_id" {
-  description = "(Not directly available via azapi without extra GET)"
-  value       = null
-}
-
 output "cluster_ca_certificate" {
   description = "Base64 cluster CA certificate from user kubeconfig."
   value       = nonsensitive(local.kubeconfig_user != null ? yamldecode(local.kubeconfig_user).clusters[0].cluster.certificate-authority-data : null)
@@ -11,16 +6,6 @@ output "cluster_ca_certificate" {
 output "host" {
   description = "API server host from user kubeconfig."
   value       = nonsensitive(local.kubeconfig_user != null ? yamldecode(local.kubeconfig_user).clusters[0].cluster.server : null)
-}
-
-output "ingress_app_object_id" {
-  description = "Ingress Application identity object id (not currently extracted)."
-  value       = null
-}
-
-output "key_vault_secrets_provider_object_id" {
-  description = "Key vault secrets provider identity object id (not currently extracted)."
-  value       = null
 }
 
 output "kube_admin_config" {
@@ -47,23 +32,9 @@ output "name" {
   value       = azapi_resource.this.name
 }
 
-output "node_resource_group_id" {
-  description = "Node resource group name not exported; manual lookup required."
-  value       = null
-}
-
 output "node_resource_group_name" {
   description = "Name of the automatically created node resource group."
   value       = try(azapi_resource.this.output.properties.nodeResourceGroup, null)
-}
-
-output "agentpool_resource_ids" {
-  description = "A map of nodepool keys to resource ids."
-  value = { for apk, ap in module.nodepools : apk => {
-    resource_id = ap.resource_id
-    name        = ap.name
-    }
-  }
 }
 
 output "oidc_issuer_url" {
@@ -103,9 +74,4 @@ output "user_assigned_identity_object_ids" {
 output "web_app_routing_client_id" {
   description = "The object ID of the web app routing identity"
   value       = try(azapi_resource.this.output.properties.ingressProfile.webAppRouting.identity.clientId, null)
-}
-
-output "web_app_routing_object_id" {
-  description = "Web app routing identity object id (not currently extracted)."
-  value       = null
 }

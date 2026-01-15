@@ -1,15 +1,11 @@
 module "default_agent_pool" {
-  source                        = "./modules/agentpool"
-  parent_id                     = "" # As we are outputting data only, parent_id is not required
-  output_data_only              = true
-  count_of                      = var.default_agent_pool.count_of
+  source = "./modules/agentpool"
+
   name                          = var.default_agent_pool.name
-  mode                          = "System"
-  os_type                       = "Linux"
-  type                          = var.default_agent_pool.type
+  parent_id                     = "" # As we are outputting data only, parent_id is not required
   availability_zones            = var.default_agent_pool.availability_zones
   capacity_reservation_group_id = var.default_agent_pool.capacity_reservation_group_id
-  tags                          = var.tags
+  count_of                      = var.default_agent_pool.count_of
   creation_data                 = var.default_agent_pool.creation_data
   enable_auto_scaling           = var.default_agent_pool.enable_auto_scaling
   enable_encryption_at_host     = var.default_agent_pool.enable_encryption_at_host
@@ -28,6 +24,7 @@ module "default_agent_pool" {
   max_pods                      = var.default_agent_pool.max_pods
   message_of_the_day            = var.default_agent_pool.message_of_the_day
   min_count                     = var.default_agent_pool.min_count
+  mode                          = "System"
   network_profile               = var.default_agent_pool.network_profile
   node_labels                   = var.default_agent_pool.node_labels
   node_public_ip_prefix_id      = var.default_agent_pool.node_public_ip_prefix_id
@@ -36,6 +33,8 @@ module "default_agent_pool" {
   os_disk_size_gb               = var.default_agent_pool.os_disk_size_gb
   os_disk_type                  = var.default_agent_pool.os_disk_type
   os_sku                        = var.default_agent_pool.os_sku
+  os_type                       = "Linux"
+  output_data_only              = true
   pod_ip_allocation_mode        = var.default_agent_pool.pod_ip_allocation_mode
   pod_subnet_id                 = var.default_agent_pool.pod_subnet_id
   proximity_placement_group_id  = var.default_agent_pool.proximity_placement_group_id
@@ -44,7 +43,9 @@ module "default_agent_pool" {
   scale_set_priority            = var.default_agent_pool.scale_set_priority
   security_profile              = var.default_agent_pool.security_profile
   spot_max_price                = var.default_agent_pool.spot_max_price
+  tags                          = var.tags
   timeouts                      = null # Timeouts are not required for data only output
+  type                          = var.default_agent_pool.type
   upgrade_settings              = var.default_agent_pool.upgrade_settings
   virtual_machines_profile      = var.default_agent_pool.virtual_machines_profile
   vm_size                       = var.default_agent_pool.vm_size

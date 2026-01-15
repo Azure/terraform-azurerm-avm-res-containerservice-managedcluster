@@ -15,7 +15,6 @@ locals {
       advancedNetworkPolicies = var.advanced_networking.security.advanced_network_policies
     } : null
   } : null
-
   api_server_access_profile = var.api_server_access_profile != null ? {
     authorizedIPRanges             = var.api_server_access_profile.authorized_ip_ranges
     enablePrivateCluster           = var.api_server_access_profile.enable_private_cluster

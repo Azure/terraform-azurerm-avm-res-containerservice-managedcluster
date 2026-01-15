@@ -137,17 +137,18 @@ module "waf_aligned" {
     azure_rbac_enabled     = true
     admin_group_object_ids = []
   }
-  default_node_pool = {
-    name                         = "default"
-    vm_size                      = "Standard_DS2_v2"
-    node_count                   = 3
-    zones                        = ["1", "2", "3"]
-    auto_scaling_enabled         = true
-    max_count                    = 5
-    max_pods                     = 50
-    min_count                    = 3
-    vnet_subnet_id               = azurerm_subnet.subnet.id
-    only_critical_addons_enabled = true
+  default_agent_pool = {
+    name                = "default"
+    vm_size             = "Standard_DS2_v2"
+    count_of            = 3
+    availability_zones  = ["1", "2", "3"]
+    enable_auto_scaling = true
+    max_count           = 5
+    max_pods            = 50
+    min_count           = 3
+    vnet_subnet_id      = azurerm_subnet.subnet.id
+    mode                = "System"
+    node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
     upgrade_settings = {
       max_surge = "10%"
     }
@@ -173,41 +174,40 @@ module "waf_aligned" {
     network_plugin = "azure"
   }
   node_os_channel_upgrade = "Unmanaged"
-  node_pools = {
+  agent_pools = {
     unp1 = {
-      name                 = "userpool1"
-      vm_size              = "Standard_DS2_v2"
-      zones                = ["1", "2", "3"]
-      auto_scaling_enabled = true
-      max_count            = 3
-      max_pods             = 50
-      min_count            = 3
-      os_disk_size_gb      = 60
-      vnet_subnet_id       = azurerm_subnet.unp1.id
+      name                = "userpool1"
+      vm_size             = "Standard_DS2_v2"
+      availability_zones  = ["1", "2", "3"]
+      enable_auto_scaling = true
+      max_count           = 3
+      max_pods            = 50
+      min_count           = 3
+      os_disk_size_gb     = 60
+      vnet_subnet_id      = azurerm_subnet.unp1.id
 
       upgrade_settings = {
         max_surge = "10%"
       }
     }
     unp2 = {
-      name                 = "userpool2"
-      vm_size              = "Standard_DS2_v2"
-      node_count           = 3
-      zones                = ["1", "2", "3"]
-      auto_scaling_enabled = true
-      max_count            = 3
-      max_pods             = 50
-      min_count            = 3
-      os_disk_size_gb      = 60
-      vnet_subnet_id       = azurerm_subnet.unp2.id
+      name                = "userpool2"
+      vm_size             = "Standard_DS2_v2"
+      count_of            = 3
+      availability_zones  = ["1", "2", "3"]
+      enable_auto_scaling = true
+      max_count           = 3
+      max_pods            = 50
+      min_count           = 3
+      os_disk_size_gb     = 60
+      vnet_subnet_id      = azurerm_subnet.unp2.id
       upgrade_settings = {
         max_surge = "10%"
       }
     }
   }
-  oms_agent = {
-    log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
-  }
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.workspace.id
+  oms_agent                  = {}
   sku = {
     name = "Base"
     tier = "Standard"
