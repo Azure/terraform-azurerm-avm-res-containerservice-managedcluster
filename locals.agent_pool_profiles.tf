@@ -1,6 +1,10 @@
 # This file contains local values for agent pool profiles in an AKS cluster.
 # It differentiates between automatic and standard agent pools based on the SKU.
 # Automatic agent pools have a predefined set of properties, while standard agent pools include all properties.
+# Why regex? Because Terraform required that ternary expressions return the same type.
+# This is also try for functions like concat(), etc.
+# Therefore, we use regex to filter the properties accordingly.
+# The only ternary we use is a string for the regex pattern.
 locals {
   agent_pool_profiles = [{
     for k, v in module.default_agent_pool.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k))
