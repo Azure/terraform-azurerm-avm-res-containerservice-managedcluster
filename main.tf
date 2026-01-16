@@ -10,6 +10,7 @@ resource "azapi_resource" "this" {
   read_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs = [
     "properties.nodeResourceGroup",
+    "properties.agentPoolProfiles[0].vnetSubnetID",
   ]
   response_export_values = [
     "properties.currentKubernetesVersion",
@@ -49,9 +50,32 @@ resource "azapi_resource" "this" {
 
   lifecycle {
     ignore_changes = [
-      body.properties.kubernetesVersion
+      body.properties.kubernetesVersion,
+      body.properties.agentPoolProfiles,
     ]
   }
+}
+
+# Idempotency hack. Becasue agentpools are stored in a list, adding an additional agentpool
+# using the child resource woudl result in drift. To avoid that we ignore changes to the agentpools
+# in the main resource and use an update resource to update the first agentpool only.
+# TODO: When the azapi provider supports ignoring other items in teh list, then remove this.
+resource "azapi_update_resource" "this" {
+  resource_id = azapi_resource.this.id
+  type        = azapi_resource.this.type
+  body = {
+    properties = {
+      agentPoolProfiles = concat(
+        [local.agent_pool_profiles[0]],
+        [
+          for i, ap in azapi_resource.this.body.properties.agentPoolProfiles : ap if i != 0
+        ],
+      ),
+    }
+  }
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = []
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 moved {

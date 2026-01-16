@@ -113,6 +113,12 @@ resource "azurerm_role_assignment" "private_dns_zone_contributor" {
   role_definition_name = "Private DNS Zone Contributor"
 }
 
+resource "azurerm_role_assignment" "network_contributor" {
+  principal_id         = azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_virtual_network.vnet.id
+  role_definition_name = "Network Contributor"
+}
+
 resource "random_string" "dns_prefix" {
   length  = 10    # Set the length of the string
   lower   = true  # Use lowercase letters
@@ -140,9 +146,11 @@ module "private" {
       name                = "userpool1"
       vm_size             = "Standard_DS2_v2"
       mode                = "User"
+      type                = "VirtualMachineScaleSets"
       enable_auto_scaling = true
       max_count           = 4
       max_pods            = 30
+      count_of            = 3
       min_count           = 2
       os_disk_size_gb     = 128
       vnet_subnet_id      = azurerm_subnet.unp1_subnet.id
@@ -150,6 +158,12 @@ module "private" {
         max_surge = "10%"
       }
     }
+  }
+  agentpool_timeouts = {
+    create = "20m"
+    delete = "20m"
+    read   = "5m"
+    update = "20m"
   }
   api_server_access_profile = {
     enable_private_cluster = true
@@ -175,9 +189,11 @@ module "private" {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
   }
   network_profile = {
-    dns_service_ip = "10.10.200.10"
-    service_cidr   = "10.10.200.0/24"
-    network_plugin = "azure"
+    dns_service_ip      = "10.10.200.10"
+    service_cidr        = "10.10.200.0/24"
+    pod_cidr            = "100.64.0.0/10"
+    network_plugin      = "azure"
+    network_plugin_mode = "overlay"
     advanced_networking = {
       enabled = true
       observability = {

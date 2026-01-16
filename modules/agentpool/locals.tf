@@ -3,7 +3,7 @@ locals {
     properties = {
       availabilityZones          = var.availability_zones == null ? null : [for item in var.availability_zones : item]
       capacityReservationGroupID = var.capacity_reservation_group_id
-      count                      = var.count_of
+      count                      = var.max_count != null && var.min_count != null ? null : var.count_of
       creationData = var.creation_data == null ? null : {
         sourceResourceId = var.creation_data.source_resource_id
       }
