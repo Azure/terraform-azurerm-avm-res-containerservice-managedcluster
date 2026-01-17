@@ -179,7 +179,7 @@ module "automatic" {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.this.id]
   }
   network_profile = {
-    # Change this to userDefinedRouting to prevent creation of public IP
+    # Change this to userDefinedRouting to prevent creation of public IP.
     outbound_type = "loadBalancer"
   }
   onboard_alerts          = true

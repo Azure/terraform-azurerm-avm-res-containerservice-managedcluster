@@ -189,6 +189,9 @@ module "private" {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
   }
   network_profile = {
+    # In enterprise environments you typically want to manage outbound traffic using your own routing.
+    # This reuqires user defined routing (UDR) to be setup in the subnet used by the AKS cluster.
+    # outbound_type       = "userDefinedRouting"
     dns_service_ip      = "10.10.200.10"
     service_cidr        = "10.10.200.0/24"
     pod_cidr            = "100.64.0.0/10"
