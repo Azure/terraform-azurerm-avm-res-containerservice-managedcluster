@@ -209,5 +209,8 @@ module "private" {
     tier = "Standard"
   }
 
-  depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
+  depends_on = [
+    azurerm_role_assignment.private_dns_zone_contributor,
+    azurerm_role_assignment.network_contributor,
+  ]
 }
