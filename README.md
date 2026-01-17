@@ -1317,7 +1317,11 @@ Default: `{}`
 
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
-Description: Controls the Managed Identity configuration on this resource.
+Description: Controls the Managed Identity configuration on this resource.  
+For this resource we enable system assigned identity by default,  
+This allows the cluster to support deployment of managed resources.  
+If you don't want to use managed identity, then you must supply `service_principal_profile`.  
+Using managed identity is stringly recommended over service principal.
 
 Type:
 
@@ -1328,7 +1332,13 @@ object({
   })
 ```
 
-Default: `{}`
+Default:
+
+```json
+{
+  "system_assigned": true
+}
+```
 
 ### <a name="input_metrics_profile"></a> [metrics\_profile](#input\_metrics\_profile)
 

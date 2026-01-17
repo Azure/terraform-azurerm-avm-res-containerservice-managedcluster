@@ -6,29 +6,24 @@ locals {
         user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
       }
     } : {}
-    system_assigned = var.managed_identities.system_assigned ? {
-      this = {
-        type = "SystemAssigned"
-      }
-    } : {}
-    user_assigned = length(var.managed_identities.user_assigned_resource_ids) > 0 ? {
-      this = {
-        type                       = "UserAssigned"
-        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
-      }
-    } : {}
   }
   private_endpoints = { for k, v in var.private_endpoints : k => merge(v, {
     subresource_name = coalesce(v.subresource_name, "management")
   }) }
-  resource_body = {
+  resource_body = merge(
+    local.resource_body_full,
+    {
+      properties = local.resource_body_properties
+    }
+  )
+  resource_body_full = {
     extendedLocation = var.extended_location == null ? null : {
       name = var.extended_location.name
       type = var.extended_location.type
     }
     kind = var.kind
     properties = {
-      aadProfile = var.aad_profile == null || local.is_automatic ? null : {
+      aadProfile = var.aad_profile == null ? null : {
         adminGroupObjectIDs = var.aad_profile.admin_group_object_ids == null ? null : [for item in var.aad_profile.admin_group_object_ids : item]
         clientAppID         = var.aad_profile.client_app_id
         enableAzureRBAC     = var.aad_profile.enable_azure_rbac
@@ -51,7 +46,7 @@ locals {
         privateDNSZone                 = var.api_server_access_profile.private_dns_zone
         subnetId                       = var.api_server_access_profile.subnet_id
       }
-      autoScalerProfile = var.auto_scaler_profile == null || local.is_automatic ? null : {
+      autoScalerProfile = var.auto_scaler_profile == null ? null : {
         balance-similar-node-groups           = var.auto_scaler_profile.balance_similar_node_groups
         daemonset-eviction-for-empty-nodes    = var.auto_scaler_profile.daemonset_eviction_for_empty_nodes
         daemonset-eviction-for-occupied-nodes = var.auto_scaler_profile.daemonset_eviction_for_occupied_nodes
@@ -73,11 +68,11 @@ locals {
         skip-nodes-with-local-storage         = var.auto_scaler_profile.skip_nodes_with_local_storage
         skip-nodes-with-system-pods           = var.auto_scaler_profile.skip_nodes_with_system_pods
       }
-      autoUpgradeProfile = var.auto_upgrade_profile == null || local.is_automatic ? null : {
+      autoUpgradeProfile = var.auto_upgrade_profile == null ? null : {
         nodeOSUpgradeChannel = var.auto_upgrade_profile.node_os_upgrade_channel
         upgradeChannel       = var.auto_upgrade_profile.upgrade_channel
       }
-      azureMonitorProfile = var.azure_monitor_profile == null || local.is_automatic ? null : {
+      azureMonitorProfile = var.azure_monitor_profile == null ? null : {
         metrics = var.azure_monitor_profile.metrics == null ? null : {
           enabled = var.azure_monitor_profile.metrics.enabled
           kubeStateMetrics = var.azure_monitor_profile.metrics.kube_state_metrics == null ? null : {
@@ -86,16 +81,16 @@ locals {
           }
         }
       }
-      bootstrapProfile = var.bootstrap_profile == null || local.is_automatic ? null : {
+      bootstrapProfile = var.bootstrap_profile == null ? null : {
         artifactSource      = var.bootstrap_profile.artifact_source
         containerRegistryId = var.bootstrap_profile.container_registry_id
       }
-      disableLocalAccounts = local.is_automatic ? null : var.disable_local_accounts
+      disableLocalAccounts = var.disable_local_accounts
       diskEncryptionSetID  = var.disk_encryption_set_id
       dnsPrefix            = var.dns_prefix
-      enableRBAC           = local.is_automatic ? null : var.enable_rbac
+      enableRBAC           = var.enable_rbac
       fqdnSubdomain        = var.fqdn_subdomain
-      httpProxyConfig = var.http_proxy_config == null || local.is_automatic ? null : {
+      httpProxyConfig = var.http_proxy_config == null ? null : {
         httpProxy  = var.http_proxy_config.http_proxy
         httpsProxy = var.http_proxy_config.https_proxy
         noProxy    = var.http_proxy_config.no_proxy == null ? null : [for item in var.http_proxy_config.no_proxy : item]
@@ -168,7 +163,7 @@ locals {
         type            = item.type
       }]
       publicNetworkAccess = var.public_network_access
-      securityProfile = var.security_profile == null || local.is_automatic ? null : {
+      securityProfile = var.security_profile == null ? null : {
         azureKeyVaultKms = var.security_profile.azure_key_vault_kms == null ? null : {
           enabled               = var.security_profile.azure_key_vault_kms.enabled
           keyId                 = var.security_profile.azure_key_vault_kms.key_id
@@ -221,7 +216,7 @@ locals {
         clientId = var.service_principal_profile.client_id
         secret   = var.service_principal_profile.secret
       }
-      storageProfile = var.storage_profile == null || local.is_automatic ? null : {
+      storageProfile = var.storage_profile == null ? null : {
         blobCSIDriver = var.storage_profile.blob_csi_driver == null ? null : {
           enabled = var.storage_profile.blob_csi_driver.enabled
         }
@@ -235,14 +230,14 @@ locals {
           enabled = var.storage_profile.snapshot_controller.enabled
         }
       }
-      supportPlan = local.is_automatic ? null : var.support_plan
+      supportPlan = var.support_plan
       upgradeSettings = var.upgrade_settings == null ? null : {
         overrideSettings = var.upgrade_settings.override_settings == null ? null : {
           forceUpgrade = var.upgrade_settings.override_settings.force_upgrade
           until        = var.upgrade_settings.override_settings.until
         }
       }
-      windowsProfile = var.windows_profile == null || local.is_automatic ? null : {
+      windowsProfile = var.windows_profile == null ? null : {
         adminUsername  = var.windows_profile.admin_username
         enableCSIProxy = var.windows_profile.enable_csi_proxy
         gmsaProfile = var.windows_profile.gmsa_profile == null ? null : {
@@ -265,6 +260,22 @@ locals {
       name = var.sku.name
       tier = var.sku.tier
     }
-    tags = var.tags == null ? null : { for k, value in var.tags : k => value }
   }
+  resource_body_properties = {
+    for k, v in local.resource_body_full.properties : k => v if can(regex(local.resource_body_properties_regex, k)) && v != null
+  }
+  resource_body_properties_automatic = [
+    "addonProfiles",
+    "agentPoolProfiles",
+    "apiServerAccessProfile",
+    "azureMonitorProfile",
+    "diskEncryptionSetID",
+    "ingressProfile",
+    "kubernetesVersion",
+    "networkProfile",
+    "nodeResourceGroup",
+  ]
+  resource_body_properties_regex           = local.is_automatic ? local.resource_body_properties_regex_automatic : local.resource_body_properties_regex_standard
+  resource_body_properties_regex_automatic = "^(${join("|", local.resource_body_properties_automatic)})$"
+  resource_body_properties_regex_standard  = "^(.*)$"
 }

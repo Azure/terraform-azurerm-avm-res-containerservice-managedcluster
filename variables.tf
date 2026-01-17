@@ -756,9 +756,15 @@ variable "managed_identities" {
     system_assigned            = optional(bool, false)
     user_assigned_resource_ids = optional(set(string), [])
   })
-  default     = {}
+  default = {
+    system_assigned = true
+  }
   description = <<DESCRIPTION
 Controls the Managed Identity configuration on this resource.
+For this resource we enable system assigned identity by default,
+This allows the cluster to support deployment of managed resources.
+If you don't want to use managed identity, then you must supply `service_principal_profile`.
+Using managed identity is stringly recommended over service principal.
 DESCRIPTION
   nullable    = false
 }
