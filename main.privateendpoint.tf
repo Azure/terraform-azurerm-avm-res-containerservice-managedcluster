@@ -1,5 +1,5 @@
 resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
-  for_each = var.private_endpoints
+  for_each = { for k, v in var.private_endpoints : k => v if var.private_endpoints_manage_dns_zone_group }
 
   location                      = each.value.location != null ? each.value.location : var.location
   name                          = each.value.name != null ? each.value.name : "pe-${var.name}"

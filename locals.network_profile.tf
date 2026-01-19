@@ -1,9 +1,11 @@
 locals {
-  network_profile = local.is_automatic && try(var.network_profile.outbound_type != "loadBalancer", true) ? null : { for k, v in local.network_profile_merged : k => v if v != null }
+  network_profile = local.is_automatic && try(var.network_profile.outbound_type == "loadBalancer", true) ? null : { for k, v in local.network_profile_merged : k => v if v != null }
   network_profile_merged = local.is_automatic ? merge(
     local.network_profile_template,
     {
+      dnsServiceIP = try(var.network_profile.dns_service_ip, null)
       outboundType = try(var.network_profile.outbound_type, null)
+      serviceCidr  = try(var.network_profile.service_cidr, null)
     }
     ) : merge(
     local.network_profile_template,
