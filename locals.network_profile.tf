@@ -1,5 +1,9 @@
 locals {
-  network_profile = local.is_automatic && try(var.network_profile.outbound_type == "loadBalancer", true) ? null : { for k, v in local.network_profile_filtered : k => v if v != null }
+  network_profile = (
+    (local.is_automatic && try(var.network_profile.outbound_type == "loadBalancer", true))
+    ||
+    local.network_profile_filtered == null
+  ) ? null : { for k, v in local.network_profile_filtered : k => v if v != null }
   network_profile_properties_automatic = [
     "dnsServiceIP",
     "outboundType",

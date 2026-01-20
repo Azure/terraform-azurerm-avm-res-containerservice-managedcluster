@@ -22,11 +22,11 @@ provider "azurerm" {
 }
 
 module "regions" {
-  source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.0"
+  source            = "Azure/avm-utl-regions/azurerm"
+  version           = "0.10.0"
+  region_name_regex = "[^euap]"
 
   is_recommended = true
-  region_filter  = ["swedencentral"]
 }
 
 # This allows us to randomize the region for the resource group.
