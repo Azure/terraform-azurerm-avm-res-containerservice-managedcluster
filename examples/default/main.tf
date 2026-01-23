@@ -22,11 +22,12 @@ provider "azurerm" {
 }
 
 module "regions" {
-  source            = "Azure/avm-utl-regions/azurerm"
-  version           = "0.10.0"
-  region_name_regex = "[^euap]"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.11.0"
 
-  is_recommended = true
+  is_recommended         = true
+  region_name_regex      = "euap"
+  region_name_regex_mode = "not_match"
 }
 
 # This allows us to randomize the region for the resource group.

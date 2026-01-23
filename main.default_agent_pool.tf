@@ -1,4 +1,4 @@
-module "default_agent_pool" {
+module "default_agent_pool_data" {
   source = "./modules/agentpool"
 
   name                          = var.default_agent_pool.name
@@ -49,7 +49,19 @@ module "default_agent_pool" {
   upgrade_settings              = var.default_agent_pool.upgrade_settings
   virtual_machines_profile      = var.default_agent_pool.virtual_machines_profile
   vm_size                       = var.default_agent_pool.vm_size
-  vnet_subnet_id                = var.default_agent_pool.vnet_subnet_id
   windows_profile               = var.default_agent_pool.windows_profile
   workload_runtime              = var.default_agent_pool.workload_runtime
+}
+
+# This is in place so we can update the default agent pool, as we ignore changes to the object array in the parent resource.
+# TODO: Remove this when <https://github.com/Azure/terraform-provider-azapi/pull/1033> is merged and released.
+resource "azapi_update_resource" "default_agent_pool" {
+  name      = module.default_agent_pool_data.name
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.ContainerService/managedClusters/agentpools@2025-10-01"
+  body = {
+    properties = { for k, v in module.default_agent_pool_data.body_properties : k => v if v != null }
+  }
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }

@@ -383,4 +383,9 @@ The list of Availability zones to use for nodes. This can only be specified if t
 **enable_fips**
 Whether to use a FIPS-enabled OS. See [Add a FIPS-enabled node pool](https://docs.microsoft.com/azure/aks/use-multiple-node-pools#add-a-fips-enabled-node-pool-preview) for more details.
 DESCRIPTION
+
+  validation {
+    error_message = "The name must not be the same as the default agent pool name."
+    condition     = alltrue([for k, v in var.agent_pools : v.name != var.default_agent_pool.name])
+  }
 }

@@ -30,10 +30,9 @@ provider "azurerm" {
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.0"
+  version = "0.10.0"
 
   is_recommended = true
-  region_filter  = ["swedencentral"]
 }
 
 # This allows us to randomize the region for the resource group.
@@ -174,7 +173,7 @@ Version: 0.4.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.9.0
+Version: 0.10.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

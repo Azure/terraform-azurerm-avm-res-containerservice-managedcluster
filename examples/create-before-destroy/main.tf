@@ -21,28 +21,22 @@ provider "azurerm" {
   }
 }
 
-locals {
-  locations = [
-    "eastus",
-    "eastus2",
-    "westus2",
-    "centralus",
-    "westeurope",
-    "northeurope",
-    "southeastasia",
-    "japaneast",
-  ]
+
+module "regions" {
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.10.0"
+
+  is_recommended = true
 }
 
 # This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
-  max = length(local.locations) - 1
+  max = length(module.regions.regions) - 1
   min = 0
 }
-## End of section to provide a random Azure region for the resource group
 
 locals {
-  location = local.locations[random_integer.region_index.result]
+  location = module.regions.regions[random_integer.region_index.result].name
 }
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -74,11 +68,11 @@ module "create_before_destroy" {
   agent_pools = {
     unp1 = {
       name                = "unp1"
-      vm_size             = "Standard_DS2_v2"
+      vm_size             = "Standard_D2S_v6"
       enable_auto_scaling = true
-      max_count           = 4
+      max_count           = 2
       max_pods            = 30
-      min_count           = 2
+      min_count           = 1
       os_disk_size_gb     = 128
       upgrade_settings = {
         max_surge = "10%"
@@ -88,9 +82,9 @@ module "create_before_destroy" {
       name                = "unp2"
       vm_size             = "Standard_DS2_v2"
       enable_auto_scaling = true
-      max_count           = 4
+      max_count           = 2
       max_pods            = 30
-      min_count           = 2
+      min_count           = 1
       os_disk_size_gb     = 128
       upgrade_settings = {
         max_surge = "10%"
@@ -102,9 +96,9 @@ module "create_before_destroy" {
     name                = "default"
     vm_size             = "Standard_DS2_v2"
     enable_auto_scaling = true
-    max_count           = 4
+    max_count           = 2
     max_pods            = 30
-    min_count           = 2
+    min_count           = 1
     mode                = "System"
     node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
 
@@ -117,6 +111,7 @@ module "create_before_destroy" {
     system_assigned = true
   }
   network_profile = {
-    network_plugin = "kubenet"
+    network_plugin      = "azure"
+    network_plugin_mode = "overlay"
   }
 }

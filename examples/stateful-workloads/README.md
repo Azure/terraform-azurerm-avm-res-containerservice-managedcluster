@@ -13,6 +13,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4.46.0, < 5.0.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 
@@ -32,10 +36,29 @@ module "naming" {
   version = "0.4.2"
 }
 
+module "regions" {
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.11.0"
+
+  is_recommended         = true
+  region_name_regex      = "euap"
+  region_name_regex_mode = "not_match"
+}
+
+# This allows us to randomize the region for the resource group.
+resource "random_integer" "region_index" {
+  max = length(module.regions.regions) - 1
+  min = 0
+}
+
+locals {
+  location = module.regions.regions[random_integer.region_index.result].name
+}
+
 # Creating the resource group
 ######################################################################################################################
 resource "azurerm_resource_group" "this" {
-  location = coalesce(var.location, "eastus")
+  location = coalesce(var.location, local.location)
   name     = coalesce(var.resource_group_name, module.naming.resource_group.name_unique)
 }
 
@@ -143,7 +166,7 @@ module "stateful_workloads" {
   }
   default_agent_pool = {
     name     = "systempool"
-    count_of = 3
+    count_of = 2
     vm_size  = "Standard_D2ds_v4"
     os_type  = "Linux"
     # Provide zones as strings for consistency with variable type list(string)
@@ -225,6 +248,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.0.0)
 
+- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.6)
+
 ## Resources
 
 The following resources are used by this module:
@@ -234,6 +259,7 @@ The following resources are used by this module:
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_role_assignment.acr_role_assignment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.container_registry_import_for_task](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -490,6 +516,12 @@ Version:
 Source: Azure/naming/azurerm
 
 Version: 0.4.2
+
+### <a name="module_regions"></a> [regions](#module\_regions)
+
+Source: Azure/avm-utl-regions/azurerm
+
+Version: 0.11.0
 
 ### <a name="module_stateful_workloads"></a> [stateful\_workloads](#module\_stateful\_workloads)
 

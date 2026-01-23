@@ -21,21 +21,28 @@ provider "azurerm" {
   }
 }
 
-locals {
-  locations = [
-    "swedencentral",
-  ]
+module "regions" {
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.10.0"
+
+  is_recommended = true
 }
 
 # This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
-  max = length(local.locations) - 1
+  max = length(module.regions.regions) - 1
   min = 0
 }
 ## End of section to provide a random Azure region for the resource group
 
+resource "random_string" "suffix" {
+  length  = 4
+  special = false
+  upper   = false
+}
+
 locals {
-  location = local.locations[random_integer.region_index.result]
+  location = module.regions.regions[random_integer.region_index.result].name
 }
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -78,13 +85,6 @@ resource "azurerm_subnet" "subnet" {
 resource "azurerm_subnet" "unp1_subnet" {
   address_prefixes     = ["10.1.2.0/24"]
   name                 = "unp1"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-}
-
-resource "azurerm_subnet" "unp2_subnet" {
-  address_prefixes     = ["10.1.3.0/24"]
-  name                 = "unp2"
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.vnet.name
 }
@@ -144,13 +144,12 @@ module "private" {
   agent_pools = {
     unp1 = {
       name                = "userpool1"
-      vm_size             = "Standard_DS2_v2"
+      vm_size             = "Standard_D2S_v6"
       mode                = "User"
       type                = "VirtualMachineScaleSets"
       enable_auto_scaling = true
       max_count           = 4
       max_pods            = 30
-      count_of            = 3
       min_count           = 2
       os_disk_size_gb     = 128
       vnet_subnet_id      = azurerm_subnet.unp1_subnet.id
@@ -171,7 +170,7 @@ module "private" {
   }
   default_agent_pool = {
     name                = "default"
-    vm_size             = "Standard_DS2_v2"
+    vm_size             = "Standard_D2S_v6"
     enable_auto_scaling = true
     max_count           = 4
     max_pods            = 30

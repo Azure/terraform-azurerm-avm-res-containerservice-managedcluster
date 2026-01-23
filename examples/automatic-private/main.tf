@@ -23,7 +23,7 @@ provider "azurerm" {
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.0"
+  version = "0.10.0"
 
   is_recommended = true
   region_filter  = ["swedencentral"]
@@ -142,7 +142,7 @@ module "automatic" {
   }
   alert_email = "test@this.com"
   api_server_access_profile = {
-    vnet_subnet_id         = azurerm_subnet.api_server.id
+    subnet_id              = azurerm_subnet.api_server.id
     enable_private_cluster = true
     private_dns_zone       = azurerm_private_dns_zone.this.id
     disable_run_command    = true

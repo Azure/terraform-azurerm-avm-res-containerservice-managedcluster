@@ -4,15 +4,7 @@ locals {
     ||
     local.network_profile_filtered == null
   ) ? null : { for k, v in local.network_profile_filtered : k => v if v != null }
-  network_profile_properties_automatic = [
-    "dnsServiceIP",
-    "outboundType",
-    "serviceCidr"
-  ]
-  network_profile_properties_regex           = local.is_automatic ? local.network_profile_properties_regex_automatic : local.network_profile_properties_regex_standard
-  network_profile_properties_regex_standard  = "^(.*)$"
-  network_profile_properties_regex_automatic = "^(${join("|", local.network_profile_properties_automatic)})$"
-  network_profile_filtered                   = var.network_profile == null ? null : { for k, v in local.network_profile_full : k => v if can(regex(local.network_profile_properties_regex, k)) && v != null }
+  network_profile_filtered = var.network_profile == null ? null : { for k, v in local.network_profile_full : k => v if can(regex(local.network_profile_properties_regex, k)) && v != null }
   network_profile_full = var.network_profile == null ? null : {
     advancedNetworking = var.network_profile.advanced_networking == null ? null : {
       enabled = var.network_profile.advanced_networking.enabled
@@ -67,4 +59,12 @@ locals {
       enabled = var.network_profile.static_egress_gateway_profile.enabled
     }
   }
+  network_profile_properties_automatic = [
+    "dnsServiceIP",
+    "outboundType",
+    "serviceCidr"
+  ]
+  network_profile_properties_regex           = local.is_automatic ? local.network_profile_properties_regex_automatic : local.network_profile_properties_regex_standard
+  network_profile_properties_regex_automatic = "^(${join("|", local.network_profile_properties_automatic)})$"
+  network_profile_properties_regex_standard  = "^(.*)$"
 }

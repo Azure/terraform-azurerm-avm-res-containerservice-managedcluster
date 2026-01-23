@@ -33,8 +33,8 @@ locals {
       azureKeyvaultSecretsProvider = {
         enabled = true
         config = tomap({
-          enableSecretRotation = var.addon_profile_key_vault_secrets_provider.secret_rotation_enabled
-          rotationPollInterval = var.addon_profile_key_vault_secrets_provider.secret_rotation_interval
+          enableSecretRotation = var.addon_profile_key_vault_secrets_provider.config.enable_secret_rotation
+          rotationPollInterval = var.addon_profile_key_vault_secrets_provider.config.rotation_poll_interval
         })
       }
     } : null,

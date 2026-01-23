@@ -49,6 +49,10 @@ resource "azapi_resource" "this" {
   }
 
   lifecycle {
+    # I'm sorry about this...
+    # We need to ignore any changes to everything but the first agent pool.
+    # Because azapi provider does not support ignoring items in a list yet.
+    # TODO: When https://github.com/Azure/terraform-provider-azapi/pull/1033 is merged, we can remove this.
     ignore_changes = [
       body.properties.kubernetesVersion,
       body.properties.agentPoolProfiles,
@@ -59,25 +63,7 @@ resource "azapi_resource" "this" {
 # Idempotency hack. Becasue agentpools are stored in a list, adding an additional agentpool
 # using the child resource woudl result in drift. To avoid that we ignore changes to the agentpools
 # in the main resource and use an update resource to update the first agentpool only.
-# TODO: When the azapi provider supports ignoring other items in teh list, then remove this.
-resource "azapi_update_resource" "this" {
-  resource_id = azapi_resource.this.id
-  type        = azapi_resource.this.type
-  body = {
-    properties = {
-      agentPoolProfiles = concat(
-        [local.agent_pool_profiles[0]],
-        [
-          for i, ap in azapi_resource.this.body.properties.agentPoolProfiles : ap if i != 0
-        ],
-      ),
-    }
-  }
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  response_export_values = []
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-}
-
+# TODO: When the azapi provider supports ignoring other items in the list, then remove this.
 moved {
   from = azurerm_kubernetes_cluster.this
   to   = azapi_resource.this
@@ -124,4 +110,8 @@ resource "azapi_resource_action" "this_admin_kubeconfig" {
   resource_id            = azapi_resource.this.id
   type                   = azapi_resource.this.type
   response_export_values = ["kubeconfigs"]
+}
+locals {
+  kubeconfig_admin = length(azapi_resource_action.this_admin_kubeconfig) == 1 ? base64decode(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value) : null
+  kubeconfig_user  = !local.is_automatic ? base64decode(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value) : null
 }

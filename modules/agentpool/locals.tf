@@ -1,4 +1,7 @@
 locals {
+  replace_triggers_refs = [
+    "properties.vmSize",
+  ]
   resource_body = {
     properties = {
       availabilityZones          = var.availability_zones == null ? null : [for item in var.availability_zones : item]

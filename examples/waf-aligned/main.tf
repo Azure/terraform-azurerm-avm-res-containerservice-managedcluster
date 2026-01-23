@@ -21,15 +21,33 @@ provider "azurerm" {
   }
 }
 
+module "regions" {
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.10.0"
+
+  has_availability_zones = true
+  is_recommended         = true
+}
+
+# This allows us to randomize the region for the resource group.
+resource "random_integer" "region_index" {
+  max = length(module.regions.regions) - 1
+  min = 0
+}
+## End of section to provide a random Azure region for the resource group
+
+locals {
+  location = module.regions.regions[random_integer.region_index.result].name
+}
+
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.4.2"
 }
 
-# This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = "eastus"
+  location = local.location
   name     = module.naming.resource_group.name_unique
 }
 
@@ -65,13 +83,6 @@ resource "azurerm_subnet" "unp1" {
   virtual_network_name = azurerm_virtual_network.vnet.name
 }
 
-resource "azurerm_subnet" "unp2" {
-  address_prefixes     = ["10.1.3.0/24"]
-  name                 = "unp2"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-}
-
 resource "azurerm_private_dns_zone" "zone" {
   name                = "privatelink.${azurerm_resource_group.this.location}.azmk8s.io"
   resource_group_name = azurerm_resource_group.this.name
@@ -81,6 +92,12 @@ resource "azurerm_user_assigned_identity" "identity" {
   location            = azurerm_resource_group.this.location
   name                = "aks-identity"
   resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_role_assignment" "network_contributor" {
+  principal_id         = azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_virtual_network.vnet.id
+  role_definition_name = "Network Contributor"
 }
 
 resource "azurerm_role_assignment" "private_dns_zone_contributor" {
@@ -136,12 +153,12 @@ module "waf_aligned" {
   agent_pools = {
     unp1 = {
       name                = "userpool1"
-      vm_size             = "Standard_DS2_v2"
-      availability_zones  = ["1", "2", "3"]
+      vm_size             = "Standard_D2S_v6"
+      availability_zones  = ["1", "2", ]
       enable_auto_scaling = true
       max_count           = 3
       max_pods            = 50
-      min_count           = 3
+      min_count           = 2
       os_disk_size_gb     = 60
       vnet_subnet_id      = azurerm_subnet.unp1.id
 
@@ -149,32 +166,18 @@ module "waf_aligned" {
         max_surge = "10%"
       }
     }
-    unp2 = {
-      name                = "userpool2"
-      vm_size             = "Standard_DS2_v2"
-      count_of            = 3
-      availability_zones  = ["1", "2", "3"]
-      enable_auto_scaling = true
-      max_count           = 3
-      max_pods            = 50
-      min_count           = 3
-      os_disk_size_gb     = 60
-      vnet_subnet_id      = azurerm_subnet.unp2.id
-      upgrade_settings = {
-        max_surge = "10%"
-      }
-    }
   }
   api_server_access_profile = {
-    enable_private_cluster = true
-    private_dns_zone       = azurerm_private_dns_zone.zone.id
+    enable_private_cluster  = true
+    enable_vnet_integration = true
+    private_dns_zone        = azurerm_private_dns_zone.zone.id
+    subnet_id               = azurerm_subnet.api_server.id
   }
   auto_scaler_profile = {
-    expander                      = "random"
-    scan_interval                 = "20s"
-    scale_down_unneeded_time      = "10m"
-    scale_down_delay_after_add    = "10m"
-    scale_down_delay_after_delete = "2m"
+    expander                   = "random"
+    scan_interval              = "20s"
+    scale_down_unneeded_time   = "10m"
+    scale_down_delay_after_add = "10m"
   }
   auto_upgrade_profile = {
     upgrade_channel         = "stable"
@@ -182,13 +185,12 @@ module "waf_aligned" {
   }
   default_agent_pool = {
     name                = "default"
-    vm_size             = "Standard_DS2_v2"
-    count_of            = 3
-    availability_zones  = ["1", "2", "3"]
+    vm_size             = "Standard_D2S_v6"
+    availability_zones  = ["1", "2", ]
     enable_auto_scaling = true
     max_count           = 5
     max_pods            = 50
-    min_count           = 3
+    min_count           = 2
     vnet_subnet_id      = azurerm_subnet.subnet.id
     mode                = "System"
     node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
@@ -219,9 +221,13 @@ module "waf_aligned" {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
   }
   network_profile = {
-    dns_service_ip = "10.10.200.10"
-    service_cidr   = "10.10.200.0/24"
-    network_plugin = "azure"
+    # In enterprise environments you typically want to manage outbound traffic using your own routing.
+    # This reuqires user defined routing (UDR) to be setup in the subnet used by the AKS cluster.
+    # outbound_type       = "userDefinedRouting"
+    dns_service_ip      = "10.10.200.10"
+    service_cidr        = "10.10.200.0/24"
+    network_plugin      = "azure"
+    network_plugin_mode = "overlay"
   }
   security_profile = {
     defender = {
@@ -236,5 +242,8 @@ module "waf_aligned" {
     tier = "Standard"
   }
 
-  depends_on = [azurerm_role_assignment.private_dns_zone_contributor]
+  depends_on = [
+    azurerm_role_assignment.private_dns_zone_contributor,
+    azurerm_role_assignment.network_contributor,
+  ]
 }

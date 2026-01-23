@@ -689,7 +689,7 @@ Description: System-generated state of localDNS.
 
 ### <a name="output_name"></a> [name](#output\_name)
 
-Description: The name of the created resource.
+Description: The name of the resource.
 
 ### <a name="output_node_image_version"></a> [node\_image\_version](#output\_node\_image\_version)
 

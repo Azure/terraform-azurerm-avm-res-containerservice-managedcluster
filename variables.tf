@@ -510,6 +510,7 @@ Note that:
 - The `os_type` and `mode` options are not available here and are automatically set to `Linux` and `System` respectively.
 - The default node count (`count_of`) is set to `3` if not specified.
 - The default name is set to `systempool` if not specified.
+- It is not supported to rename the default agent pool after creation.
 DESCRIPTION
   nullable    = false
 }
@@ -1255,9 +1256,13 @@ variable "sku" {
   description = <<DESCRIPTION
 The SKU of a Managed Cluster.
 
-- `name` - The name of a managed cluster SKU.
-- `tier` - The tier of a managed cluster SKU. If not specified, the default is 'Free'. See [AKS Pricing Tier](https://learn.microsoft.com/azure/aks/free-standard-pricing-tiers) for more details.
+- `name` - The name of a managed cluster SKU. Valid values are 'Automatic' and 'Base'.
+- `tier` - The tier of a managed cluster SKU. Valid values are 'Free', 'Standard', and 'Premium'.
 
+NOTE:
+When deploying an Automatic SKU cluster, only the allowable API properties will be included in the request.
+Any remaining properties not supported by Automatic SKU will be ignored.
+See <https://learn.microsoft.com/azure/aks/intro-aks-automatic#aks-automatic-and-standard-feature-comparison> for more details.
 DESCRIPTION
 
   validation {
