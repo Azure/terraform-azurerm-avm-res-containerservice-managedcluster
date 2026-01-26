@@ -324,6 +324,7 @@ variable "upgrade_settings" {
     drain_timeout_in_minutes      = optional(number)
     node_soak_duration_in_minutes = optional(number)
     max_surge                     = optional(string)
+    undrainable_node_behavior     = optional(string)
   })
   default = {
     max_surge = "10%"

@@ -136,6 +136,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
       max_surge                     = upgrade_settings.value.max_surge
       drain_timeout_in_minutes      = upgrade_settings.value.drain_timeout_in_minutes
       node_soak_duration_in_minutes = upgrade_settings.value.node_soak_duration_in_minutes
+      undrainable_node_behavior     = upgrade_settings.value.undrainable_node_behavior
     }
   }
   dynamic "windows_profile" {
