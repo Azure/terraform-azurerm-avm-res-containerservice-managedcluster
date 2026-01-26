@@ -334,6 +334,7 @@ map(object({
       drain_timeout_in_minutes      = optional(number)
       node_soak_duration_in_minutes = optional(number)
       max_surge                     = string
+      undrainable_node_behavior     = optional(string)
     }))
   }))
 ```
