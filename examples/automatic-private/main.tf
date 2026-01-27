@@ -21,6 +21,10 @@ provider "azurerm" {
   }
 }
 
+data "azurerm_client_config" "current" {}
+
+# Ensure to select a region that meets criteria for AKS Automatic clusters.
+# See this doc for more info: https://learn.microsoft.com/azure/aks/automatic/quick-automatic-managed-network?pivots=azure-portal#limitations
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.10.0"
@@ -185,6 +189,12 @@ module "automatic" {
   onboard_alerts          = true
   onboard_monitoring      = true
   prometheus_workspace_id = azurerm_monitor_workspace.this.id
+  role_assignments = {
+    "admin" = {
+      principal_id               = data.azurerm_client_config.current.object_id
+      role_definition_id_or_name = "Azure Kubernetes Service RBAC Admin"
+    }
+  }
   sku = {
     name = "Automatic"
     tier = "Standard"

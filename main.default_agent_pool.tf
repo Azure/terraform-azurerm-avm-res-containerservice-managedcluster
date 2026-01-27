@@ -49,6 +49,7 @@ module "default_agent_pool_data" {
   upgrade_settings              = var.default_agent_pool.upgrade_settings
   virtual_machines_profile      = var.default_agent_pool.virtual_machines_profile
   vm_size                       = var.default_agent_pool.vm_size
+  vnet_subnet_id                = var.default_agent_pool.vnet_subnet_id
   windows_profile               = var.default_agent_pool.windows_profile
   workload_runtime              = var.default_agent_pool.workload_runtime
 }
