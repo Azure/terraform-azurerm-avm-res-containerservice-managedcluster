@@ -8,7 +8,6 @@ To connect to the private cluster after deployment, use one of the supported met
 
 > Note: To use the `az aks command invoke` command to run commands on the cluster, the `disable_run_command` property in the `api_server_access_profile` module variable must be set to `false`.
 
-
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
@@ -33,6 +32,10 @@ provider "azurerm" {
   }
 }
 
+data "azurerm_client_config" "current" {}
+
+# Ensure to select a region that meets criteria for AKS Automatic clusters.
+# See this doc for more info: https://learn.microsoft.com/azure/aks/automatic/quick-automatic-managed-network?pivots=azure-portal#limitations
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.10.0"
@@ -197,6 +200,12 @@ module "automatic" {
   onboard_alerts          = true
   onboard_monitoring      = true
   prometheus_workspace_id = azurerm_monitor_workspace.this.id
+  role_assignments = {
+    "admin" = {
+      principal_id               = data.azurerm_client_config.current.object_id
+      role_definition_id_or_name = "Azure Kubernetes Service RBAC Admin"
+    }
+  }
   sku = {
     name = "Automatic"
     tier = "Standard"
@@ -236,6 +245,7 @@ The following resources are used by this module:
 - [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

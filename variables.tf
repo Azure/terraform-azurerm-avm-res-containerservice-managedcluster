@@ -653,8 +653,6 @@ DESCRIPTION
 
 variable "identity_profile" {
   type = map(object({
-    client_id   = optional(string)
-    object_id   = optional(string)
     resource_id = optional(string)
   }))
   default     = null
@@ -662,11 +660,20 @@ variable "identity_profile" {
 The user identity associated with the managed cluster. This identity will be used by the kubelet. Only one user assigned identity is allowed. The only accepted key is "kubeletidentity", with value of "resourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}".
 
 Map values:
-- `client_id` - The client ID of the user assigned identity.
-- `object_id` - The object ID of the user assigned identity.
 - `resource_id` - The resource ID of the user assigned identity.
 
+Only supported with clusters that are assigned a user managed identity.
+The control plane managed identity must be assigned 'Managed Identity Operator' role on the user assigned identity.
 DESCRIPTION
+
+  validation {
+    error_message = "The only accepted key for identity_profile is 'kubeletidentity'."
+    condition     = var.identity_profile == null || alltrue([for k in keys(var.identity_profile) : k == "kubeletidentity"])
+  }
+  validation {
+    error_message = "When kublet identity is specified in identity_profile, managed_identities.user_assigned_resource_ids must be configured."
+    condition     = var.identity_profile == null || !contains(keys(var.identity_profile), "kubeletidentity") || (var.managed_identities != null && length(var.managed_identities.user_assigned_resource_ids) == 1)
+  }
 }
 
 variable "ingress_profile" {

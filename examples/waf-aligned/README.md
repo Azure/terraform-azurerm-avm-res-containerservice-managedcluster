@@ -28,12 +28,16 @@ provider "azurerm" {
   }
 }
 
+data "azurerm_client_config" "current" {}
+
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.10.0"
+  version = "0.11.0"
 
   has_availability_zones = true
   is_recommended         = true
+  region_name_regex      = "euap"
+  region_name_regex_mode = "not_match"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -95,10 +99,24 @@ resource "azurerm_private_dns_zone" "zone" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+# Identity for the managed cluster
 resource "azurerm_user_assigned_identity" "identity" {
   location            = azurerm_resource_group.this.location
   name                = "aks-identity"
   resource_group_name = azurerm_resource_group.this.name
+}
+
+# Identity for the kubelet, used to pull images from ACR for example
+resource "azurerm_user_assigned_identity" "kubelet_identity" {
+  location            = azurerm_resource_group.this.location
+  name                = "aks-kubelet-identity"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_role_assignment" "managed_identity_operator" {
+  principal_id         = azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_user_assigned_identity.kubelet_identity.id
+  role_definition_name = "Managed Identity Operator"
 }
 
 resource "azurerm_role_assignment" "network_contributor" {
@@ -135,8 +153,6 @@ resource "random_string" "dns_prefix" {
   special = false # No special characters
   upper   = false # No uppercase letters
 }
-
-data "azurerm_client_config" "current" {}
 
 module "waf_aligned" {
   source = "../.."
@@ -205,7 +221,13 @@ module "waf_aligned" {
       max_surge = "10%"
     }
   }
-  fqdn_subdomain = random_string.dns_prefix.result
+  disable_local_accounts = true
+  fqdn_subdomain         = random_string.dns_prefix.result
+  identity_profile = {
+    kubeletidentity = {
+      resource_id = azurerm_user_assigned_identity.kubelet_identity.id
+    }
+  }
   maintenanceconfiguration = {
     aksManagedAutoUpgradeSchedule = {
       name = "aksManagedAutoUpgradeSchedule"
@@ -235,6 +257,24 @@ module "waf_aligned" {
     service_cidr        = "10.10.200.0/24"
     network_plugin      = "azure"
     network_plugin_mode = "overlay"
+    network_dataplane   = "cilium"
+    advanced_networking = {
+      enabled = true
+      observability = {
+        enabled = true
+      }
+      security = {
+        enabled                   = true
+        advanced_network_policies = "FQDN"
+      }
+    }
+  }
+  role_assignments = {
+    rbac_admin = {
+      principal_id                     = data.azurerm_client_config.current.object_id
+      role_definition_id_or_name       = "Azure Kubernetes Service RBAC Cluster Admin"
+      skip_service_principal_aad_check = false
+    }
   }
   security_profile = {
     defender = {
@@ -252,6 +292,7 @@ module "waf_aligned" {
   depends_on = [
     azurerm_role_assignment.private_dns_zone_contributor,
     azurerm_role_assignment.network_contributor,
+    azurerm_role_assignment.managed_identity_operator,
   ]
 }
 ```
@@ -275,12 +316,14 @@ The following resources are used by this module:
 - [azurerm_private_dns_zone.zone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_private_dns_zone_virtual_network_link.vnet_link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_role_assignment.managed_identity_operator](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.network_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.api_server](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.unp1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_user_assigned_identity.identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
+- [azurerm_user_assigned_identity.kubelet_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
@@ -313,7 +356,7 @@ Version: 0.4.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.10.0
+Version: 0.11.0
 
 ### <a name="module_waf_aligned"></a> [waf\_aligned](#module\_waf\_aligned)
 

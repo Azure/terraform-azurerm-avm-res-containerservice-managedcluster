@@ -90,8 +90,6 @@ locals {
         trustedCa  = var.http_proxy_config.trusted_ca
       }
       identityProfile = var.identity_profile == null ? null : { for k, value in var.identity_profile : k => value == null ? null : {
-        clientId   = value.client_id
-        objectId   = value.object_id
         resourceId = value.resource_id
       } }
       ingressProfile = var.ingress_profile == null ? null : {

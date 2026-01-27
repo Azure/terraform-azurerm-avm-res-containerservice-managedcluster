@@ -15,7 +15,7 @@ resource "azapi_resource" "this" {
   response_export_values = [
     "properties.currentKubernetesVersion",
     "properties.fqdn",
-    "properties.identityprofile.kubeletidentity",
+    "properties.identityProfile.kubeletidentity",
     "properties.ingressProfile.webAppRouting.identity",
     "properties.maxAgentPools",
     "properties.networkProfile.loadBalancerProfile.effectiveOutboundIPs",
@@ -50,9 +50,6 @@ resource "azapi_resource" "this" {
   }
 
   lifecycle {
-    # I'm sorry about this...
-    # We need to ignore any changes to everything but the first agent pool.
-    # Because azapi provider does not support ignoring items in a list yet.
     # TODO: When https://github.com/Azure/terraform-provider-azapi/pull/1033 is merged, we can remove this.
     ignore_changes = [
       body.properties.kubernetesVersion,
@@ -61,10 +58,6 @@ resource "azapi_resource" "this" {
   }
 }
 
-# Idempotency hack. Becasue agentpools are stored in a list, adding an additional agentpool
-# using the child resource woudl result in drift. To avoid that we ignore changes to the agentpools
-# in the main resource and use an update resource to update the first agentpool only.
-# TODO: When the azapi provider supports ignoring other items in the list, then remove this.
 moved {
   from = azurerm_kubernetes_cluster.this
   to   = azapi_resource.this

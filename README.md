@@ -1132,16 +1132,15 @@ Default: `null`
 Description: The user identity associated with the managed cluster. This identity will be used by the kubelet. Only one user assigned identity is allowed. The only accepted key is "kubeletidentity", with value of "resourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}".
 
 Map values:
-- `client_id` - The client ID of the user assigned identity.
-- `object_id` - The object ID of the user assigned identity.
 - `resource_id` - The resource ID of the user assigned identity.
+
+Only supported with clusters that are assigned a user managed identity.  
+The control plane managed identity must be assigned 'Managed Identity Operator' role on the user assigned identity.
 
 Type:
 
 ```hcl
 map(object({
-    client_id   = optional(string)
-    object_id   = optional(string)
     resource_id = optional(string)
   }))
 ```
