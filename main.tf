@@ -15,6 +15,7 @@ resource "azapi_resource" "this" {
   response_export_values = [
     "properties.currentKubernetesVersion",
     "properties.fqdn",
+    "properties.identityprofile.kubeletidentity",
     "properties.ingressProfile.webAppRouting.identity",
     "properties.maxAgentPools",
     "properties.networkProfile.loadBalancerProfile.effectiveOutboundIPs",
