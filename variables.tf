@@ -3,6 +3,7 @@ variable "location" {
   description = <<DESCRIPTION
 The location of the resource.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "name" {
@@ -573,7 +574,8 @@ variable "disk_encryption_set_id" {
   type        = string
   default     = null
   description = <<DESCRIPTION
-The Resource ID of the disk encryption set to use for enabling encryption at rest. This is of the form: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/diskEncryptionSets/{encryptionSetName}'
+The Resource ID of the disk encryption set to use for enabling encryption at rest.
+This is of the form: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/diskEncryptionSets/{encryptionSetName}'
 DESCRIPTION
 }
 
@@ -1049,7 +1051,6 @@ variable "private_endpoints" {
     }), null)
     tags                                    = optional(map(string), null)
     subnet_resource_id                      = string
-    subresource_name                        = optional(string, null)
     private_dns_zone_group_name             = optional(string, "default")
     private_dns_zone_resource_ids           = optional(set(string), [])
     application_security_group_associations = optional(map(string), {})

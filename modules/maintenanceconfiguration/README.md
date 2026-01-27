@@ -38,14 +38,6 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
-
-Description: This variable controls whether or not telemetry is enabled for the module. For more information see https://aka.ms/avm/telemetryinfo.
-
-Type: `bool`
-
-Default: `true`
-
 ### <a name="input_maintenance_window"></a> [maintenance\_window](#input\_maintenance\_window)
 
 Description: Maintenance window used to configure scheduled auto-upgrade for a Managed Cluster.

@@ -102,14 +102,6 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
-
-Description: This variable controls whether or not telemetry is enabled for the module. For more information see https://aka.ms/avm/telemetryinfo.
-
-Type: `bool`
-
-Default: `true`
-
 ### <a name="input_labels"></a> [labels](#input\_labels)
 
 Description: The labels of managed namespace.
