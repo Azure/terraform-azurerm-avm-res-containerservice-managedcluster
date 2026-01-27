@@ -20,6 +20,7 @@ resource "azapi_resource" "this" {
     "properties.maxAgentPools",
     "properties.networkProfile.loadBalancerProfile.effectiveOutboundIPs",
     "properties.networkProfile.natGatewayProfile.effectiveOutboundIPs",
+    "properties.nodeResourceGroup",
     "properties.oidcIssuerProfile.issuerURL",
     "properties.privateFQDN",
   ]
