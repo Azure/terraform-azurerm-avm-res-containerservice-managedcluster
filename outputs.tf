@@ -65,11 +65,6 @@ output "name" {
   value       = azapi_resource.this.name
 }
 
-output "node_resource_group_name" {
-  description = "The name of the auto-created node resource group."
-  value       = try(azapi_resource.this.output.properties.nodeResourceGroup, null)
-}
-
 output "network_profile_load_balancer_profile_effective_outbound_ips" {
   description = "The effective outbound IP resources of the cluster load balancer."
   value       = try(azapi_resource.this.output.properties.networkProfile.loadBalancerProfile.effectiveOutboundIPs, [])
@@ -78,6 +73,11 @@ output "network_profile_load_balancer_profile_effective_outbound_ips" {
 output "network_profile_nat_gateway_profile_effective_outbound_ips" {
   description = "The effective outbound IP resources of the cluster NAT gateway."
   value       = try(azapi_resource.this.output.properties.networkProfile.natGatewayProfile.effectiveOutboundIPs, [])
+}
+
+output "node_resource_group_name" {
+  description = "The name of the auto-created node resource group."
+  value       = try(azapi_resource.this.output.properties.nodeResourceGroup, null)
 }
 
 output "oidc_issuer_profile_issuer_url" {

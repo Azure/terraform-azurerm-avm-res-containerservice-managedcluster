@@ -2112,6 +2112,10 @@ Description: The effective outbound IP resources of the cluster load balancer.
 
 Description: The effective outbound IP resources of the cluster NAT gateway.
 
+### <a name="output_node_resource_group_name"></a> [node\_resource\_group\_name](#output\_node\_resource\_group\_name)
+
+Description: The name of the auto-created node resource group.
+
 ### <a name="output_oidc_issuer_profile_issuer_url"></a> [oidc\_issuer\_profile\_issuer\_url](#output\_oidc\_issuer\_profile\_issuer\_url)
 
 Description: The OIDC issuer url of the Managed Cluster.
