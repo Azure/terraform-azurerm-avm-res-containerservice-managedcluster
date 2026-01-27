@@ -169,7 +169,7 @@ module "automatic" {
         duration_hours = 4
         start_time     = "00:00"
         utc_offset     = "+00:00"
-        start_date     = formatdate("YYYY-MM-DD", timestamp())
+        start_date     = "2025-09-27"
         schedule = {
           weekly = {
             day_of_week    = "Sunday"
