@@ -1054,10 +1054,10 @@ variable "private_endpoints" {
     private_dns_zone_group_name             = optional(string, "default")
     private_dns_zone_resource_ids           = optional(set(string), [])
     application_security_group_associations = optional(map(string), {})
-    private_service_connection_name         = optional(string)
-    network_interface_name                  = optional(string)
-    location                                = optional(string)
-    resource_group_name                     = optional(string)
+    private_service_connection_name         = optional(string, null)
+    network_interface_name                  = optional(string, null)
+    location                                = optional(string, null)
+    resource_group_name                     = optional(string, null)
     ip_configurations = optional(map(object({
       name               = string
       private_ip_address = string

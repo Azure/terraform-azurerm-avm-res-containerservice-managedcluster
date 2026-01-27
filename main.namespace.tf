@@ -9,7 +9,6 @@ module "namespace" {
   default_network_policy = each.value.default_network_policy
   default_resource_quota = each.value.default_resource_quota
   delete_policy          = each.value.delete_policy
-  enable_telemetry       = each.value.enable_telemetry
   labels                 = each.value.labels
   tags                   = each.value.tags
 }
