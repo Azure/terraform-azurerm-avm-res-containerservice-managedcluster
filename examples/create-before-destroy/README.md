@@ -105,7 +105,7 @@ module "create_before_destroy" {
     enable_auto_scaling = true
     max_count           = 2
     max_pods            = 30
-    min_count           = 1
+    min_count           = 2
     mode                = "System"
     node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
 
@@ -120,6 +120,9 @@ module "create_before_destroy" {
   network_profile = {
     network_plugin      = "azure"
     network_plugin_mode = "overlay"
+  }
+  sku = {
+    tier = "Standard"
   }
 }
 ```
