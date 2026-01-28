@@ -110,6 +110,9 @@ module "default" {
   managed_identities = {
     system_assigned = true
   }
+  sku = {
+    tier = "Standard"
+  }
 }
 ```
 
