@@ -103,7 +103,19 @@ module "default" {
   managed_identities = {
     system_assigned = true
   }
+  service_mesh_profile = {
+    mode = "Istio"
+    istio = {
+      components = {
+        ingress_gateways = [{
+          enabled = true
+          mode    = "External"
+        }]
+      }
+    }
+  }
   sku = {
     tier = "Standard"
+    name = "Base"
   }
 }

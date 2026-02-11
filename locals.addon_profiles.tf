@@ -21,21 +21,21 @@ locals {
     var.addon_profile_ingress_application_gateway != null ? {
       ingressApplicationGateway = {
         enabled = var.addon_profile_ingress_application_gateway.enabled
-        config = tomap({
+        config = var.addon_profile_ingress_application_gateway.config != null ? tomap({
           applicationGatewayId   = var.addon_profile_ingress_application_gateway.config.application_gateway_id
           applicationGatewayName = var.addon_profile_ingress_application_gateway.config.application_gateway_name
           subnetCIDR             = var.addon_profile_ingress_application_gateway.config.subnet_cidr
           subnetId               = var.addon_profile_ingress_application_gateway.config.subnet_id
-        })
+        }) : null
       }
     } : null,
     !local.is_automatic && var.addon_profile_key_vault_secrets_provider != null ? {
       azureKeyvaultSecretsProvider = {
         enabled = true
-        config = tomap({
+        config = var.addon_profile_key_vault_secrets_provider.config != null ? tomap({
           enableSecretRotation = var.addon_profile_key_vault_secrets_provider.config.enable_secret_rotation
           rotationPollInterval = var.addon_profile_key_vault_secrets_provider.config.rotation_poll_interval
-        })
+        }) : null
       }
     } : null,
     var.addon_profile_confidential_computing != null ? {

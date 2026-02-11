@@ -13,6 +13,7 @@ resource "azapi_resource" "this" {
     "properties.agentPoolProfiles[0].vnetSubnetID",
   ]
   response_export_values = [
+    "properties.addonProfiles.azureKeyvaultSecretsProvider",
     "properties.currentKubernetesVersion",
     "properties.fqdn",
     "properties.identityProfile.kubeletidentity",
