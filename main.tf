@@ -43,10 +43,10 @@ resource "azapi_resource" "this" {
     for_each = var.cluster_timeouts == null ? [] : [1]
 
     content {
-      create = var.timeouts.create
-      delete = var.timeouts.delete
-      read   = var.timeouts.read
-      update = var.timeouts.update
+      create = var.cluster_timeouts.create
+      delete = var.cluster_timeouts.delete
+      read   = var.cluster_timeouts.read
+      update = var.cluster_timeouts.update
     }
   }
 
