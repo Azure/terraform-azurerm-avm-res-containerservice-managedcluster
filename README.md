@@ -782,6 +782,70 @@ object({
 
 Default: `null`
 
+### <a name="input_cluster_extension"></a> [cluster\_extension](#input\_cluster\_extension)
+
+Description: Map of instances for the cluster extension submodule with the following attributes:
+
+**name**  
+The name of the cluster extension.
+
+**extension\_type**  
+The extension type. Examples: 'microsoft.dapr', 'microsoft.azureappconfiguration', 'microsoft.storagepoolextension'.
+
+**configuration\_protected\_settings**  
+Configuration settings that are protected or sensitive for the extension.
+
+**configuration\_settings**  
+Configuration settings for the extension.
+
+**release\_namespace**  
+Namespace where the extension release must be placed for a cluster scoped extension.
+
+**release\_train**  
+The release train used by this extension. Possible values include but are not limited to 'Stable' or 'Preview'.
+
+**target\_namespace**  
+Namespace where the extension will be created for a namespace scoped extension.
+
+**version**  
+User-specified version that the extension should pin to. If not set, Azure uses the latest version and auto-upgrades.
+
+**plan**  
+Plan block for marketplace extensions.
+
+**timeouts**  
+Timeouts for create, read, update, and delete operations.
+
+Type:
+
+```hcl
+map(object({
+    configuration_protected_settings = optional(map(string))
+    configuration_settings           = optional(map(string))
+    extension_type                   = string
+    name                             = string
+    plan = optional(object({
+      name           = string
+      product        = string
+      publisher      = string
+      promotion_code = optional(string)
+      version        = optional(string)
+    }))
+    release_namespace = optional(string)
+    release_train     = optional(string)
+    target_namespace  = optional(string)
+    timeouts = optional(object({
+      create = optional(string)
+      read   = optional(string)
+      update = optional(string)
+      delete = optional(string)
+    }))
+    version = optional(string)
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_cluster_timeouts"></a> [cluster\_timeouts](#input\_cluster\_timeouts)
 
 Description: - `create` - (Defaults to 60 minutes) Used when creating the Kubernetes Cluster Node Pool.
@@ -2038,6 +2102,10 @@ Description: The special FQDN used by the Azure Portal to access the Managed Clu
 
 Description: Base64 cluster CA certificate from user kubeconfig.
 
+### <a name="output_cluster_extension_resource_ids"></a> [cluster\_extension\_resource\_ids](#output\_cluster\_extension\_resource\_ids)
+
+Description: A map of cluster extension keys to resource ids and names.
+
 ### <a name="output_current_kubernetes_version"></a> [current\_kubernetes\_version](#output\_current\_kubernetes\_version)
 
 Description: The version of Kubernetes the Managed Cluster is running. If kubernetesVersion was a fully specified version <major.minor.patch>, this field will be exactly equal to it. If kubernetesVersion was <major.minor>, this field will contain the full <major.minor.patch> version being used.
@@ -2117,6 +2185,12 @@ The following Modules are called:
 ### <a name="module_alerting"></a> [alerting](#module\_alerting)
 
 Source: ./modules/alerting
+
+Version:
+
+### <a name="module_clusterextension"></a> [clusterextension](#module\_clusterextension)
+
+Source: ./modules/clusterextension
 
 Version:
 
