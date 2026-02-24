@@ -5,4 +5,7 @@ resource "azapi_resource" "this" {
   body                   = local.resource_body
   response_export_values = []
   tags                   = var.tags
+  locks = [
+    var.parent_id
+  ]
 }
