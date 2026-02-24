@@ -63,6 +63,9 @@ resource "azapi_update_resource" "default_agent_pool" {
   body = {
     properties = { for k, v in module.default_agent_pool_data.body_properties : k => v if v != null }
   }
+  locks = [
+    azapi_resource.this.id,
+  ]
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
