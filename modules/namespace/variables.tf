@@ -1,3 +1,11 @@
+variable "location" {
+  type        = string
+  description = <<DESCRIPTION
+The location of the resource.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "name" {
   type        = string
   description = <<DESCRIPTION
