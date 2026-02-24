@@ -6,7 +6,7 @@ This deploys the module with AKS Automatic Mode and managed namespaces, demonstr
 
 ```hcl
 terraform {
-  required_version = "~> 1.12"
+  required_version = "~> 1.11"
 
   required_providers {
     azurerm = {
@@ -169,7 +169,7 @@ module "namespaces" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.12)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.11)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.0.0)
 

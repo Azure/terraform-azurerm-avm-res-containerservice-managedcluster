@@ -14,7 +14,7 @@ This major release migrates the underlying provider from `azurerm_kubernetes_clu
 
 | Version   | Old (AzureRM)   | New (AzAPI) |
 | --------- | --------------- | ----------- |
-| Terraform | `>= 1.9, < 2.0` | `~> 1.12`   |
+| Terraform | `>= 1.9, < 2.0` | `~> 1.11`   |
 
 ## Provider Requirements
 
@@ -971,7 +971,7 @@ moved {
 
 ## Migration Checklist
 
-1. [ ] Update Terraform version to `~> 1.12`
+1. [ ] Update Terraform version to `~> 1.11`
 2. [ ] Add AzAPI provider to your provider configuration
 3. [ ] Replace `resource_group_name` with `parent_id` (full resource ID)
 4. [ ] Replace `sku_tier` with `sku` object
