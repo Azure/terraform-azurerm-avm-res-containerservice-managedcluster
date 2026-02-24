@@ -22,6 +22,26 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_default_resource_quota"></a> [default\_resource\_quota](#input\_default\_resource\_quota)
+
+Description: Resource quota for the namespace. This is required by the Azure API even though the API spec marks it as optional.
+
+- `cpu_limit` - CPU limit of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
+- `cpu_request` - CPU request of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
+- `memory_limit` - Memory limit of the namespace in the power-of-two equivalents form: Ei, Pi, Ti, Gi, Mi, Ki. See [Memory resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory) for more details.
+- `memory_request` - Memory request of the namespace in the power-of-two equivalents form: Ei, Pi, Ti, Gi, Mi, Ki. See [Memory resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory) for more details.
+
+Type:
+
+```hcl
+object({
+    cpu_limit      = optional(string)
+    cpu_request    = optional(string)
+    memory_limit   = optional(string)
+    memory_request = optional(string)
+  })
+```
+
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: The location of the resource.
@@ -73,28 +93,6 @@ Type:
 object({
     egress  = optional(string)
     ingress = optional(string)
-  })
-```
-
-Default: `null`
-
-### <a name="input_default_resource_quota"></a> [default\_resource\_quota](#input\_default\_resource\_quota)
-
-Description: Resource quota for the namespace.
-
-- `cpu_limit` - CPU limit of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
-- `cpu_request` - CPU request of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
-- `memory_limit` - Memory limit of the namespace in the power-of-two equivalents form: Ei, Pi, Ti, Gi, Mi, Ki. See [Memory resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory) for more details.
-- `memory_request` - Memory request of the namespace in the power-of-two equivalents form: Ei, Pi, Ti, Gi, Mi, Ki. See [Memory resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory) for more details.
-
-Type:
-
-```hcl
-object({
-    cpu_limit      = optional(string)
-    cpu_request    = optional(string)
-    memory_limit   = optional(string)
-    memory_request = optional(string)
   })
 ```
 
