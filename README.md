@@ -7,7 +7,7 @@
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.12)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.11)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -1376,7 +1376,7 @@ A mapping of tags to assign to the resource.
 Action if Kubernetes namespace with same name already exists.
 
 **default\_resource\_quota**  
-Resource quota for the namespace.
+Resource quota for the namespace. This is required by the Azure API even though the API spec marks it as optional.
 
 - `cpu_limit` - CPU limit of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
 - `cpu_request` - CPU request of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
@@ -1393,16 +1393,17 @@ map(object({
       egress  = optional(string)
       ingress = optional(string)
     }))
-    default_resource_quota = optional(object({
+    default_resource_quota = object({
       cpu_limit      = optional(string)
       cpu_request    = optional(string)
       memory_limit   = optional(string)
       memory_request = optional(string)
-    }))
+    })
     delete_policy    = optional(string)
     enable_telemetry = optional(bool)
     labels           = optional(map(string))
     name             = string
+    location         = optional(string, null)
     tags             = optional(map(string))
   }))
 ```
