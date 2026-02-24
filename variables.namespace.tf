@@ -16,6 +16,7 @@ variable "namespace" {
     enable_telemetry = optional(bool)
     labels           = optional(map(string))
     name             = string
+    location         = optional(string, null)
     tags             = optional(map(string))
   }))
   default     = {}

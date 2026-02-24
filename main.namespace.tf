@@ -2,6 +2,7 @@ module "namespace" {
   source   = "./modules/namespace"
   for_each = var.namespace
 
+  location               = each.value.location != null ? each.value.location : var.location
   name                   = each.value.name
   parent_id              = azapi_resource.this.id
   adoption_policy        = each.value.adoption_policy
