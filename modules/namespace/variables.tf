@@ -1,3 +1,30 @@
+variable "default_resource_quota" {
+  type = object({
+    cpu_limit      = optional(string)
+    cpu_request    = optional(string)
+    memory_limit   = optional(string)
+    memory_request = optional(string)
+  })
+  description = <<DESCRIPTION
+Resource quota for the namespace. This is required by the Azure API even though the API spec marks it as optional.
+
+- `cpu_limit` - CPU limit of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
+- `cpu_request` - CPU request of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
+- `memory_limit` - Memory limit of the namespace in the power-of-two equivalents form: Ei, Pi, Ti, Gi, Mi, Ki. See [Memory resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory) for more details.
+- `memory_request` - Memory request of the namespace in the power-of-two equivalents form: Ei, Pi, Ti, Gi, Mi, Ki. See [Memory resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory) for more details.
+
+DESCRIPTION
+  nullable    = false
+}
+
+variable "location" {
+  type        = string
+  description = <<DESCRIPTION
+The location of the resource.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "name" {
   type        = string
   description = <<DESCRIPTION
@@ -68,25 +95,6 @@ DESCRIPTION
     condition     = var.default_network_policy == null || var.default_network_policy.ingress == null || contains(["AllowAll", "AllowSameNamespace", "DenyAll"], var.default_network_policy.ingress)
     error_message = "default_network_policy.ingress must be one of: [\"AllowAll\", \"AllowSameNamespace\", \"DenyAll\"]."
   }
-}
-
-variable "default_resource_quota" {
-  type = object({
-    cpu_limit      = optional(string)
-    cpu_request    = optional(string)
-    memory_limit   = optional(string)
-    memory_request = optional(string)
-  })
-  default     = null
-  description = <<DESCRIPTION
-Resource quota for the namespace.
-
-- `cpu_limit` - CPU limit of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
-- `cpu_request` - CPU request of the namespace in one-thousandth CPU form. See [CPU resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-cpu) for more details.
-- `memory_limit` - Memory limit of the namespace in the power-of-two equivalents form: Ei, Pi, Ti, Gi, Mi, Ki. See [Memory resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory) for more details.
-- `memory_request` - Memory request of the namespace in the power-of-two equivalents form: Ei, Pi, Ti, Gi, Mi, Ki. See [Memory resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory) for more details.
-
-DESCRIPTION
 }
 
 variable "delete_policy" {
