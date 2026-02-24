@@ -32,6 +32,7 @@ The following resources are used by this module:
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
+- [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
@@ -1038,7 +1039,8 @@ Default: `null`
 
 ### <a name="input_dns_prefix"></a> [dns\_prefix](#input\_dns\_prefix)
 
-Description: The DNS prefix of the Managed Cluster. This cannot be updated once the Managed Cluster has been created.
+Description: The DNS prefix of the Managed Cluster. This cannot be updated once the Managed Cluster has been created.  
+If not specified, a random DNS prefix will be generated.
 
 Type: `string`
 

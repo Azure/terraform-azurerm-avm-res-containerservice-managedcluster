@@ -60,6 +60,14 @@ resource "azapi_resource" "this" {
   }
 }
 
+resource "random_string" "dns_prefix" {
+  length  = 10
+  lower   = true
+  numeric = true
+  special = false
+  upper   = false
+}
+
 moved {
   from = azurerm_kubernetes_cluster.this
   to   = azapi_resource.this

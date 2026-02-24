@@ -584,6 +584,7 @@ variable "dns_prefix" {
   default     = null
   description = <<DESCRIPTION
 The DNS prefix of the Managed Cluster. This cannot be updated once the Managed Cluster has been created.
+If not specified, a random DNS prefix will be generated.
 DESCRIPTION
 }
 
