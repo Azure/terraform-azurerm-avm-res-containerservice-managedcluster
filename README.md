@@ -1040,7 +1040,8 @@ Default: `null`
 ### <a name="input_dns_prefix"></a> [dns\_prefix](#input\_dns\_prefix)
 
 Description: The DNS prefix of the Managed Cluster. This cannot be updated once the Managed Cluster has been created.  
-If not specified, a random DNS prefix will be generated.
+If not specified, a random DNS prefix will be generated.  
+This property is mutually exclusive with `fqdn_subdomain`. When `fqdn_subdomain` is set, `dns_prefix` is automatically omitted.
 
 Type: `string`
 

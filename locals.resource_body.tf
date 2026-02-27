@@ -80,7 +80,7 @@ locals {
       }
       disableLocalAccounts = var.disable_local_accounts
       diskEncryptionSetID  = var.disk_encryption_set_id
-      dnsPrefix            = coalesce(var.dns_prefix, random_string.dns_prefix.result)
+      dnsPrefix            = var.fqdn_subdomain != null ? null : coalesce(var.dns_prefix, random_string.dns_prefix.result)
       enableRBAC           = var.enable_rbac
       fqdnSubdomain        = var.fqdn_subdomain
       httpProxyConfig = var.http_proxy_config == null ? null : {
