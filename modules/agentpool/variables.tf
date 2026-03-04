@@ -17,9 +17,8 @@ DESCRIPTION
     condition     = can(regex("^[a-z][a-z0-9]{0,11}$", var.name))
     error_message = "name must match the pattern: ^[a-z][a-z0-9]{0,11}$."
   }
-
   validation {
-    condition     = var.create_before_destroy ? alltrue([for k, v in var.agent_pools : length(v.name) <= 8]) : true
+    condition     = var.create_before_destroy ? length(var.name) <= 8 : true
     error_message = "The name maximum length must be 8 when create_before_destroy is enabled."
   }
 }
