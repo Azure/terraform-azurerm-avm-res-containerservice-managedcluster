@@ -26,7 +26,8 @@ The following input variables are required:
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: The name of the resource.
+Description: The name of the resource. The name must be 1-12 characters long, and must begin with a lowercase letter followed by lowercase letters or numbers.  
+If create\_before\_destroy is enabled, the name must be 1-8 characters long.
 
 Type: `string`
 

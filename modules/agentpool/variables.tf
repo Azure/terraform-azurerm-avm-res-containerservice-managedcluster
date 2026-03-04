@@ -1,7 +1,8 @@
 variable "name" {
   type        = string
   description = <<DESCRIPTION
-The name of the resource.
+The name of the resource. The name must be 1-12 characters long, and must begin with a lowercase letter followed by lowercase letters or numbers.
+If create_before_destroy is enabled, the name must be 1-8 characters long.
 DESCRIPTION
 
   validation {
@@ -15,6 +16,10 @@ DESCRIPTION
   validation {
     condition     = can(regex("^[a-z][a-z0-9]{0,11}$", var.name))
     error_message = "name must match the pattern: ^[a-z][a-z0-9]{0,11}$."
+  }
+  validation {
+    condition     = var.create_before_destroy ? length(var.name) <= 8 : true
+    error_message = "The name maximum length must be 8 when create_before_destroy is enabled."
   }
 }
 
