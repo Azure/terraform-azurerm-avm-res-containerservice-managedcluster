@@ -242,6 +242,9 @@ Message of the day for Linux nodes, base64-encoded. A base64-encoded string whic
 
 **name**
 The name of the resource.
+The name must be 1-12 characters long, and must begin with a lowercase letter followed by lowercase letters or numbers.
+The name of an agent pool should not be the same as the default agent pool name.
+If create_agentpools_before_destroy is enabled, the name must be 1-8 characters long.
 
 **linux_os_config**
 OS configurations of Linux agent nodes. See [AKS custom node configuration](https://docs.microsoft.com/azure/aks/custom-node-configuration) for more details.
