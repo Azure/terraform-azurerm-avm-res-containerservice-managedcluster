@@ -13,7 +13,7 @@ locals {
   agent_pool_profiles = [
     merge(
       {
-        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && v != null && k != "securityProfile"
+        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && v != null
       },
       {
         name = module.default_agent_pool_data.name

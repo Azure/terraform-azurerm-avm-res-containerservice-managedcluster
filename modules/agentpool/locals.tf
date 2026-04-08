@@ -157,10 +157,16 @@ locals {
       workloadRuntime = var.workload_runtime
     }
   }
-  # resource_body_properties_no_security strips securityProfile so it can be safely embedded
-  # in the managedClusters agentPoolProfiles PUT body, which rejects securityProfile fields.
-  # The full resource_body (with securityProfile) is still used by the direct agentpool resource.
-  resource_body_properties_no_security = {
-    for k, v in local.resource_body.properties : k => v if k != "securityProfile"
-  }
+  # resource_body_properties_no_security rebuilds securityProfile without sshAccess so it can
+  # be safely embedded in the managedClusters agentPoolProfiles PUT body.
+  # sshAccess is rejected by the managedClusters API in agentPoolProfiles context.
+  # enableSecureBoot and enableVTPM remain valid and are preserved.
+  resource_body_properties_no_security = merge(
+    { for k, v in local.resource_body.properties : k => v if k != "securityProfile" },
+    local.resource_body.properties.securityProfile == null ? {} : {
+      securityProfile = {
+        for k, v in local.resource_body.properties.securityProfile : k => v if k != "sshAccess"
+      }
+    }
+  )
 }
