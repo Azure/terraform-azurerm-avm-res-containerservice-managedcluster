@@ -474,7 +474,7 @@ variable "default_agent_pool" {
     security_profile = optional(object({
       enable_secure_boot = optional(bool)
       enable_vtpm        = optional(bool)
-      ssh_access         = optional(string)
+      //ssh_access         = optional(string)
     }))
     spot_max_price = optional(number)
     status         = optional(object({}))

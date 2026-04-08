@@ -129,7 +129,7 @@ locals {
       securityProfile = var.security_profile == null ? null : {
         enableSecureBoot = var.security_profile.enable_secure_boot
         enableVTPM       = var.security_profile.enable_vtpm
-        sshAccess        = var.security_profile.ssh_access
+        //sshAccess        = var.security_profile.ssh_access
       }
       spotMaxPrice = var.spot_max_price
       tags         = var.tags == null ? null : { for k, value in var.tags : k => value }

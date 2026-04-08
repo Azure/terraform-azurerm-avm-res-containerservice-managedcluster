@@ -531,7 +531,7 @@ Description: The security settings of an agent pool.
 
 - `enable_secure_boot` - Secure Boot is a feature of Trusted Launch which ensures that only signed operating systems and drivers can boot. For more details, see aka.ms/aks/trustedlaunch.  If not specified, the default is false.
 - `enable_vtpm` - vTPM is a Trusted Launch feature for configuring a dedicated secure vault for keys and measurements held locally on the node. For more details, see aka.ms/aks/trustedlaunch. If not specified, the default is false.
-- `ssh_access` - SSH access method of an agent pool.
+<!-- - `ssh_access` - SSH access method of an agent pool. -->
 
 Type:
 
@@ -539,7 +539,7 @@ Type:
 object({
     enable_secure_boot = optional(bool)
     enable_vtpm        = optional(bool)
-    ssh_access         = optional(string)
+    //ssh_access         = optional(string)
   })
 ```
 
