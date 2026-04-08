@@ -7,10 +7,13 @@
 # The only ternary we use is a string for the regex pattern.
 locals {
   # We only care about the first agent pool. The others are created using child resources.
+  # securityProfile is excluded from agentPoolProfiles because the managedClusters API
+  # does not accept sshAccess (and other securityProfile fields) in PUT requests via agentPoolProfiles.
+  # securityProfile is managed separately via azapi_update_resource.default_agent_pool.
   agent_pool_profiles = [
     merge(
       {
-        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && v != null
+        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && v != null && k != "securityProfile"
       },
       {
         name = module.default_agent_pool_data.name
