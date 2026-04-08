@@ -157,4 +157,10 @@ locals {
       workloadRuntime = var.workload_runtime
     }
   }
+  # resource_body_properties_no_security strips securityProfile so it can be safely embedded
+  # in the managedClusters agentPoolProfiles PUT body, which rejects securityProfile fields.
+  # The full resource_body (with securityProfile) is still used by the direct agentpool resource.
+  resource_body_properties_no_security = {
+    for k, v in local.resource_body.properties : k => v if k != "securityProfile"
+  }
 }

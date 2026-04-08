@@ -1,6 +1,6 @@
 output "body_properties" {
-  description = "If output_data_only is set to true, this output will contain the properties of the resource as defined in the body. Otherwise, it will be null."
-  value       = var.output_data_only ? local.resource_body.properties : null
+  description = "If output_data_only is set to true, this output will contain the properties of the resource as defined in the body. Otherwise, it will be null. securityProfile is excluded so this output is safe to embed in agentPoolProfiles of a managedClusters PUT request."
+  value       = var.output_data_only ? local.resource_body_properties_no_security : null
 }
 
 output "current_orchestrator_version" {
