@@ -1,6 +1,5 @@
 locals {
   resource_body = {
-    location = var.location
     properties = {
       adoptionPolicy = var.adoption_policy
       annotations    = var.annotations == null ? null : { for k, value in var.annotations : k => value }
