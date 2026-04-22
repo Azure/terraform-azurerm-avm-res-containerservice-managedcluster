@@ -1068,8 +1068,26 @@ variable "private_endpoints" {
   default     = {}
   description = <<DESCRIPTION
 A map of private endpoints to create on this resource.
+
+Private endpoints for the AKS API server are only supported when the cluster is
+created as a private cluster (`api_server_access_profile.enable_private_cluster = true`)
+and API Server VNet Integration is NOT enabled
+(`api_server_access_profile.enable_vnet_integration` is unset or `false`).
+
+When API Server VNet Integration is enabled the API server is projected directly
+into the delegated subnet and there is no private link service to connect a
+private endpoint to. Attempting to create a private endpoint in that configuration
+will fail with an HTTP 400 `InternalServerError` from the ARM API.
 DESCRIPTION
   nullable    = false
+
+  validation {
+    condition = length(var.private_endpoints) == 0 || (
+      try(var.api_server_access_profile.enable_private_cluster, false) == true
+      && try(var.api_server_access_profile.enable_vnet_integration, false) != true
+    )
+    error_message = "private_endpoints can only be created when api_server_access_profile.enable_private_cluster is true and api_server_access_profile.enable_vnet_integration is not true. Private endpoints are not supported when API Server VNet Integration is enabled because the API server is projected directly into the delegated subnet and there is no private link service to target."
+  }
 }
 
 variable "private_endpoints_manage_dns_zone_group" {

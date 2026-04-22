@@ -1631,6 +1631,16 @@ Default: `null`
 
 Description: A map of private endpoints to create on this resource.
 
+Private endpoints for the AKS API server are only supported when the cluster is  
+created as a private cluster (`api_server_access_profile.enable_private_cluster = true`)  
+and API Server VNet Integration is NOT enabled
+(`api_server_access_profile.enable_vnet_integration` is unset or `false`).
+
+When API Server VNet Integration is enabled the API server is projected directly  
+into the delegated subnet and there is no private link service to connect a  
+private endpoint to. Attempting to create a private endpoint in that configuration  
+will fail with an HTTP 400 `InternalServerError` from the ARM API.
+
 Type:
 
 ```hcl
@@ -2055,11 +2065,11 @@ Description: The FQDN of the master pool.
 
 ### <a name="output_identity_principal_id"></a> [identity\_principal\_id](#output\_identity\_principal\_id)
 
-Description: The principal id of the system assigned identity which is used by master components.
+Description: The principal id of the assigned identity which is used by master components.
 
 ### <a name="output_identity_tenant_id"></a> [identity\_tenant\_id](#output\_identity\_tenant\_id)
 
-Description: The tenant id of the system assigned identity which is used by master components.
+Description: The tenant id of the assigned identity which is used by master components.
 
 ### <a name="output_ingress_profile_web_app_routing_identity"></a> [ingress\_profile\_web\_app\_routing\_identity](#output\_ingress\_profile\_web\_app\_routing\_identity)
 
