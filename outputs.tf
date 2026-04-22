@@ -19,13 +19,13 @@ output "fqdn" {
 }
 
 output "identity_principal_id" {
-  description = "The principal id of the system assigned identity which is used by master components."
-  value       = try(azapi_resource.this.output.identity.principalId, null)
+  description = "The principal id of the assigned identity which is used by master components."
+  value       = try(azapi_resource.this.identity[0].principal_id, null)
 }
 
 output "identity_tenant_id" {
-  description = "The tenant id of the system assigned identity which is used by master components."
-  value       = try(azapi_resource.this.output.identity.tenantId, null)
+  description = "The tenant id of the assigned identity which is used by master components."
+  value       = try(azapi_resource.this.identity[0].tenant_id, null)
 }
 
 output "ingress_profile_web_app_routing_identity" {
