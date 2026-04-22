@@ -507,6 +507,8 @@ variable "default_agent_pool" {
 Configuration block for the default agent pool of the Kubernetes cluster.
 See `var.agent_pools` for details on the available options.
 
+NOTE: Updates to the default agent pool post-deployment require `default_agent_pool_managed_as_child = true`. See that variable for details and recommended migration steps for existing clusters.
+
 Note that:
 - The `os_type` and `mode` options are not available here and are automatically set to `Linux` and `System` respectively.
 - The default node count (`count_of`) is set to `3` if not specified.
@@ -514,6 +516,35 @@ Note that:
 - It is not supported to rename the default agent pool after creation.
 DESCRIPTION
   nullable    = false
+}
+
+variable "default_agent_pool_managed_as_child" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+Controls whether the default (system) agent pool is managed as an independent child resource after cluster creation.
+
+- When `false` (the default) the default agent pool is specified in the parent cluster's initial PUT and drift on `agentPoolProfiles` is ignored thereafter. Changes to the default agent pool (e.g. `vm_size`) that require replacement of the node pool cannot be applied without recreating the cluster.
+- When `true`, the default agent pool is imported into a dedicated child `azapi_resource` on the next apply and gets `create_before_destroy` semantics. Subsequent changes to immutable fields on the default agent pool (such as `vm_size`) will replace the pool in-place without cluster replacement. The replacement pool is created with a name suffixed by a short hash (e.g. `default1a2b`) so the old and new pools coexist during the swap. When Terraform then deletes the old pool, AKS cordons and drains its nodes, and the Kubernetes scheduler reschedules pods onto the new pool -- subject to `PodDisruptionBudget` settings on the workloads. A second `mode = "System"` pool is not required for the CBD swap itself, but may be useful for extra scheduling headroom or for workloads with strict PDBs.
+
+When `default_agent_pool_managed_as_child = true`, `default_agent_pool.name` must be 1-8 characters long to leave room for the 4-character hash suffix used during `create_before_destroy` replacement.
+
+Recommended migration flow for existing clusters:
+1. Upgrade to this module version with `default_agent_pool_managed_as_child = false`.
+2. On a subsequent apply, flip the value to `true`. This triggers a one-shot Terraform `import` that adopts the existing default pool into the child resource without any changes in Azure.
+
+> IMPORTANT: This variable must only be set to `true` on an apply where the cluster **already exists in Azure**. Setting it to `true` on the first-ever apply of the module would attempt to create the child agent pool resource concurrently with the cluster and fail, because the Azure API requires the cluster to exist before an agent pool can be PUT to it. Always do an initial apply with `default_agent_pool_managed_as_child = false`, then flip it to `true` on a subsequent apply.
+
+> DESTROY: When destroying the cluster, Terraform destroys the cluster resource first (enforced by an explicit `depends_on`). Azure deletes all agent pools as part of the cluster delete, so the subsequent child agent pool DELETE issued by Terraform returns 404 and is treated as already-deleted. `terraform destroy` therefore works without any extra steps.
+
+> WARNING: Flipping this variable back to `false` after it has been set to `true` will plan a standalone destroy of the adopted default agent pool. Azure will reject that delete if it is the only agent pool on the cluster ("There has to be at least one agent pool"). To reverse the adoption safely, either (a) first add a second user-mode agent pool via `node_pools`, or (b) use a `removed {}` block to detach the resource from Terraform state without deleting it in Azure.
+DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = !var.default_agent_pool_managed_as_child || length(var.default_agent_pool.name) <= 8
+    error_message = "When `default_agent_pool_managed_as_child` is true, `default_agent_pool.name` must be 1-8 characters long to leave room for the 4-character hash suffix used during create_before_destroy replacement."
+  }
 }
 
 variable "diagnostic_settings" {

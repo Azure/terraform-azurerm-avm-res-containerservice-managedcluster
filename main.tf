@@ -51,8 +51,18 @@ resource "azapi_resource" "this" {
     }
   }
 
+  # When default_agent_pool_managed_as_child is true, the child pool resource's parent_id
+  # is built from inputs (see main.default_agent_pool.tf) rather than a reference to this
+  # resource's id, so there is no implicit create/destroy dependency between the two. This
+  # explicit depends_on makes destroy order deterministic: Terraform destroys dependents
+  # first, so the cluster is destroyed BEFORE the child pool. After the cluster is gone
+  # the child pool DELETE returns 404, which azapi treats as already-deleted. This avoids
+  # Azure's "There has to be at least one agent pool" 400 error that would otherwise occur
+  # when Terraform tries to delete the sole remaining agent pool while the cluster still
+  # exists.
+  depends_on = [module.default_agent_pool]
+
   lifecycle {
-    # TODO: When https://github.com/Azure/terraform-provider-azapi/pull/1033 is merged, we can remove this.
     ignore_changes = [
       body.properties.kubernetesVersion,
       body.properties.agentPoolProfiles,

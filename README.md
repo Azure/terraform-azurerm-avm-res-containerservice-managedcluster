@@ -9,7 +9,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.11)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.0.0)
 
@@ -24,7 +24,6 @@ The following resources are used by this module:
 - [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.this_admin_kubeconfig](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.this_user_kubeconfig](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
-- [azapi_update_resource.default_agent_pool](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
@@ -988,6 +987,29 @@ object({
 ```
 
 Default: `{}`
+
+### <a name="input_default_agent_pool_managed_as_child"></a> [default\_agent\_pool\_managed\_as\_child](#input\_default\_agent\_pool\_managed\_as\_child)
+
+Description: Controls whether the default (system) agent pool is managed as an independent child resource after cluster creation.
+
+- When `false` (the default) the default agent pool is specified in the parent cluster's initial PUT and drift on `agentPoolProfiles` is ignored thereafter. Changes to the default agent pool (e.g. `vm_size`) that require replacement of the node pool cannot be applied without recreating the cluster.
+- When `true`, the default agent pool is imported into a dedicated child `azapi_resource` on the next apply and gets `create_before_destroy` semantics. Subsequent changes to immutable fields on the default agent pool (such as `vm_size`) will replace the pool in-place without cluster replacement. The replacement pool is created with a name suffixed by a short hash (e.g. `default1a2b`) so the old and new pools coexist during the swap. When Terraform then deletes the old pool, AKS cordons and drains its nodes, and the Kubernetes scheduler reschedules pods onto the new pool -- subject to `PodDisruptionBudget` settings on the workloads. A second `mode = "System"` pool is not required for the CBD swap itself, but may be useful for extra scheduling headroom or for workloads with strict PDBs.
+
+When `default_agent_pool_managed_as_child = true`, `default_agent_pool.name` must be 1-8 characters long to leave room for the 4-character hash suffix used during `create_before_destroy` replacement.
+
+Recommended migration flow for existing clusters:  
+1. Upgrade to this module version with `default_agent_pool_managed_as_child = false`.  
+2. On a subsequent apply, flip the value to `true`. This triggers a one-shot Terraform `import` that adopts the existing default pool into the child resource without any changes in Azure.
+
+> IMPORTANT: This variable must only be set to `true` on an apply where the cluster **already exists in Azure**. Setting it to `true` on the first-ever apply of the module would attempt to create the child agent pool resource concurrently with the cluster and fail, because the Azure API requires the cluster to exist before an agent pool can be PUT to it. Always do an initial apply with `default_agent_pool_managed_as_child = false`, then flip it to `true` on a subsequent apply.
+
+> DESTROY: When destroying the cluster, Terraform destroys the cluster resource first (enforced by an explicit `depends_on`). Azure deletes all agent pools as part of the cluster delete, so the subsequent child agent pool DELETE issued by Terraform returns 404 and is treated as already-deleted. `terraform destroy` therefore works without any extra steps.
+
+> WARNING: Flipping this variable back to `false` after it has been set to `true` will plan a standalone destroy of the adopted default agent pool. Azure will reject that delete if it is the only agent pool on the cluster ("There has to be at least one agent pool"). To reverse the adoption safely, either (a) first add a second user-mode agent pool via `node_pools`, or (b) use a `removed {}` block to detach the resource from Terraform state without deleting it in Azure.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
@@ -2055,11 +2077,11 @@ Description: The FQDN of the master pool.
 
 ### <a name="output_identity_principal_id"></a> [identity\_principal\_id](#output\_identity\_principal\_id)
 
-Description: The principal id of the system assigned identity which is used by master components.
+Description: The principal id of the assigned identity which is used by master components.
 
 ### <a name="output_identity_tenant_id"></a> [identity\_tenant\_id](#output\_identity\_tenant\_id)
 
-Description: The tenant id of the system assigned identity which is used by master components.
+Description: The tenant id of the assigned identity which is used by master components.
 
 ### <a name="output_ingress_profile_web_app_routing_identity"></a> [ingress\_profile\_web\_app\_routing\_identity](#output\_ingress\_profile\_web\_app\_routing\_identity)
 
@@ -2124,6 +2146,12 @@ The following Modules are called:
 ### <a name="module_alerting"></a> [alerting](#module\_alerting)
 
 Source: ./modules/alerting
+
+Version:
+
+### <a name="module_default_agent_pool"></a> [default\_agent\_pool](#module\_default\_agent\_pool)
+
+Source: ./modules/agentpool
 
 Version:
 
