@@ -1084,7 +1084,7 @@ DESCRIPTION
   validation {
     condition = length(var.private_endpoints) == 0 || (
       try(var.api_server_access_profile.enable_private_cluster, false) == true
-      && try(var.api_server_access_profile.enable_vnet_integration, false) != true
+      && try(var.api_server_access_profile.enable_vnet_integration, false) == false
     )
     error_message = "private_endpoints can only be created when api_server_access_profile.enable_private_cluster is true and api_server_access_profile.enable_vnet_integration is not true. Private endpoints are not supported when API Server VNet Integration is enabled because the API server is projected directly into the delegated subnet and there is no private link service to target."
   }
