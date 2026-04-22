@@ -1,4 +1,5 @@
 resource "azapi_resource" "this" {
+  location  = var.location
   name      = var.name
   parent_id = var.parent_id
   type      = "Microsoft.ContainerService/managedClusters/managedNamespaces@2025-10-01"
