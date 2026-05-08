@@ -14,7 +14,10 @@ locals {
       },
       {
         name = module.default_agent_pool_data.name
-      }
+      },
+      local.is_automatic ? {
+        count = coalesce(module.default_agent_pool_data.body_properties.count, var.default_agent_pool.count_of)
+      } : {}
     )
   ]
   agent_pool_profiles_regex           = local.is_automatic ? local.agent_pool_profiles_regex_automatic : local.agent_pool_profiles_regex_standard
