@@ -954,11 +954,11 @@ The nodeProvisioningProfile of the resource.
 DESCRIPTION
 
   validation {
-    condition     = var.node_provisioning_profile == null || var.node_provisioning_profile.default_node_pools == null || contains(["Auto", "None"], var.node_provisioning_profile.default_node_pools)
+    condition     = var.node_provisioning_profile == null || try(var.node_provisioning_profile.default_node_pools, null) == null || contains(["Auto", "None"], try(var.node_provisioning_profile.default_node_pools, ""))
     error_message = "node_provisioning_profile.default_node_pools must be one of: [\"Auto\", \"None\"]."
   }
   validation {
-    condition     = var.node_provisioning_profile == null || var.node_provisioning_profile.mode == null || contains(["Auto", "Manual"], var.node_provisioning_profile.mode)
+    condition     = var.node_provisioning_profile == null || try(var.node_provisioning_profile.mode, null) == null || contains(["Auto", "Manual"], try(var.node_provisioning_profile.mode, ""))
     error_message = "node_provisioning_profile.mode must be one of: [\"Auto\", \"Manual\"]."
   }
 }
@@ -984,7 +984,7 @@ Node resource group lockdown profile for a managed cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.node_resource_group_profile == null || var.node_resource_group_profile.restriction_level == null || contains(["ReadOnly", "Unrestricted"], var.node_resource_group_profile.restriction_level)
+    condition     = var.node_resource_group_profile == null || try(var.node_resource_group_profile.restriction_level, null) == null || contains(["ReadOnly", "Unrestricted"], try(var.node_resource_group_profile.restriction_level, ""))
     error_message = "node_resource_group_profile.restriction_level must be one of: [\"ReadOnly\", \"Unrestricted\"]."
   }
 }
