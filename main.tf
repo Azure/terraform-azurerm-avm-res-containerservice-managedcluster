@@ -52,9 +52,7 @@ resource "azapi_resource" "this" {
   }
 
   lifecycle {
-    # TODO: When https://github.com/Azure/terraform-provider-azapi/pull/1033 is merged, we can remove this.
     ignore_changes = [
-      body.properties.kubernetesVersion,
       body.properties.agentPoolProfiles,
     ]
   }
