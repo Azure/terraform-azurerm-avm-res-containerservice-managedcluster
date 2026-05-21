@@ -15,7 +15,7 @@ locals {
     var.addon_profile_azure_policy != null && !local.is_automatic ? {
       azurepolicy = {
         enabled = var.addon_profile_azure_policy.enabled
-        config  = null
+        config  = var.addon_profile_azure_policy.config
       }
     } : null,
     var.addon_profile_ingress_application_gateway != null ? {
