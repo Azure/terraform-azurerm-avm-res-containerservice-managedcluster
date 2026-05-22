@@ -54,8 +54,28 @@ resource "azapi_resource" "this" {
   lifecycle {
     ignore_changes = [
       body.properties.agentPoolProfiles,
+      body.properties.kubernetesVersion,
     ]
   }
+}
+
+resource "azapi_update_resource" "kubernetes_version" {
+  count = var.kubernetes_version == null ? 0 : 1
+
+  name      = var.name
+  parent_id = var.parent_id
+  type      = azapi_resource.this.type
+  body = {
+    properties = {
+      kubernetesVersion = var.kubernetes_version
+    }
+  }
+  locks = [
+    azapi_resource.this.id,
+  ]
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = []
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 resource "random_string" "dns_prefix" {
