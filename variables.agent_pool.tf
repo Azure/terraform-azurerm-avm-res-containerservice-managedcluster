@@ -1,5 +1,8 @@
 variable "agent_pools" {
   type = map(object({
+    artifact_streaming_profile = optional(object({
+      enabled = optional(bool)
+    }))
     availability_zones            = optional(list(string))
     capacity_reservation_group_id = optional(string)
     count_of                      = optional(number)
@@ -382,6 +385,11 @@ The max price (in US Dollars) you are willing to pay for spot instances. Possibl
 
 **availability_zones**
 The list of Availability zones to use for nodes. This can only be specified if the AgentPoolType property is 'VirtualMachineScaleSets'.
+
+**artifact_streaming_profile**
+Configuration for using artifact streaming on AKS.
+
+- `enabled` - Whether artifact streaming is enabled on the agent pool.
 
 **enable_fips**
 Whether to use a FIPS-enabled OS. See [Add a FIPS-enabled node pool](https://docs.microsoft.com/azure/aks/use-multiple-node-pools#add-a-fips-enabled-node-pool-preview) for more details.

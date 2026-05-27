@@ -3,6 +3,7 @@ module "default_agent_pool_data" {
 
   name                          = var.default_agent_pool.name
   parent_id                     = "" # As we are outputting data only, parent_id is not required
+  artifact_streaming_profile    = var.default_agent_pool.artifact_streaming_profile
   availability_zones            = var.default_agent_pool.availability_zones
   capacity_reservation_group_id = var.default_agent_pool.capacity_reservation_group_id
   count_of                      = var.default_agent_pool.count_of
@@ -59,7 +60,7 @@ module "default_agent_pool_data" {
 resource "azapi_update_resource" "default_agent_pool" {
   name      = module.default_agent_pool_data.name
   parent_id = azapi_resource.this.id
-  type      = "Microsoft.ContainerService/managedClusters/agentpools@2025-10-01"
+  type      = "Microsoft.ContainerService/managedClusters/agentpools@2026-01-02-preview"
   body = {
     properties = { for k, v in module.default_agent_pool_data.body_properties : k => v if v != null }
   }

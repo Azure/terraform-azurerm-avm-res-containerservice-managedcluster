@@ -4,6 +4,7 @@ module "nodepools" {
 
   name                          = each.value.name
   parent_id                     = azapi_resource.this.id
+  artifact_streaming_profile    = each.value.artifact_streaming_profile
   availability_zones            = each.value.availability_zones
   capacity_reservation_group_id = each.value.capacity_reservation_group_id
   count_of                      = each.value.count_of

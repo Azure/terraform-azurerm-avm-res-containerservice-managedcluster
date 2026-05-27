@@ -11,11 +11,12 @@ moved {
 resource "azapi_resource" "this" {
   count = var.output_data_only ? 0 : var.create_before_destroy ? 0 : 1
 
-  name                 = var.name
-  parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
-  body                 = local.resource_body
-  ignore_null_property = true
+  name                      = var.name
+  parent_id                 = var.parent_id
+  type                      = "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview"
+  body                      = local.resource_body
+  ignore_null_property      = true
+  schema_validation_enabled = false
   locks = [
     var.parent_id
   ]
@@ -43,11 +44,12 @@ resource "azapi_resource" "this" {
 resource "azapi_resource" "this_create_before_destroy" {
   count = var.output_data_only ? 0 : var.create_before_destroy ? 1 : 0
 
-  name                 = "${var.name}${substr(sha256(uuid()), 0, 4)}"
-  parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
-  body                 = local.resource_body
-  ignore_null_property = true
+  name                      = "${var.name}${substr(sha256(uuid()), 0, 4)}"
+  parent_id                 = var.parent_id
+  type                      = "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview"
+  body                      = local.resource_body
+  ignore_null_property      = true
+  schema_validation_enabled = false
   locks = [
     var.parent_id
   ]

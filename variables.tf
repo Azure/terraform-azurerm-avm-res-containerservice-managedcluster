@@ -346,6 +346,9 @@ DESCRIPTION
 
 variable "default_agent_pool" {
   type = object({
+    artifact_streaming_profile = optional(object({
+      enabled = optional(bool)
+    }))
     availability_zones            = optional(list(string))
     capacity_reservation_group_id = optional(string)
     count_of                      = optional(number, 3)
@@ -512,6 +515,8 @@ Note that:
 - The default node count (`count_of`) is set to `3` if not specified.
 - The default name is set to `systempool` if not specified.
 - It is not supported to rename the default agent pool after creation.
+- `artifact_streaming_profile` configures artifact streaming on the default agent pool.
+- Updating `vm_size` after creation triggers an AKS-managed rolling resize of the default agent pool. Ensure the subscription has quota for temporary surge capacity and that workloads can tolerate node rotation.
 DESCRIPTION
   nullable    = false
 }

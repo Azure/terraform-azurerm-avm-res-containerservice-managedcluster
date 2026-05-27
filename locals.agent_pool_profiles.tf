@@ -10,7 +10,7 @@ locals {
   agent_pool_profiles = [
     merge(
       {
-        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && v != null
+        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && !contains(local.agent_pool_profiles_excluded_properties, k) && k != "securityProfile" && v != null
       },
       {
         name = module.default_agent_pool_data.name
@@ -20,6 +20,10 @@ locals {
   agent_pool_profiles_regex           = local.is_automatic ? local.agent_pool_profiles_regex_automatic : local.agent_pool_profiles_regex_standard
   agent_pool_profiles_regex_automatic = "^(${join("|", local.agent_pool_properties_automatic)})$"
   agent_pool_profiles_regex_standard  = "^(.*)$"
+  agent_pool_profiles_excluded_properties = [
+    "artifactStreamingProfile",
+    "securityProfile",
+  ]
   agent_pool_properties_automatic = [
     "name",
     "mode",

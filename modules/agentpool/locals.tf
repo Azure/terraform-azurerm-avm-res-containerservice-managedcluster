@@ -4,6 +4,9 @@ locals {
   ]
   resource_body = {
     properties = {
+      artifactStreamingProfile = var.artifact_streaming_profile == null ? null : {
+        enabled = var.artifact_streaming_profile.enabled
+      }
       availabilityZones          = var.availability_zones == null ? null : [for item in var.availability_zones : item]
       capacityReservationGroupID = var.capacity_reservation_group_id
       count                      = var.max_count != null && var.min_count != null ? null : var.count_of

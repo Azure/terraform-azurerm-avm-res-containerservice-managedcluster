@@ -38,6 +38,19 @@ The list of Availability zones to use for nodes. This can only be specified if t
 DESCRIPTION
 }
 
+variable "artifact_streaming_profile" {
+  type = object({
+    enabled = optional(bool)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Configuration for using artifact streaming on AKS.
+
+- `enabled` - Whether artifact streaming is enabled on the agent pool.
+
+DESCRIPTION
+}
+
 variable "capacity_reservation_group_id" {
   type        = string
   default     = null
