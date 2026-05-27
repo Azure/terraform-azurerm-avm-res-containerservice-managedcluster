@@ -27,6 +27,8 @@ resource "azapi_resource" "this" {
     "properties.provisioningState",
     "type"
   ]
+  # AzAPI's embedded AKS schema does not include this preview API yet.
+  # Azure still validates the request at apply time.
   schema_validation_enabled = false
 
   dynamic "timeouts" {
@@ -60,6 +62,8 @@ resource "azapi_resource" "this_create_before_destroy" {
     "properties.provisioningState",
     "type"
   ]
+  # AzAPI's embedded AKS schema does not include this preview API yet.
+  # Azure still validates the request at apply time.
   schema_validation_enabled = false
 
   dynamic "timeouts" {

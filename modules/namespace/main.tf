@@ -7,7 +7,9 @@ resource "azapi_resource" "this" {
   locks = [
     var.parent_id
   ]
-  response_export_values    = []
+  response_export_values = []
+  # AzAPI's embedded AKS schema does not include 2026-03-01 yet.
+  # Azure still validates the request at apply time.
   schema_validation_enabled = false
   tags                      = var.tags
 }
