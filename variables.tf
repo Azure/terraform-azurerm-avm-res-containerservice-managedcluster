@@ -435,6 +435,7 @@ variable "default_agent_pool" {
         serve_stale                     = optional(string)
         serve_stale_duration_in_seconds = optional(number)
       })))
+      mode  = optional(string)
       state = optional(string)
       vnet_dns_overrides = optional(map(object({
         cache_duration_in_seconds       = optional(number)
@@ -540,6 +541,11 @@ Note that:
 - Updating `vm_size` after creation triggers an AKS-managed rolling resize of the default agent pool. Ensure the subscription has quota for temporary surge capacity and that workloads can tolerate node rotation.
 DESCRIPTION
   nullable    = false
+
+  validation {
+    condition     = var.default_agent_pool.kubelet_config == null || var.default_agent_pool.kubelet_config.seccomp_default == null
+    error_message = "default_agent_pool.kubelet_config.seccomp_default is not supported because the managedClusters parent API rejects it and the default agent pool child API treats kubelet configuration as immutable after creation. Use agent_pools[*].kubelet_config.seccomp_default for user pools."
+  }
 }
 
 variable "diagnostic_settings" {

@@ -68,7 +68,33 @@ resource "azapi_update_resource" "default_agent_pool" {
   parent_id = azapi_resource.this.id
   type      = "Microsoft.ContainerService/managedClusters/agentpools@2026-01-02-preview"
   body = {
-    properties = { for k, v in module.default_agent_pool_data.body_properties : k => v if v != null }
+    properties = merge(
+      {
+        for k, v in module.default_agent_pool_data.body_properties : k => v if v != null && k != "nodeInitializationTaints" && !contains(["gpuProfile", "kubeletConfig", "localDNSProfile", "securityProfile", "upgradeSettings", "upgradeSettingsBlueGreen"], k)
+      },
+      {
+        for k, v in {
+          gpuProfile = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.gpuProfile, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          kubeletConfig = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.kubeletConfig, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          localDNSProfile = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.localDNSProfile, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          securityProfile = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.securityProfile, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          upgradeSettings = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.upgradeSettings, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          upgradeSettingsBlueGreen = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.upgradeSettingsBlueGreen, null), {}) : profile_key => profile_value if profile_value != null
+          }
+        } : k => v if try(length(v), 0) > 0
+      }
+    )
   }
   locks = [
     azapi_resource.this.id,

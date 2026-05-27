@@ -493,6 +493,11 @@ variable "node_initialization_taints" {
   description = <<DESCRIPTION
 The taints added to nodes during node initialization. These taints are not reconciled by AKS after creation.
 DESCRIPTION
+
+  validation {
+    condition     = var.node_initialization_taints == null
+    error_message = "node_initialization_taints is not supported because live AKS APIs reject it on both managed cluster parent and child agent pool operations."
+  }
 }
 
 variable "node_labels" {
@@ -766,6 +771,14 @@ DESCRIPTION
   validation {
     condition     = var.upgrade_settings == null || var.upgrade_settings.undrainable_node_behavior == null || contains(["Cordon", "Schedule"], var.upgrade_settings.undrainable_node_behavior)
     error_message = "upgrade_settings.undrainable_node_behavior must be one of: [\"Cordon\", \"Schedule\"]."
+  }
+  validation {
+    condition     = var.upgrade_settings == null || var.upgrade_settings.max_blocked_nodes == null || var.upgrade_settings.undrainable_node_behavior == "Cordon"
+    error_message = "upgrade_settings.max_blocked_nodes can only be set when upgrade_settings.undrainable_node_behavior is \"Cordon\"."
+  }
+  validation {
+    condition     = var.upgrade_settings == null || var.upgrade_settings.max_blocked_nodes == null || !contains(["0", "0%"], var.upgrade_settings.max_blocked_nodes)
+    error_message = "upgrade_settings.max_blocked_nodes must be greater than zero when set."
   }
 }
 

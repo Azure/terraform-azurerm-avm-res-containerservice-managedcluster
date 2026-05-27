@@ -950,6 +950,7 @@ object({
         serve_stale                     = optional(string)
         serve_stale_duration_in_seconds = optional(number)
       })))
+      mode  = optional(string)
       state = optional(string)
       vnet_dns_overrides = optional(map(object({
         cache_duration_in_seconds       = optional(number)
