@@ -1,14 +1,13 @@
 resource "azapi_resource" "this" {
-  location                  = var.location
-  name                      = var.name
-  parent_id                 = var.parent_id
-  type                      = "Microsoft.ContainerService/managedClusters@2026-03-01"
-  body                      = local.resource_body
-  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  ignore_null_property      = true
-  schema_validation_enabled = false
-  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  location             = var.location
+  name                 = var.name
+  parent_id            = var.parent_id
+  type                 = "Microsoft.ContainerService/managedClusters@2026-03-01"
+  body                 = local.resource_body
+  create_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_null_property = true
+  read_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs = [
     "properties.nodeResourceGroup",
     "properties.agentPoolProfiles[0].vnetSubnetID",
@@ -26,7 +25,8 @@ resource "azapi_resource" "this" {
     "properties.oidcIssuerProfile.issuerURL",
     "properties.privateFQDN",
   ]
-  sensitive_body = local.sensitive_body
+  schema_validation_enabled = false
+  sensitive_body            = local.sensitive_body
   sensitive_body_version = var.windows_profile == null ? null : {
     "properties.windowsProfile.adminPassword" = var.windows_profile_password_version
   }

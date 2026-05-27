@@ -30,14 +30,6 @@ The parent resource ID for this resource.
 DESCRIPTION
 }
 
-variable "availability_zones" {
-  type        = list(string)
-  default     = null
-  description = <<DESCRIPTION
-The list of Availability zones to use for nodes. This can only be specified if the AgentPoolType property is 'VirtualMachineScaleSets'.
-DESCRIPTION
-}
-
 variable "artifact_streaming_profile" {
   type = object({
     enabled = optional(bool)
@@ -48,6 +40,14 @@ Configuration for using artifact streaming on AKS.
 
 - `enabled` - Whether artifact streaming is enabled on the agent pool.
 
+DESCRIPTION
+}
+
+variable "availability_zones" {
+  type        = list(string)
+  default     = null
+  description = <<DESCRIPTION
+The list of Availability zones to use for nodes. This can only be specified if the AgentPoolType property is 'VirtualMachineScaleSets'.
 DESCRIPTION
 }
 

@@ -41,6 +41,22 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
+### <a name="input_artifact_streaming_profile"></a> [artifact\_streaming\_profile](#input\_artifact\_streaming\_profile)
+
+Description: Configuration for using artifact streaming on AKS.
+
+- `enabled` - Whether artifact streaming is enabled on the agent pool.
+
+Type:
+
+```hcl
+object({
+    enabled = optional(bool)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones)
 
 Description: The list of Availability zones to use for nodes. This can only be specified if the AgentPoolType property is 'VirtualMachineScaleSets'.

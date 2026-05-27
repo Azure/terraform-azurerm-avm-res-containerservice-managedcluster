@@ -433,6 +433,11 @@ The max price (in US Dollars) you are willing to pay for spot instances. Possibl
 **availability\_zones**  
 The list of Availability zones to use for nodes. This can only be specified if the AgentPoolType property is 'VirtualMachineScaleSets'.
 
+**artifact\_streaming\_profile**  
+Configuration for using artifact streaming on AKS.
+
+- `enabled` - Whether artifact streaming is enabled on the agent pool.
+
 **enable\_fips**  
 Whether to use a FIPS-enabled OS. See [Add a FIPS-enabled node pool](https://docs.microsoft.com/azure/aks/use-multiple-node-pools#add-a-fips-enabled-node-pool-preview) for more details.
 
@@ -440,6 +445,9 @@ Type:
 
 ```hcl
 map(object({
+    artifact_streaming_profile = optional(object({
+      enabled = optional(bool)
+    }))
     availability_zones            = optional(list(string))
     capacity_reservation_group_id = optional(string)
     count_of                      = optional(number)
@@ -824,11 +832,16 @@ Note that:
 - The default node count (`count_of`) is set to `3` if not specified.
 - The default name is set to `systempool` if not specified.
 - It is not supported to rename the default agent pool after creation.
+- `artifact_streaming_profile` configures artifact streaming on the default agent pool.
+- Updating `vm_size` after creation triggers an AKS-managed rolling resize of the default agent pool. Ensure the subscription has quota for temporary surge capacity and that workloads can tolerate node rotation.
 
 Type:
 
 ```hcl
 object({
+    artifact_streaming_profile = optional(object({
+      enabled = optional(bool)
+    }))
     availability_zones            = optional(list(string))
     capacity_reservation_group_id = optional(string)
     count_of                      = optional(number, 3)
