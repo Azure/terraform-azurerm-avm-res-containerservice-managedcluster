@@ -14,6 +14,7 @@ module "nodepools" {
   enable_encryption_at_host     = each.value.enable_encryption_at_host
   enable_fips                   = each.value.enable_fips
   enable_node_public_ip         = each.value.enable_node_public_ip
+  enable_os_disk_full_caching   = each.value.enable_os_disk_full_caching
   enable_ultra_ssd              = each.value.enable_ultra_ssd
   gateway_profile               = each.value.gateway_profile
   gpu_instance_profile          = each.value.gpu_instance_profile
@@ -29,6 +30,9 @@ module "nodepools" {
   min_count                     = each.value.min_count
   mode                          = each.value.mode
   network_profile               = each.value.network_profile
+  node_customization_profile    = each.value.node_customization_profile
+  node_image_version            = each.value.node_image_version
+  node_initialization_taints    = each.value.node_initialization_taints
   node_labels                   = each.value.node_labels
   node_public_ip_prefix_id      = each.value.node_public_ip_prefix_id
   node_taints                   = each.value.node_taints
@@ -50,6 +54,8 @@ module "nodepools" {
   timeouts                      = var.agentpool_timeouts
   type                          = each.value.type
   upgrade_settings              = each.value.upgrade_settings
+  upgrade_settings_blue_green   = each.value.upgrade_settings_blue_green
+  upgrade_strategy              = each.value.upgrade_strategy
   virtual_machines_profile      = each.value.virtual_machines_profile
   vm_size                       = each.value.vm_size
   vnet_subnet_id                = each.value.vnet_subnet_id

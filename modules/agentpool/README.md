@@ -137,6 +137,14 @@ Type: `bool`
 
 Default: `null`
 
+### <a name="input_enable_os_disk_full_caching"></a> [enable\_os\_disk\_full\_caching](#input\_enable\_os\_disk\_full\_caching)
+
+Description: Whether to enable full-cache ephemeral OS disk.
+
+Type: `bool`
+
+Default: `null`
+
 ### <a name="input_enable_ultra_ssd"></a> [enable\_ultra\_ssd](#input\_enable\_ultra\_ssd)
 
 Description: Whether to enable UltraSSD
@@ -174,12 +182,19 @@ Default: `null`
 Description: GPU settings for the Agent Pool.
 
 - `driver` - Whether to install GPU drivers. When it's not specified, default is Install.
+- `driver_type` - GPU driver type.
+- `nvidia` - NVIDIA GPU settings for the agent pool.
 
 Type:
 
 ```hcl
 object({
-    driver = optional(string)
+    driver      = optional(string)
+    driver_type = optional(string)
+    nvidia = optional(object({
+      management_mode = optional(string)
+      mig_strategy    = optional(string)
+    }))
   })
 ```
 
@@ -207,6 +222,7 @@ Description: Kubelet configurations of agent nodes. See [AKS custom node configu
 - `image_gc_high_threshold` - The percent of disk usage after which image garbage collection is always run. To disable image garbage collection, set to 100. The default is 85%
 - `image_gc_low_threshold` - The percent of disk usage before which image garbage collection is never run. This cannot be set higher than imageGcHighThreshold. The default is 80%
 - `pod_max_pids` - The maximum number of processes per pod.
+- `seccomp_default` - The seccomp profile applied by default.
 - `topology_manager_policy` - The Topology Manager policy to use. For more information see [Kubernetes Topology Manager](https://kubernetes.io/docs/tasks/administer-cluster/topology-manager). The default is 'none'. Allowed values are 'none', 'best-effort', 'restricted', and 'single-numa-node'.
 
 Type:
@@ -223,6 +239,7 @@ object({
     image_gc_high_threshold   = optional(number)
     image_gc_low_threshold    = optional(number)
     pod_max_pids              = optional(number)
+    seccomp_default           = optional(string)
     topology_manager_policy   = optional(string)
   })
 ```
@@ -322,6 +339,8 @@ Description: Configures the per-node local DNS, with VnetDNS and KubeDNS overrid
 
 - `kube_dns_overrides` - LocalDNSOverrides is a map of zone names for Vnet and Kube DNS overrides.
 - `mode` - Mode of enablement for localDNS.
+- `mode` - Mode of enablement for localDNS.
+- `state` - Whether LocalDNS is enabled or disabled.
 - `vnet_dns_overrides` - LocalDNSOverrides is a map of zone names for Vnet and Kube DNS overrides.
 
 Type:
@@ -338,7 +357,8 @@ object({
       serve_stale                     = optional(string)
       serve_stale_duration_in_seconds = optional(number)
     })))
-    mode = optional(string)
+    mode  = optional(string)
+    state = optional(string)
     vnet_dns_overrides = optional(map(object({
       cache_duration_in_seconds       = optional(number)
       forward_destination             = optional(string)
@@ -418,6 +438,38 @@ object({
     })))
   })
 ```
+
+Default: `null`
+
+### <a name="input_node_customization_profile"></a> [node\_customization\_profile](#input\_node\_customization\_profile)
+
+Description: Settings for node customization.
+
+- `node_customization_id` - The node customization ID.
+
+Type:
+
+```hcl
+object({
+    node_customization_id = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_node_image_version"></a> [node\_image\_version](#input\_node\_image\_version)
+
+Description: The node image version.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_node_initialization_taints"></a> [node\_initialization\_taints](#input\_node\_initialization\_taints)
+
+Description: The taints added to nodes during node initialization. These taints are not reconciled by AKS after creation.
+
+Type: `list(string)`
 
 Default: `null`
 
@@ -607,6 +659,8 @@ Default: `null`
 Description: Settings for upgrading an agentpool
 
 - `drain_timeout_in_minutes` - The drain timeout for a node. The amount of time (in minutes) to wait on eviction of pods and graceful termination per node. This eviction wait time honors waiting on pod disruption budgets. If this time is exceeded, the upgrade fails. If not specified, the default is 30 minutes.
+- `drain_timeout_in_minutes` - The drain timeout for a node. The amount of time (in minutes) to wait on eviction of pods and graceful termination per node. This eviction wait time honors waiting on pod disruption budgets. If this time is exceeded, the upgrade fails. If not specified, the default is 30 minutes.
+- `max_blocked_nodes` - The maximum number or percentage of nodes that can be blocked during upgrade.
 - `max_surge` - The maximum number or percentage of nodes that are surged during upgrade. This can either be set to an integer (e.g. '5') or a percentage (e.g. '50%'). If a percentage is specified, it is the percentage of the total agent pool size at the time of the upgrade. For percentages, fractional nodes are rounded up. If not specified, the default is 10%. For more information, including best practices, see: https://learn.microsoft.com/en-us/azure/aks/upgrade-cluster
 - `max_unavailable` - The maximum number or percentage of nodes that can be simultaneously unavailable during upgrade. This can either be set to an integer (e.g. '1') or a percentage (e.g. '5%'). If a percentage is specified, it is the percentage of the total agent pool size at the time of the upgrade. For percentages, fractional nodes are rounded up. If not specified, the default is 0. For more information, including best practices, see: https://learn.microsoft.com/en-us/azure/aks/upgrade-cluster
 - `node_soak_duration_in_minutes` - The soak duration for a node. The amount of time (in minutes) to wait after draining a node and before reimaging it and moving on to next node. If not specified, the default is 0 minutes.
@@ -617,12 +671,43 @@ Type:
 ```hcl
 object({
     drain_timeout_in_minutes      = optional(number)
+    max_blocked_nodes             = optional(string)
     max_surge                     = optional(string)
     max_unavailable               = optional(string, "0")
     node_soak_duration_in_minutes = optional(number)
     undrainable_node_behavior     = optional(string)
   })
 ```
+
+Default: `null`
+
+### <a name="input_upgrade_settings_blue_green"></a> [upgrade\_settings\_blue\_green](#input\_upgrade\_settings\_blue\_green)
+
+Description: Blue-green upgrade settings for the agent pool.
+
+- `batch_soak_duration_in_minutes` - The soak duration after each batch is drained.
+- `drain_batch_size` - The number or percentage of nodes to drain in a batch.
+- `drain_timeout_in_minutes` - The drain timeout for a node.
+- `final_soak_duration_in_minutes` - The final soak duration after all batches are drained.
+
+Type:
+
+```hcl
+object({
+    batch_soak_duration_in_minutes = optional(number)
+    drain_batch_size               = optional(string)
+    drain_timeout_in_minutes       = optional(number)
+    final_soak_duration_in_minutes = optional(number)
+  })
+```
+
+Default: `null`
+
+### <a name="input_upgrade_strategy"></a> [upgrade\_strategy](#input\_upgrade\_strategy)
+
+Description: The agent pool upgrade strategy.
+
+Type: `string`
 
 Default: `null`
 

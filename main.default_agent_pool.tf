@@ -12,6 +12,7 @@ module "default_agent_pool_data" {
   enable_encryption_at_host     = var.default_agent_pool.enable_encryption_at_host
   enable_fips                   = var.default_agent_pool.enable_fips
   enable_node_public_ip         = var.default_agent_pool.enable_node_public_ip
+  enable_os_disk_full_caching   = var.default_agent_pool.enable_os_disk_full_caching
   enable_ultra_ssd              = var.default_agent_pool.enable_ultra_ssd
   gateway_profile               = var.default_agent_pool.gateway_profile
   gpu_instance_profile          = var.default_agent_pool.gpu_instance_profile
@@ -27,6 +28,9 @@ module "default_agent_pool_data" {
   min_count                     = var.default_agent_pool.min_count
   mode                          = "System"
   network_profile               = var.default_agent_pool.network_profile
+  node_customization_profile    = var.default_agent_pool.node_customization_profile
+  node_image_version            = var.default_agent_pool.node_image_version
+  node_initialization_taints    = var.default_agent_pool.node_initialization_taints
   node_labels                   = var.default_agent_pool.node_labels
   node_public_ip_prefix_id      = var.default_agent_pool.node_public_ip_prefix_id
   node_taints                   = var.default_agent_pool.node_taints
@@ -48,6 +52,8 @@ module "default_agent_pool_data" {
   timeouts                      = null # Timeouts are not required for data only output
   type                          = var.default_agent_pool.type
   upgrade_settings              = var.default_agent_pool.upgrade_settings
+  upgrade_settings_blue_green   = var.default_agent_pool.upgrade_settings_blue_green
+  upgrade_strategy              = var.default_agent_pool.upgrade_strategy
   virtual_machines_profile      = var.default_agent_pool.virtual_machines_profile
   vm_size                       = var.default_agent_pool.vm_size
   vnet_subnet_id                = var.default_agent_pool.vnet_subnet_id

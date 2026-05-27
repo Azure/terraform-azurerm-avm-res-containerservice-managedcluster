@@ -13,17 +13,23 @@ locals {
       creationData = var.creation_data == null ? null : {
         sourceResourceId = var.creation_data.source_resource_id
       }
-      enableAutoScaling      = var.enable_auto_scaling
-      enableEncryptionAtHost = var.enable_encryption_at_host
-      enableFIPS             = var.enable_fips
-      enableNodePublicIP     = var.enable_node_public_ip
-      enableUltraSSD         = var.enable_ultra_ssd
+      enableAutoScaling       = var.enable_auto_scaling
+      enableEncryptionAtHost  = var.enable_encryption_at_host
+      enableFIPS              = var.enable_fips
+      enableNodePublicIP      = var.enable_node_public_ip
+      enableOSDiskFullCaching = var.enable_os_disk_full_caching
+      enableUltraSSD          = var.enable_ultra_ssd
       gatewayProfile = var.gateway_profile == null ? null : {
         publicIPPrefixSize = var.gateway_profile.public_ip_prefix_size
       }
       gpuInstanceProfile = var.gpu_instance_profile
       gpuProfile = var.gpu_profile == null ? null : {
-        driver = var.gpu_profile.driver
+        driver     = var.gpu_profile.driver
+        driverType = var.gpu_profile.driver_type
+        nvidia = var.gpu_profile.nvidia == null ? null : {
+          managementMode = var.gpu_profile.nvidia.management_mode
+          migStrategy    = var.gpu_profile.nvidia.mig_strategy
+        }
       }
       hostGroupID = var.host_group_id
       kubeletConfig = var.kubelet_config == null ? null : {
@@ -37,6 +43,7 @@ locals {
         imageGcHighThreshold  = var.kubelet_config.image_gc_high_threshold
         imageGcLowThreshold   = var.kubelet_config.image_gc_low_threshold
         podMaxPids            = var.kubelet_config.pod_max_pids
+        seccompDefault        = var.kubelet_config.seccomp_default
         topologyManagerPolicy = var.kubelet_config.topology_manager_policy
       }
       kubeletDiskType = var.kubelet_disk_type
@@ -86,7 +93,8 @@ locals {
           serveStale                  = value.serve_stale
           serveStaleDurationInSeconds = value.serve_stale_duration_in_seconds
         } }
-        mode = var.local_dns_profile.mode
+        mode  = var.local_dns_profile.mode
+        state = var.local_dns_profile.state
         vnetDNSOverrides = var.local_dns_profile.vnet_dns_overrides == null ? null : { for k, value in var.local_dns_profile.vnet_dns_overrides : k => value == null ? null : {
           cacheDurationInSeconds      = value.cache_duration_in_seconds
           forwardDestination          = value.forward_destination
@@ -115,7 +123,12 @@ locals {
           tag       = item.tag
         }]
       }
-      nodeLabels                = var.node_labels == null ? null : { for k, value in var.node_labels : k => value }
+      nodeLabels = var.node_labels == null ? null : { for k, value in var.node_labels : k => value }
+      nodeCustomizationProfile = var.node_customization_profile == null ? null : {
+        nodeCustomizationId = var.node_customization_profile.node_customization_id
+      }
+      nodeImageVersion          = var.node_image_version
+      nodeInitializationTaints  = var.node_initialization_taints == null ? null : [for item in var.node_initialization_taints : item]
       nodePublicIPPrefixID      = var.node_public_ip_prefix_id
       nodeTaints                = var.node_taints == null ? null : [for item in var.node_taints : item]
       orchestratorVersion       = var.orchestrator_version
@@ -139,11 +152,19 @@ locals {
       type         = var.type
       upgradeSettings = var.upgrade_settings == null ? null : {
         drainTimeoutInMinutes     = var.upgrade_settings.drain_timeout_in_minutes
+        maxBlockedNodes           = var.upgrade_settings.max_blocked_nodes
         maxSurge                  = var.upgrade_settings.max_surge
         maxUnavailable            = var.upgrade_settings.max_unavailable
         nodeSoakDurationInMinutes = var.upgrade_settings.node_soak_duration_in_minutes
         undrainableNodeBehavior   = var.upgrade_settings.undrainable_node_behavior
       }
+      upgradeSettingsBlueGreen = var.upgrade_settings_blue_green == null ? null : {
+        batchSoakDurationInMinutes = var.upgrade_settings_blue_green.batch_soak_duration_in_minutes
+        drainBatchSize             = var.upgrade_settings_blue_green.drain_batch_size
+        drainTimeoutInMinutes      = var.upgrade_settings_blue_green.drain_timeout_in_minutes
+        finalSoakDurationInMinutes = var.upgrade_settings_blue_green.final_soak_duration_in_minutes
+      }
+      upgradeStrategy = var.upgrade_strategy
       virtualMachinesProfile = var.virtual_machines_profile == null ? null : {
         scale = var.virtual_machines_profile.scale == null ? null : {
           manual = var.virtual_machines_profile.scale.manual == null ? null : [for item in var.virtual_machines_profile.scale.manual : item == null ? null : {
