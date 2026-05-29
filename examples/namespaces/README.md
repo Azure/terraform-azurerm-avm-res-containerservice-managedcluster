@@ -140,12 +140,18 @@ module "namespaces" {
       labels = {
         environment = "dev"
       }
+      default_network_policy = {
+        ingress = "AllowSameNamespace"
+        egress  = "AllowAll"
+      }
       default_resource_quota = {
         cpu_limit      = "1000m"
         cpu_request    = "250m"
         memory_limit   = "2Gi"
         memory_request = "512Mi"
       }
+      adoption_policy = "Never"
+      delete_policy   = "Keep"
     }
   }
   onboard_alerts          = true

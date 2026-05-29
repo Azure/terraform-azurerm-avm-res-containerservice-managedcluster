@@ -100,6 +100,8 @@ module "avm_res_containerregistry_registry" {
 ## Section to create the Azure Container Registry task
 ######################################################################################################################
 resource "azurerm_container_registry_task" "this" {
+  count = var.valkey_enabled ? 1 : 0
+
   container_registry_id = module.avm_res_containerregistry_registry.resource_id
   name                  = "image-import-task"
 
@@ -120,7 +122,9 @@ resource "azurerm_container_registry_task" "this" {
 ## Section to assign the role to the task identity
 ######################################################################################################################
 resource "azurerm_role_assignment" "container_registry_import_for_task" {
-  principal_id         = azurerm_container_registry_task.this.identity[0].principal_id
+  count = var.valkey_enabled ? 1 : 0
+
+  principal_id         = azurerm_container_registry_task.this[0].identity[0].principal_id
   scope                = module.avm_res_containerregistry_registry.resource_id
   role_definition_name = "Container Registry Data Importer and Data Reader"
 }
@@ -128,12 +132,14 @@ resource "azurerm_role_assignment" "container_registry_import_for_task" {
 ## Section to run the Azure Container Registry task
 ######################################################################################################################
 resource "azurerm_container_registry_task_schedule_run_now" "this" {
-  container_registry_task_id = azurerm_container_registry_task.this.id
+  count = var.valkey_enabled ? 1 : 0
+
+  container_registry_task_id = azurerm_container_registry_task.this[0].id
 
   depends_on = [azurerm_role_assignment.container_registry_import_for_task]
 
   lifecycle {
-    replace_triggered_by = [azurerm_container_registry_task.this]
+    replace_triggered_by = [azurerm_container_registry_task.this[0]]
   }
 }
 
@@ -160,10 +166,8 @@ module "stateful_workloads" {
   default_agent_pool = {
     name     = "systempool"
     count_of = 2
-    vm_size  = "Standard_D2ds_v4"
+    vm_size  = "Standard_DC2ds_v3"
     os_type  = "Linux"
-    # Provide zones as strings for consistency with variable type list(string)
-    availability_zones = ["2", "3"]
 
     upgrade_settings = {
       max_surge = "10%"

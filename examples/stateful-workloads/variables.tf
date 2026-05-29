@@ -9,8 +9,8 @@ variable "acr_task_content" {
   default     = <<-EOF
 version: v1.1.0
 steps:
-  - cmd: bash echo Waiting 60 seconds the propagation of the Container Registry Data Importer and Data Reader role
-  - cmd: bash sleep 60
+  - cmd: bash -c "echo Waiting 60 seconds for the Container Registry Data Importer and Data Reader role to propagate"
+  - cmd: bash -c "sleep 60"
   - cmd: az login --identity
   - cmd: az acr import --name $RegistryName --source acrforavmexamples.azurecr.io/valkey:latest --image valkey:latest
 EOF
@@ -34,11 +34,9 @@ variable "agent_pools" {
     # This is an example of a node pool for a stateful workload with minimal configuration
     valkey = {
       name     = "valkey"
-      vm_size  = "Standard_D2ds_v4"
-      count_of = 3
-      # Provide zones as strings (variable type list(string))
-      availability_zones = ["1", "2", "3"]
-      os_type            = "Linux"
+      vm_size  = "Standard_DC2ds_v3"
+      count_of = 1
+      os_type  = "Linux"
       upgrade_settings = {
         max_surge = "10%"
       }
