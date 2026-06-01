@@ -30,6 +30,19 @@ The parent resource ID for this resource.
 DESCRIPTION
 }
 
+variable "artifact_streaming_profile" {
+  type = object({
+    enabled = optional(bool)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Configuration for using artifact streaming on AKS.
+
+- `enabled` - Whether artifact streaming is enabled on the agent pool.
+
+DESCRIPTION
+}
+
 variable "availability_zones" {
   type        = list(string)
   default     = null
@@ -108,6 +121,14 @@ Whether each node is allocated its own public IP. Some scenarios may require nod
 DESCRIPTION
 }
 
+variable "enable_os_disk_full_caching" {
+  type        = bool
+  default     = null
+  description = <<DESCRIPTION
+Whether to enable full-cache ephemeral OS disk.
+DESCRIPTION
+}
+
 variable "enable_ultra_ssd" {
   type        = bool
   default     = null
@@ -153,19 +174,38 @@ DESCRIPTION
 
 variable "gpu_profile" {
   type = object({
-    driver = optional(string)
+    driver      = optional(string)
+    driver_type = optional(string)
+    nvidia = optional(object({
+      management_mode = optional(string)
+      mig_strategy    = optional(string)
+    }))
   })
   default     = null
   description = <<DESCRIPTION
 GPU settings for the Agent Pool.
 
 - `driver` - Whether to install GPU drivers. When it's not specified, default is Install.
+- `driver_type` - GPU driver type.
+- `nvidia` - NVIDIA GPU settings for the agent pool.
 
 DESCRIPTION
 
   validation {
     condition     = var.gpu_profile == null || var.gpu_profile.driver == null || contains(["Install", "None"], var.gpu_profile.driver)
     error_message = "gpu_profile.driver must be one of: [\"Install\", \"None\"]."
+  }
+  validation {
+    condition     = var.gpu_profile == null || var.gpu_profile.driver_type == null || contains(["CUDA", "GRID"], var.gpu_profile.driver_type)
+    error_message = "gpu_profile.driver_type must be one of: [\"CUDA\", \"GRID\"]."
+  }
+  validation {
+    condition     = var.gpu_profile == null || var.gpu_profile.nvidia == null || var.gpu_profile.nvidia.management_mode == null || contains(["Managed", "Unmanaged"], var.gpu_profile.nvidia.management_mode)
+    error_message = "gpu_profile.nvidia.management_mode must be one of: [\"Managed\", \"Unmanaged\"]."
+  }
+  validation {
+    condition     = var.gpu_profile == null || var.gpu_profile.nvidia == null || var.gpu_profile.nvidia.mig_strategy == null || contains(["Mixed", "None", "Single"], var.gpu_profile.nvidia.mig_strategy)
+    error_message = "gpu_profile.nvidia.mig_strategy must be one of: [\"Mixed\", \"None\", \"Single\"]."
   }
 }
 
@@ -189,6 +229,7 @@ variable "kubelet_config" {
     image_gc_high_threshold   = optional(number)
     image_gc_low_threshold    = optional(number)
     pod_max_pids              = optional(number)
+    seccomp_default           = optional(string)
     topology_manager_policy   = optional(string)
   })
   default     = null
@@ -205,6 +246,7 @@ Kubelet configurations of agent nodes. See [AKS custom node configuration](https
 - `image_gc_high_threshold` - The percent of disk usage after which image garbage collection is always run. To disable image garbage collection, set to 100. The default is 85%
 - `image_gc_low_threshold` - The percent of disk usage before which image garbage collection is never run. This cannot be set higher than imageGcHighThreshold. The default is 80%
 - `pod_max_pids` - The maximum number of processes per pod.
+- `seccomp_default` - The seccomp profile applied by default.
 - `topology_manager_policy` - The Topology Manager policy to use. For more information see [Kubernetes Topology Manager](https://kubernetes.io/docs/tasks/administer-cluster/topology-manager). The default is 'none'. Allowed values are 'none', 'best-effort', 'restricted', and 'single-numa-node'.
 
 DESCRIPTION
@@ -212,6 +254,10 @@ DESCRIPTION
   validation {
     condition     = var.kubelet_config == null || var.kubelet_config.container_log_max_files == null || var.kubelet_config.container_log_max_files >= 2
     error_message = "kubelet_config.container_log_max_files must be greater than or equal to 2."
+  }
+  validation {
+    condition     = var.kubelet_config == null || var.kubelet_config.seccomp_default == null || contains(["RuntimeDefault", "Unconfined"], var.kubelet_config.seccomp_default)
+    error_message = "kubelet_config.seccomp_default must be one of: [\"RuntimeDefault\", \"Unconfined\"]."
   }
 }
 
@@ -316,7 +362,8 @@ variable "local_dns_profile" {
       serve_stale                     = optional(string)
       serve_stale_duration_in_seconds = optional(number)
     })))
-    mode = optional(string)
+    mode  = optional(string)
+    state = optional(string)
     vnet_dns_overrides = optional(map(object({
       cache_duration_in_seconds       = optional(number)
       forward_destination             = optional(string)
@@ -334,6 +381,8 @@ Configures the per-node local DNS, with VnetDNS and KubeDNS overrides. LocalDNS 
 
 - `kube_dns_overrides` - LocalDNSOverrides is a map of zone names for Vnet and Kube DNS overrides.
 - `mode` - Mode of enablement for localDNS.
+- `mode` - Mode of enablement for localDNS.
+- `state` - Whether LocalDNS is enabled or disabled.
 - `vnet_dns_overrides` - LocalDNSOverrides is a map of zone names for Vnet and Kube DNS overrides.
 
 DESCRIPTION
@@ -341,6 +390,10 @@ DESCRIPTION
   validation {
     condition     = var.local_dns_profile == null || var.local_dns_profile.mode == null || contains(["Disabled", "Preferred", "Required"], var.local_dns_profile.mode)
     error_message = "local_dns_profile.mode must be one of: [\"Disabled\", \"Preferred\", \"Required\"]."
+  }
+  validation {
+    condition     = var.local_dns_profile == null || var.local_dns_profile.state == null || contains(["Disabled", "Enabled"], var.local_dns_profile.state)
+    error_message = "local_dns_profile.state must be one of: [\"Disabled\", \"Enabled\"]."
   }
 }
 
@@ -411,6 +464,40 @@ Network settings of an agent pool.
 - `node_public_ip_tags` - The list of tags associated with the node public IP address.
 
 DESCRIPTION
+}
+
+variable "node_customization_profile" {
+  type = object({
+    node_customization_id = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Settings for node customization.
+
+- `node_customization_id` - The node customization ID.
+
+DESCRIPTION
+}
+
+variable "node_image_version" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+The node image version.
+DESCRIPTION
+}
+
+variable "node_initialization_taints" {
+  type        = list(string)
+  default     = null
+  description = <<DESCRIPTION
+The taints added to nodes during node initialization. These taints are not reconciled by AKS after creation.
+DESCRIPTION
+
+  validation {
+    condition     = var.node_initialization_taints == null
+    error_message = "node_initialization_taints is not supported because live AKS APIs reject it on both managed cluster parent and child agent pool operations."
+  }
 }
 
 variable "node_labels" {
@@ -645,6 +732,7 @@ DESCRIPTION
 variable "upgrade_settings" {
   type = object({
     drain_timeout_in_minutes      = optional(number)
+    max_blocked_nodes             = optional(string)
     max_surge                     = optional(string)
     max_unavailable               = optional(string, "0")
     node_soak_duration_in_minutes = optional(number)
@@ -655,6 +743,8 @@ variable "upgrade_settings" {
 Settings for upgrading an agentpool
 
 - `drain_timeout_in_minutes` - The drain timeout for a node. The amount of time (in minutes) to wait on eviction of pods and graceful termination per node. This eviction wait time honors waiting on pod disruption budgets. If this time is exceeded, the upgrade fails. If not specified, the default is 30 minutes.
+- `drain_timeout_in_minutes` - The drain timeout for a node. The amount of time (in minutes) to wait on eviction of pods and graceful termination per node. This eviction wait time honors waiting on pod disruption budgets. If this time is exceeded, the upgrade fails. If not specified, the default is 30 minutes.
+- `max_blocked_nodes` - The maximum number or percentage of nodes that can be blocked during upgrade.
 - `max_surge` - The maximum number or percentage of nodes that are surged during upgrade. This can either be set to an integer (e.g. '5') or a percentage (e.g. '50%'). If a percentage is specified, it is the percentage of the total agent pool size at the time of the upgrade. For percentages, fractional nodes are rounded up. If not specified, the default is 10%. For more information, including best practices, see: https://learn.microsoft.com/en-us/azure/aks/upgrade-cluster
 - `max_unavailable` - The maximum number or percentage of nodes that can be simultaneously unavailable during upgrade. This can either be set to an integer (e.g. '1') or a percentage (e.g. '5%'). If a percentage is specified, it is the percentage of the total agent pool size at the time of the upgrade. For percentages, fractional nodes are rounded up. If not specified, the default is 0. For more information, including best practices, see: https://learn.microsoft.com/en-us/azure/aks/upgrade-cluster
 - `node_soak_duration_in_minutes` - The soak duration for a node. The amount of time (in minutes) to wait after draining a node and before reimaging it and moving on to next node. If not specified, the default is 0 minutes.
@@ -681,6 +771,46 @@ DESCRIPTION
   validation {
     condition     = var.upgrade_settings == null || var.upgrade_settings.undrainable_node_behavior == null || contains(["Cordon", "Schedule"], var.upgrade_settings.undrainable_node_behavior)
     error_message = "upgrade_settings.undrainable_node_behavior must be one of: [\"Cordon\", \"Schedule\"]."
+  }
+  validation {
+    condition     = var.upgrade_settings == null || var.upgrade_settings.max_blocked_nodes == null || var.upgrade_settings.undrainable_node_behavior == "Cordon"
+    error_message = "upgrade_settings.max_blocked_nodes can only be set when upgrade_settings.undrainable_node_behavior is \"Cordon\"."
+  }
+  validation {
+    condition     = var.upgrade_settings == null || var.upgrade_settings.max_blocked_nodes == null || !contains(["0", "0%"], var.upgrade_settings.max_blocked_nodes)
+    error_message = "upgrade_settings.max_blocked_nodes must be greater than zero when set."
+  }
+}
+
+variable "upgrade_settings_blue_green" {
+  type = object({
+    batch_soak_duration_in_minutes = optional(number)
+    drain_batch_size               = optional(string)
+    drain_timeout_in_minutes       = optional(number)
+    final_soak_duration_in_minutes = optional(number)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Blue-green upgrade settings for the agent pool.
+
+- `batch_soak_duration_in_minutes` - The soak duration after each batch is drained.
+- `drain_batch_size` - The number or percentage of nodes to drain in a batch.
+- `drain_timeout_in_minutes` - The drain timeout for a node.
+- `final_soak_duration_in_minutes` - The final soak duration after all batches are drained.
+
+DESCRIPTION
+}
+
+variable "upgrade_strategy" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+The agent pool upgrade strategy.
+DESCRIPTION
+
+  validation {
+    condition     = var.upgrade_strategy == null || contains(["BlueGreen", "Rolling"], var.upgrade_strategy)
+    error_message = "upgrade_strategy must be one of: [\"BlueGreen\", \"Rolling\"]."
   }
 }
 

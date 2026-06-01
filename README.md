@@ -434,6 +434,11 @@ The max price (in US Dollars) you are willing to pay for spot instances. Possibl
 **availability\_zones**  
 The list of Availability zones to use for nodes. This can only be specified if the AgentPoolType property is 'VirtualMachineScaleSets'.
 
+**artifact\_streaming\_profile**  
+Configuration for using artifact streaming on AKS.
+
+- `enabled` - Whether artifact streaming is enabled on the agent pool.
+
 **enable\_fips**  
 Whether to use a FIPS-enabled OS. See [Add a FIPS-enabled node pool](https://docs.microsoft.com/azure/aks/use-multiple-node-pools#add-a-fips-enabled-node-pool-preview) for more details.
 
@@ -441,23 +446,32 @@ Type:
 
 ```hcl
 map(object({
+    artifact_streaming_profile = optional(object({
+      enabled = optional(bool)
+    }))
     availability_zones            = optional(list(string))
     capacity_reservation_group_id = optional(string)
     count_of                      = optional(number)
     creation_data = optional(object({
       source_resource_id = optional(string)
     }))
-    enable_auto_scaling       = optional(bool)
-    enable_encryption_at_host = optional(bool)
-    enable_fips               = optional(bool)
-    enable_node_public_ip     = optional(bool)
-    enable_ultra_ssd          = optional(bool)
+    enable_auto_scaling         = optional(bool)
+    enable_encryption_at_host   = optional(bool)
+    enable_fips                 = optional(bool)
+    enable_node_public_ip       = optional(bool)
+    enable_os_disk_full_caching = optional(bool)
+    enable_ultra_ssd            = optional(bool)
     gateway_profile = optional(object({
       public_ip_prefix_size = optional(number)
     }))
     gpu_instance_profile = optional(string)
     gpu_profile = optional(object({
-      driver = optional(string)
+      driver      = optional(string)
+      driver_type = optional(string)
+      nvidia = optional(object({
+        management_mode = optional(string)
+        mig_strategy    = optional(string)
+      }))
     }))
     host_group_id = optional(string)
     kubelet_config = optional(object({
@@ -471,6 +485,7 @@ map(object({
       image_gc_high_threshold   = optional(number)
       image_gc_low_threshold    = optional(number)
       pod_max_pids              = optional(number)
+      seccomp_default           = optional(string)
       topology_manager_policy   = optional(string)
     }))
     kubelet_disk_type = optional(string)
@@ -520,7 +535,8 @@ map(object({
         serve_stale                     = optional(string)
         serve_stale_duration_in_seconds = optional(number)
       })))
-      mode = optional(string)
+      mode  = optional(string)
+      state = optional(string)
       vnet_dns_overrides = optional(map(object({
         cache_duration_in_seconds       = optional(number)
         forward_destination             = optional(string)
@@ -550,7 +566,12 @@ map(object({
         tag         = optional(string)
       })))
     }))
-    node_labels                  = optional(map(string))
+    node_labels = optional(map(string))
+    node_customization_profile = optional(object({
+      node_customization_id = optional(string)
+    }))
+    node_image_version           = optional(string)
+    node_initialization_taints   = optional(list(string))
     node_public_ip_prefix_id     = optional(string)
     node_taints                  = optional(list(string))
     orchestrator_version         = optional(string)
@@ -575,11 +596,19 @@ map(object({
     type           = optional(string)
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
+      max_blocked_nodes             = optional(string)
       max_surge                     = optional(string)
       max_unavailable               = optional(string)
       node_soak_duration_in_minutes = optional(number)
       undrainable_node_behavior     = optional(string)
     }))
+    upgrade_settings_blue_green = optional(object({
+      batch_soak_duration_in_minutes = optional(number)
+      drain_batch_size               = optional(string)
+      drain_timeout_in_minutes       = optional(number)
+      final_soak_duration_in_minutes = optional(number)
+    }))
+    upgrade_strategy = optional(string)
     virtual_machines_profile = optional(object({
       scale = optional(object({
         manual = optional(list(object({
@@ -825,28 +854,39 @@ Note that:
 - The default node count (`count_of`) is set to `3` if not specified.
 - The default name is set to `systempool` if not specified.
 - It is not supported to rename the default agent pool after creation.
+- `artifact_streaming_profile` configures artifact streaming on the default agent pool.
+- Updating `vm_size` after creation triggers an AKS-managed rolling resize of the default agent pool. Ensure the subscription has quota for temporary surge capacity and that workloads can tolerate node rotation.
 
 Type:
 
 ```hcl
 object({
+    artifact_streaming_profile = optional(object({
+      enabled = optional(bool)
+    }))
     availability_zones            = optional(list(string))
     capacity_reservation_group_id = optional(string)
     count_of                      = optional(number, 3)
     creation_data = optional(object({
       source_resource_id = optional(string)
     }))
-    enable_auto_scaling       = optional(bool)
-    enable_encryption_at_host = optional(bool)
-    enable_fips               = optional(bool)
-    enable_node_public_ip     = optional(bool)
-    enable_ultra_ssd          = optional(bool)
+    enable_auto_scaling         = optional(bool)
+    enable_encryption_at_host   = optional(bool)
+    enable_fips                 = optional(bool)
+    enable_node_public_ip       = optional(bool)
+    enable_os_disk_full_caching = optional(bool)
+    enable_ultra_ssd            = optional(bool)
     gateway_profile = optional(object({
       public_ip_prefix_size = optional(number)
     }))
     gpu_instance_profile = optional(string)
     gpu_profile = optional(object({
-      driver = optional(string)
+      driver      = optional(string)
+      driver_type = optional(string)
+      nvidia = optional(object({
+        management_mode = optional(string)
+        mig_strategy    = optional(string)
+      }))
     }))
     host_group_id = optional(string)
     kubelet_config = optional(object({
@@ -860,6 +900,7 @@ object({
       image_gc_high_threshold   = optional(number)
       image_gc_low_threshold    = optional(number)
       pod_max_pids              = optional(number)
+      seccomp_default           = optional(string)
       topology_manager_policy   = optional(string)
     }))
     kubelet_disk_type = optional(string)
@@ -909,6 +950,8 @@ object({
         serve_stale                     = optional(string)
         serve_stale_duration_in_seconds = optional(number)
       })))
+      mode  = optional(string)
+      state = optional(string)
       vnet_dns_overrides = optional(map(object({
         cache_duration_in_seconds       = optional(number)
         forward_destination             = optional(string)
@@ -938,16 +981,21 @@ object({
         tag         = optional(string)
       })))
     }))
-    node_labels              = optional(map(string))
-    node_public_ip_prefix_id = optional(string)
-    node_taints              = optional(list(string))
-    orchestrator_version     = optional(string)
-    os_disk_size_gb          = optional(number)
-    os_disk_type             = optional(string)
-    os_sku                   = optional(string)
-    output_data_only         = optional(bool)
-    pod_ip_allocation_mode   = optional(string)
-    pod_subnet_id            = optional(string)
+    node_labels = optional(map(string))
+    node_customization_profile = optional(object({
+      node_customization_id = optional(string)
+    }))
+    node_image_version         = optional(string)
+    node_initialization_taints = optional(list(string))
+    node_public_ip_prefix_id   = optional(string)
+    node_taints                = optional(list(string))
+    orchestrator_version       = optional(string)
+    os_disk_size_gb            = optional(number)
+    os_disk_type               = optional(string)
+    os_sku                     = optional(string)
+    output_data_only           = optional(bool)
+    pod_ip_allocation_mode     = optional(string)
+    pod_subnet_id              = optional(string)
     power_state = optional(object({
       code = optional(string)
     }))
@@ -966,11 +1014,19 @@ object({
     type           = optional(string)
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
+      max_blocked_nodes             = optional(string)
       max_surge                     = optional(string)
       max_unavailable               = optional(string)
       node_soak_duration_in_minutes = optional(number)
       undrainable_node_behavior     = optional(string)
     }))
+    upgrade_settings_blue_green = optional(object({
+      batch_soak_duration_in_minutes = optional(number)
+      drain_batch_size               = optional(string)
+      drain_timeout_in_minutes       = optional(number)
+      final_soak_duration_in_minutes = optional(number)
+    }))
+    upgrade_strategy = optional(string)
     virtual_machines_profile = optional(object({
       scale = optional(object({
         manual = optional(list(object({

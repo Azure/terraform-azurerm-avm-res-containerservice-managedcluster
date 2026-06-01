@@ -170,7 +170,6 @@ module "waf_aligned" {
     unp1 = {
       name                = "userpool1"
       vm_size             = "Standard_D2S_v6"
-      availability_zones  = ["1", "2", ]
       enable_auto_scaling = true
       max_count           = 3
       max_pods            = 50
@@ -202,7 +201,6 @@ module "waf_aligned" {
   default_agent_pool = {
     name                = "default"
     vm_size             = "Standard_D2S_v6"
-    availability_zones  = ["1", "2", ]
     enable_auto_scaling = true
     max_count           = 5
     max_pods            = 50

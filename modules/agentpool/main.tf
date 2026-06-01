@@ -13,7 +13,7 @@ resource "azapi_resource" "this" {
 
   name                 = var.name
   parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
+  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview"
   body                 = local.resource_body
   ignore_null_property = true
   locks = [
@@ -27,6 +27,9 @@ resource "azapi_resource" "this" {
     "properties.provisioningState",
     "type"
   ]
+  # AzAPI's embedded AKS schema does not include this preview API yet.
+  # Azure still validates the request at apply time.
+  schema_validation_enabled = false
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -45,7 +48,7 @@ resource "azapi_resource" "this_create_before_destroy" {
 
   name                 = "${var.name}${substr(sha256(uuid()), 0, 4)}"
   parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2025-10-01"
+  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview"
   body                 = local.resource_body
   ignore_null_property = true
   locks = [
@@ -59,6 +62,9 @@ resource "azapi_resource" "this_create_before_destroy" {
     "properties.provisioningState",
     "type"
   ]
+  # AzAPI's embedded AKS schema does not include this preview API yet.
+  # Azure still validates the request at apply time.
+  schema_validation_enabled = false
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]

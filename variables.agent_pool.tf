@@ -1,22 +1,31 @@
 variable "agent_pools" {
   type = map(object({
+    artifact_streaming_profile = optional(object({
+      enabled = optional(bool)
+    }))
     availability_zones            = optional(list(string))
     capacity_reservation_group_id = optional(string)
     count_of                      = optional(number)
     creation_data = optional(object({
       source_resource_id = optional(string)
     }))
-    enable_auto_scaling       = optional(bool)
-    enable_encryption_at_host = optional(bool)
-    enable_fips               = optional(bool)
-    enable_node_public_ip     = optional(bool)
-    enable_ultra_ssd          = optional(bool)
+    enable_auto_scaling         = optional(bool)
+    enable_encryption_at_host   = optional(bool)
+    enable_fips                 = optional(bool)
+    enable_node_public_ip       = optional(bool)
+    enable_os_disk_full_caching = optional(bool)
+    enable_ultra_ssd            = optional(bool)
     gateway_profile = optional(object({
       public_ip_prefix_size = optional(number)
     }))
     gpu_instance_profile = optional(string)
     gpu_profile = optional(object({
-      driver = optional(string)
+      driver      = optional(string)
+      driver_type = optional(string)
+      nvidia = optional(object({
+        management_mode = optional(string)
+        mig_strategy    = optional(string)
+      }))
     }))
     host_group_id = optional(string)
     kubelet_config = optional(object({
@@ -30,6 +39,7 @@ variable "agent_pools" {
       image_gc_high_threshold   = optional(number)
       image_gc_low_threshold    = optional(number)
       pod_max_pids              = optional(number)
+      seccomp_default           = optional(string)
       topology_manager_policy   = optional(string)
     }))
     kubelet_disk_type = optional(string)
@@ -79,7 +89,8 @@ variable "agent_pools" {
         serve_stale                     = optional(string)
         serve_stale_duration_in_seconds = optional(number)
       })))
-      mode = optional(string)
+      mode  = optional(string)
+      state = optional(string)
       vnet_dns_overrides = optional(map(object({
         cache_duration_in_seconds       = optional(number)
         forward_destination             = optional(string)
@@ -109,7 +120,12 @@ variable "agent_pools" {
         tag         = optional(string)
       })))
     }))
-    node_labels                  = optional(map(string))
+    node_labels = optional(map(string))
+    node_customization_profile = optional(object({
+      node_customization_id = optional(string)
+    }))
+    node_image_version           = optional(string)
+    node_initialization_taints   = optional(list(string))
     node_public_ip_prefix_id     = optional(string)
     node_taints                  = optional(list(string))
     orchestrator_version         = optional(string)
@@ -134,11 +150,19 @@ variable "agent_pools" {
     type           = optional(string)
     upgrade_settings = optional(object({
       drain_timeout_in_minutes      = optional(number)
+      max_blocked_nodes             = optional(string)
       max_surge                     = optional(string)
       max_unavailable               = optional(string)
       node_soak_duration_in_minutes = optional(number)
       undrainable_node_behavior     = optional(string)
     }))
+    upgrade_settings_blue_green = optional(object({
+      batch_soak_duration_in_minutes = optional(number)
+      drain_batch_size               = optional(string)
+      drain_timeout_in_minutes       = optional(number)
+      final_soak_duration_in_minutes = optional(number)
+    }))
+    upgrade_strategy = optional(string)
     virtual_machines_profile = optional(object({
       scale = optional(object({
         manual = optional(list(object({
@@ -382,6 +406,11 @@ The max price (in US Dollars) you are willing to pay for spot instances. Possibl
 
 **availability_zones**
 The list of Availability zones to use for nodes. This can only be specified if the AgentPoolType property is 'VirtualMachineScaleSets'.
+
+**artifact_streaming_profile**
+Configuration for using artifact streaming on AKS.
+
+- `enabled` - Whether artifact streaming is enabled on the agent pool.
 
 **enable_fips**
 Whether to use a FIPS-enabled OS. See [Add a FIPS-enabled node pool](https://docs.microsoft.com/azure/aks/use-multiple-node-pools#add-a-fips-enabled-node-pool-preview) for more details.

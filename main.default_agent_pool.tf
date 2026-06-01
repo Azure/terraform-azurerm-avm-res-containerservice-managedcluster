@@ -3,6 +3,7 @@ module "default_agent_pool_data" {
 
   name                          = var.default_agent_pool.name
   parent_id                     = "" # As we are outputting data only, parent_id is not required
+  artifact_streaming_profile    = var.default_agent_pool.artifact_streaming_profile
   availability_zones            = var.default_agent_pool.availability_zones
   capacity_reservation_group_id = var.default_agent_pool.capacity_reservation_group_id
   count_of                      = var.default_agent_pool.count_of
@@ -11,6 +12,7 @@ module "default_agent_pool_data" {
   enable_encryption_at_host     = var.default_agent_pool.enable_encryption_at_host
   enable_fips                   = var.default_agent_pool.enable_fips
   enable_node_public_ip         = var.default_agent_pool.enable_node_public_ip
+  enable_os_disk_full_caching   = var.default_agent_pool.enable_os_disk_full_caching
   enable_ultra_ssd              = var.default_agent_pool.enable_ultra_ssd
   gateway_profile               = var.default_agent_pool.gateway_profile
   gpu_instance_profile          = var.default_agent_pool.gpu_instance_profile
@@ -26,6 +28,9 @@ module "default_agent_pool_data" {
   min_count                     = var.default_agent_pool.min_count
   mode                          = "System"
   network_profile               = var.default_agent_pool.network_profile
+  node_customization_profile    = var.default_agent_pool.node_customization_profile
+  node_image_version            = var.default_agent_pool.node_image_version
+  node_initialization_taints    = var.default_agent_pool.node_initialization_taints
   node_labels                   = var.default_agent_pool.node_labels
   node_public_ip_prefix_id      = var.default_agent_pool.node_public_ip_prefix_id
   node_taints                   = var.default_agent_pool.node_taints
@@ -47,6 +52,8 @@ module "default_agent_pool_data" {
   timeouts                      = null # Timeouts are not required for data only output
   type                          = var.default_agent_pool.type
   upgrade_settings              = var.default_agent_pool.upgrade_settings
+  upgrade_settings_blue_green   = var.default_agent_pool.upgrade_settings_blue_green
+  upgrade_strategy              = var.default_agent_pool.upgrade_strategy
   virtual_machines_profile      = var.default_agent_pool.virtual_machines_profile
   vm_size                       = var.default_agent_pool.vm_size
   vnet_subnet_id                = var.default_agent_pool.vnet_subnet_id
@@ -59,9 +66,35 @@ module "default_agent_pool_data" {
 resource "azapi_update_resource" "default_agent_pool" {
   name      = module.default_agent_pool_data.name
   parent_id = azapi_resource.this.id
-  type      = "Microsoft.ContainerService/managedClusters/agentpools@2025-10-01"
+  type      = "Microsoft.ContainerService/managedClusters/agentpools@2026-01-02-preview"
   body = {
-    properties = { for k, v in module.default_agent_pool_data.body_properties : k => v if v != null }
+    properties = merge(
+      {
+        for k, v in module.default_agent_pool_data.body_properties : k => v if v != null && k != "nodeInitializationTaints" && !contains(["gpuProfile", "kubeletConfig", "localDNSProfile", "securityProfile", "upgradeSettings", "upgradeSettingsBlueGreen"], k)
+      },
+      {
+        for k, v in {
+          gpuProfile = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.gpuProfile, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          kubeletConfig = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.kubeletConfig, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          localDNSProfile = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.localDNSProfile, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          securityProfile = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.securityProfile, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          upgradeSettings = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.upgradeSettings, null), {}) : profile_key => profile_value if profile_value != null
+          }
+          upgradeSettingsBlueGreen = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.upgradeSettingsBlueGreen, null), {}) : profile_key => profile_value if profile_value != null
+          }
+        } : k => v if try(length(v), 0) > 0
+      }
+    )
   }
   locks = [
     azapi_resource.this.id,

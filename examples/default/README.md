@@ -94,7 +94,7 @@ module "default" {
     upgrade_channel = "none"
   }
   default_agent_pool = {
-    vm_size = "Standard_DS2_v2"
+    vm_size = "Standard_DC2ds_v3"
 
     upgrade_settings = {
       max_surge = "10%"

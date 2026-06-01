@@ -2,7 +2,7 @@ resource "azapi_resource" "this" {
   location             = var.location
   name                 = var.name
   parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters@2025-10-01"
+  type                 = "Microsoft.ContainerService/managedClusters@2026-03-01"
   body                 = local.resource_body
   create_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -25,7 +25,10 @@ resource "azapi_resource" "this" {
     "properties.oidcIssuerProfile.issuerURL",
     "properties.privateFQDN",
   ]
-  sensitive_body = local.sensitive_body
+  # AzAPI's embedded AKS schema does not include 2026-03-01 yet.
+  # Azure still validates the request at apply time.
+  schema_validation_enabled = false
+  sensitive_body            = local.sensitive_body
   sensitive_body_version = var.windows_profile == null ? null : {
     "properties.windowsProfile.adminPassword" = var.windows_profile_password_version
   }

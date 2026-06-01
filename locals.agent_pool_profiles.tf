@@ -10,12 +10,38 @@ locals {
   agent_pool_profiles = [
     merge(
       {
-        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && v != null
+        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && !contains(local.agent_pool_profiles_excluded_properties, k) && k != "securityProfile" && v != null
+      },
+      {
+        for k, v in {
+          kubeletConfig = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.kubeletConfig, null), {}) : profile_key => profile_value if profile_key != "seccompDefault" && profile_value != null
+          }
+          localDNSProfile = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.localDNSProfile, null), {}) : profile_key => profile_value if profile_key != "state" && profile_value != null
+          }
+          upgradeSettings = {
+            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.upgradeSettings, null), {}) : profile_key => profile_value if profile_key != "maxBlockedNodes" && profile_value != null
+          }
+        } : k => v if try(length(v), 0) > 0
       },
       {
         name = module.default_agent_pool_data.name
       }
     )
+  ]
+  agent_pool_profiles_excluded_properties = [
+    "artifactStreamingProfile",
+    "enableOSDiskFullCaching",
+    "kubeletConfig",
+    "localDNSProfile",
+    "nodeCustomizationProfile",
+    "nodeImageVersion",
+    "nodeInitializationTaints",
+    "securityProfile",
+    "upgradeSettings",
+    "upgradeSettingsBlueGreen",
+    "upgradeStrategy",
   ]
   agent_pool_profiles_regex           = local.is_automatic ? local.agent_pool_profiles_regex_automatic : local.agent_pool_profiles_regex_standard
   agent_pool_profiles_regex_automatic = "^(${join("|", local.agent_pool_properties_automatic)})$"

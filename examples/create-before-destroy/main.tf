@@ -80,7 +80,7 @@ module "create_before_destroy" {
     }
     unp2 = {
       name                = "unp2"
-      vm_size             = "Standard_DS2_v2"
+      vm_size             = "Standard_D2S_v6"
       enable_auto_scaling = true
       max_count           = 2
       max_pods            = 30
@@ -94,7 +94,7 @@ module "create_before_destroy" {
   create_agentpools_before_destroy = true
   default_agent_pool = {
     name                = "default"
-    vm_size             = "Standard_DS2_v2"
+    vm_size             = "Standard_D2S_v6"
     enable_auto_scaling = true
     max_count           = 2
     max_pods            = 30
@@ -115,6 +115,7 @@ module "create_before_destroy" {
     network_plugin_mode = "overlay"
   }
   sku = {
+    name = "Base"
     tier = "Standard"
   }
 }
