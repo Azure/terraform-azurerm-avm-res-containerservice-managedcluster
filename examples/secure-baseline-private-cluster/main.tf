@@ -203,9 +203,9 @@ module "aks" {
     vnet_subnet_id      = local.subnet_aks_id
     availability_zones  = ["1", "2", "3"]
     enable_auto_scaling = true
-    min_count           = 1
+    min_count           = 2
     max_count           = 3
-    count_of            = 1
+    count_of            = 2
     upgrade_settings = {
       max_surge = "10%"
     }
