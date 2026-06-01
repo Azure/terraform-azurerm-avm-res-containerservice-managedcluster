@@ -41,34 +41,16 @@ provider "azurerm" {
   }
 }
 
-module "regions" {
-  source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.11.0"
-
-  has_availability_zones = true
-}
-
-resource "random_integer" "region_index" {
-  max = length(local.regions) - 1
-  min = 0
-}
-
 locals {
-  regions = [
-    for region in module.regions.regions : region
-    if contains([
-      "canadacentral",
-      "centralus",
-      "eastus",
-      "eastus2",
-      "northeurope",
-      "southcentralus",
-      "uksouth",
-      "westeurope",
-      "westus2",
-    ], region.name)
-  ]
-  selected_region = local.regions[random_integer.region_index.result].name
+  name_prefix          = "aks-sbp-${substr(data.azapi_client_config.current.subscription_id, 0, 8)}"
+  resource_group_id    = "/subscriptions/${data.azapi_client_config.current.subscription_id}/resourceGroups/${local.resource_group_name}"
+  resource_group_name  = "rg-${local.name_prefix}"
+  selected_region      = "westeurope"
+  subnet_agc_id        = "${local.virtual_network_id}/subnets/subnet-agc"
+  subnet_aks_id        = "${local.virtual_network_id}/subnets/subnet-aks"
+  subnet_api_server_id = "${local.virtual_network_id}/subnets/subnet-apiserver"
+  virtual_network_id   = "${local.resource_group_id}/providers/Microsoft.Network/virtualNetworks/${local.virtual_network_name}"
+  virtual_network_name = "vnet-${local.name_prefix}"
 }
 
 module "naming" {
@@ -78,13 +60,13 @@ module "naming" {
 
 resource "azapi_resource" "resource_group" {
   location = local.selected_region
-  name     = module.naming.resource_group.name_unique
+  name     = local.resource_group_name
   type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
 resource "azapi_resource" "virtual_network" {
   location  = local.selected_region
-  name      = module.naming.virtual_network.name_unique
+  name      = local.virtual_network_name
   parent_id = azapi_resource.resource_group.id
   type      = "Microsoft.Network/virtualNetworks@2024-05-01"
   body = {
@@ -98,18 +80,20 @@ resource "azapi_resource" "virtual_network" {
 
 resource "azapi_resource" "subnet_aks" {
   name      = "subnet-aks"
-  parent_id = azapi_resource.virtual_network.id
+  parent_id = local.virtual_network_id
   type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
   body = {
     properties = {
       addressPrefix = "10.0.1.0/24"
     }
   }
+
+  depends_on = [azapi_resource.virtual_network]
 }
 
 resource "azapi_resource" "subnet_agc" {
   name      = "subnet-agc"
-  parent_id = azapi_resource.virtual_network.id
+  parent_id = local.virtual_network_id
   type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
   body = {
     properties = {
@@ -133,7 +117,7 @@ resource "azapi_resource" "subnet_agc" {
 
 resource "azapi_resource" "subnet_api_server" {
   name      = "subnet-apiserver"
-  parent_id = azapi_resource.virtual_network.id
+  parent_id = local.virtual_network_id
   type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
   body = {
     properties = {
@@ -186,7 +170,7 @@ resource "azapi_resource" "role_agc_config_manager" {
 
 resource "azapi_resource" "role_alb_network_contributor" {
   name      = random_uuid.role_alb_network_contributor.result
-  parent_id = azapi_resource.subnet_agc.id
+  parent_id = local.subnet_agc_id
   type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
   body = {
     properties = {
@@ -196,11 +180,13 @@ resource "azapi_resource" "role_alb_network_contributor" {
     }
   }
   response_export_values = []
+
+  depends_on = [azapi_resource.subnet_agc]
 }
 
 resource "azapi_resource" "role_aks_network_contributor" {
   name      = random_uuid.role_aks_network_contributor.result
-  parent_id = azapi_resource.virtual_network.id
+  parent_id = local.virtual_network_id
   type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
   body = {
     properties = {
@@ -210,6 +196,8 @@ resource "azapi_resource" "role_aks_network_contributor" {
     }
   }
   response_export_values = []
+
+  depends_on = [azapi_resource.virtual_network]
 }
 
 module "aks" {
@@ -221,12 +209,12 @@ module "aks" {
   api_server_access_profile = {
     enable_private_cluster  = true
     enable_vnet_integration = true
-    subnet_id               = azapi_resource.subnet_api_server.id
+    subnet_id               = local.subnet_api_server_id
   }
   default_agent_pool = {
     vm_size             = "Standard_D2S_v6"
     os_sku              = "AzureLinux"
-    vnet_subnet_id      = azapi_resource.subnet_aks.id
+    vnet_subnet_id      = local.subnet_aks_id
     availability_zones  = ["1", "2", "3"]
     enable_auto_scaling = true
     min_count           = 1
@@ -258,7 +246,11 @@ module "aks" {
     tier = "Standard"
   }
 
-  depends_on = [azapi_resource.role_aks_network_contributor]
+  depends_on = [
+    azapi_resource.role_aks_network_contributor,
+    azapi_resource.subnet_aks,
+    azapi_resource.subnet_api_server,
+  ]
 }
 
 resource "azapi_resource" "waf_policy" {
@@ -294,7 +286,7 @@ module "application_gateway_for_containers" {
   associations = {
     main = {
       name               = "association-main"
-      subnet_resource_id = azapi_resource.subnet_agc.id
+      subnet_resource_id = local.subnet_agc_id
     }
   }
   frontends = {
@@ -345,7 +337,6 @@ The following resources are used by this module:
 - [azapi_resource.subnet_api_server](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.virtual_network](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.waf_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_uuid.role_agc_config_manager](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [random_uuid.role_aks_network_contributor](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [random_uuid.role_alb_network_contributor](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
@@ -385,12 +376,6 @@ Version: v1.0.1
 Source: Azure/naming/azurerm
 
 Version: 0.4.3
-
-### <a name="module_regions"></a> [regions](#module\_regions)
-
-Source: Azure/avm-utl-regions/azurerm
-
-Version: 0.11.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Post-deployment steps
