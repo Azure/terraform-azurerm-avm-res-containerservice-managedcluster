@@ -10,18 +10,18 @@ locals {
   agent_pool_profiles = [
     merge(
       {
-        for k, v in module.default_agent_pool_data.body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && !contains(local.agent_pool_profiles_excluded_properties, k) && k != "securityProfile" && v != null
+        for k, v in local.agent_pool_profiles_create_body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && !contains(local.agent_pool_profiles_excluded_properties, k) && k != "securityProfile" && v != null
       },
       {
         for k, v in {
           kubeletConfig = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.kubeletConfig, null), {}) : profile_key => profile_value if profile_key != "seccompDefault" && profile_value != null
+            for profile_key, profile_value in coalesce(try(local.agent_pool_profiles_create_body_properties.kubeletConfig, null), {}) : profile_key => profile_value if profile_key != "seccompDefault" && profile_value != null
           }
           localDNSProfile = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.localDNSProfile, null), {}) : profile_key => profile_value if profile_key != "state" && profile_value != null
+            for profile_key, profile_value in coalesce(try(local.agent_pool_profiles_create_body_properties.localDNSProfile, null), {}) : profile_key => profile_value if profile_key != "state" && profile_value != null
           }
           upgradeSettings = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.upgradeSettings, null), {}) : profile_key => profile_value if profile_key != "maxBlockedNodes" && profile_value != null
+            for profile_key, profile_value in coalesce(try(local.agent_pool_profiles_create_body_properties.upgradeSettings, null), {}) : profile_key => profile_value if profile_key != "maxBlockedNodes" && profile_value != null
           }
         } : k => v if try(length(v), 0) > 0
       },
@@ -30,6 +30,12 @@ locals {
       }
     )
   ]
+  agent_pool_profiles_create_body_properties = merge(
+    module.default_agent_pool_data.body_properties,
+    {
+      count = local.is_automatic ? var.default_agent_pool.count_of : module.default_agent_pool_data.body_properties.count
+    }
+  )
   agent_pool_profiles_excluded_properties = [
     "artifactStreamingProfile",
     "enableOSDiskFullCaching",

@@ -260,18 +260,24 @@ locals {
     for k, v in local.resource_body_full.properties : k => v if can(regex(local.resource_body_properties_regex, k)) && v != null
   }
   resource_body_properties_automatic = [
+    "aadProfile",
     "addonProfiles",
     "agentPoolProfiles",
     "apiServerAccessProfile",
+    "autoUpgradeProfile",
     "azureMonitorProfile",
     "diskEncryptionSetID",
     "ingressProfile",
     "kubernetesVersion",
     "metricsProfile",
     "networkProfile",
+    "nodeProvisioningProfile",
     "nodeResourceGroup",
+    "oidcIssuerProfile",
+    "securityProfile",
     "serviceMeshProfile",
     "storageProfile",
+    "workloadAutoScalerProfile",
   ]
   resource_body_properties_regex           = local.is_automatic ? local.resource_body_properties_regex_automatic : local.resource_body_properties_regex_standard
   resource_body_properties_regex_automatic = "^(${join("|", local.resource_body_properties_automatic)})$"
