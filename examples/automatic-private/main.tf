@@ -93,6 +93,13 @@ resource "azurerm_subnet" "cluster" {
   virtual_network_name = azurerm_virtual_network.this.name
 }
 
+resource "azurerm_subnet" "system" {
+  address_prefixes     = ["172.19.2.0/24"]
+  name                 = "systemSubnet"
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.this.name
+}
+
 resource "azurerm_user_assigned_identity" "this" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.user_assigned_identity.name_unique
@@ -153,6 +160,11 @@ module "automatic" {
   }
   default_agent_pool = {
     vnet_subnet_id = azurerm_subnet.cluster.id
+  }
+  hosted_system_profile = {
+    enabled               = true
+    node_subnet_id        = azurerm_subnet.cluster.id
+    system_node_subnet_id = azurerm_subnet.system.id
   }
   ingress_profile = {
     web_app_routing = {
