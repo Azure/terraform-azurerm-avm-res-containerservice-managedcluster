@@ -31,7 +31,7 @@ module "naming" {
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.11.0"
+  version = "0.12.0"
 
   is_recommended         = true
   region_name_regex      = "euap"
