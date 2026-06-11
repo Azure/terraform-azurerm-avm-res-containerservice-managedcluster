@@ -33,12 +33,12 @@ provider "azurerm" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.11.0"
+  version = "0.12.0"
 
   is_recommended         = true
   region_name_regex      = "euap"
@@ -514,13 +514,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: 0.4.2
+Version: 0.4.3
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.11.0
+Version: 0.12.0
 
 ### <a name="module_stateful_workloads"></a> [stateful\_workloads](#module\_stateful\_workloads)
 

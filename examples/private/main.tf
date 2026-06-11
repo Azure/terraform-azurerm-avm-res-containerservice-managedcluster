@@ -23,7 +23,7 @@ provider "azurerm" {
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.10.0"
+  version = "0.12.0"
 
   is_recommended = true
 }
@@ -48,7 +48,7 @@ locals {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 # This is required for resource modules
