@@ -27,7 +27,7 @@ data "azurerm_client_config" "current" {}
 # See this doc for more info: https://learn.microsoft.com/azure/aks/automatic/quick-automatic-managed-network?pivots=azure-portal#limitations
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.10.0"
+  version = "0.12.0"
 
   is_recommended = true
   region_filter  = ["swedencentral"]
@@ -53,7 +53,7 @@ locals {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 # This is required for resource modules
