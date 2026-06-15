@@ -83,6 +83,11 @@ locals {
       dnsPrefix            = var.fqdn_subdomain != null ? null : coalesce(var.dns_prefix, random_string.dns_prefix.result)
       enableRBAC           = var.enable_rbac
       fqdnSubdomain        = var.fqdn_subdomain
+      hostedSystemProfile = var.hosted_system_profile == null ? null : {
+        enabled            = var.hosted_system_profile.enabled
+        nodeSubnetID       = var.hosted_system_profile.node_subnet_id
+        systemNodeSubnetID = var.hosted_system_profile.system_node_subnet_id
+      }
       httpProxyConfig = var.http_proxy_config == null ? null : {
         httpProxy  = var.http_proxy_config.http_proxy
         httpsProxy = var.http_proxy_config.https_proxy
@@ -267,6 +272,7 @@ locals {
     "autoUpgradeProfile",
     "azureMonitorProfile",
     "diskEncryptionSetID",
+    "hostedSystemProfile",
     "ingressProfile",
     "kubernetesVersion",
     "metricsProfile",

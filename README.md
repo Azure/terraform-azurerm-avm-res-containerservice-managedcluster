@@ -1151,6 +1151,28 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_hosted_system_profile"></a> [hosted\_system\_profile](#input\_hosted\_system\_profile)
+
+Description: Hosted system profile for the managed cluster. Used by AKS Automatic clusters provisioned into a customer-owned (BYO) virtual network to declare the subnets that the hosted system components use.
+
+- `enabled` - Whether to enable the hosted system profile.
+- `node_subnet_id` - Resource ID of the subnet to be used for user/workload nodes. Required when `enabled` is true.
+- `system_node_subnet_id` - Resource ID of the subnet to be used for system node pools. Required when `enabled` is true.
+
+This property is only honored by AKS Automatic clusters (`sku.name == "Automatic"`); it is ignored for standard clusters.
+
+Type:
+
+```hcl
+object({
+    enabled               = optional(bool)
+    node_subnet_id        = optional(string)
+    system_node_subnet_id = optional(string)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_http_proxy_config"></a> [http\_proxy\_config](#input\_http\_proxy\_config)
 
 Description: Cluster HTTP proxy configuration.

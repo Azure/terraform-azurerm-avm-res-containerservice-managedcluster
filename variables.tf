@@ -668,6 +668,35 @@ The FQDN subdomain of the private cluster with custom private dns zone. This can
 DESCRIPTION
 }
 
+variable "hosted_system_profile" {
+  type = object({
+    enabled               = optional(bool)
+    node_subnet_id        = optional(string)
+    system_node_subnet_id = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Hosted system profile for the managed cluster. Used by AKS Automatic clusters provisioned into a customer-owned (BYO) virtual network to declare the subnets that the hosted system components use.
+
+- `enabled` - Whether to enable the hosted system profile.
+- `node_subnet_id` - Resource ID of the subnet to be used for user/workload nodes. Required when `enabled` is true.
+- `system_node_subnet_id` - Resource ID of the subnet to be used for system node pools. Required when `enabled` is true.
+
+This property is only honored by AKS Automatic clusters (`sku.name == "Automatic"`); it is ignored for standard clusters.
+DESCRIPTION
+
+  validation {
+    condition = var.hosted_system_profile == null || var.hosted_system_profile.enabled != true || (
+      var.hosted_system_profile.node_subnet_id != null && var.hosted_system_profile.system_node_subnet_id != null
+    )
+    error_message = "When hosted_system_profile.enabled is true, both hosted_system_profile.node_subnet_id and hosted_system_profile.system_node_subnet_id must be set."
+  }
+  validation {
+    condition     = var.hosted_system_profile == null || (var.sku != null && var.sku.name == "Automatic")
+    error_message = "hosted_system_profile is only supported for AKS Automatic clusters (sku.name must be \"Automatic\")."
+  }
+}
+
 variable "http_proxy_config" {
   type = object({
     http_proxy  = optional(string)
@@ -1422,10 +1451,11 @@ DESCRIPTION
 
 variable "windows_profile_password" {
   type        = string
-  ephemeral   = true
   default     = null
   description = "(Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters."
   sensitive   = true
+
+  ephemeral = true
 
   validation {
     condition     = var.windows_profile_password == null ? true : length(var.windows_profile_password) >= 14 && length(var.windows_profile_password) <= 123
