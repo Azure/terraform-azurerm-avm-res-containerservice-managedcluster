@@ -1451,10 +1451,11 @@ DESCRIPTION
 
 variable "windows_profile_password" {
   type        = string
-  ephemeral   = true
   default     = null
   description = "(Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters."
   sensitive   = true
+
+  ephemeral = true
 
   validation {
     condition     = var.windows_profile_password == null ? true : length(var.windows_profile_password) >= 14 && length(var.windows_profile_password) <= 123

@@ -43,6 +43,7 @@ resource "azapi_resource" "this" {
       identity_ids = identity.value.user_assigned_resource_ids
     }
   }
+
   dynamic "timeouts" {
     for_each = var.cluster_timeouts == null ? [] : [1]
 
@@ -136,6 +137,7 @@ resource "azapi_resource_action" "this_admin_kubeconfig" {
   type                   = azapi_resource.this.type
   response_export_values = ["kubeconfigs"]
 }
+
 locals {
   kubeconfig_admin = length(azapi_resource_action.this_admin_kubeconfig) == 1 ? base64decode(azapi_resource_action.this_admin_kubeconfig[0].output.kubeconfigs[0].value) : null
   kubeconfig_user  = !local.is_automatic ? base64decode(azapi_resource_action.this_user_kubeconfig[0].output.kubeconfigs[0].value) : null
