@@ -13,15 +13,21 @@ locals {
         for k, v in local.agent_pool_profiles_create_body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && !contains(local.agent_pool_profiles_excluded_properties, k) && k != "securityProfile" && v != null
       },
       {
+        # Strip null-valued attributes from each nested object. Do NOT wrap the source with
+        # `coalesce(obj, {})`: coalescing a populated object with the empty object `{}`
+        # unifies them to `map(string)`, silently coercing numeric attributes (e.g.
+        # upgradeSettings.drainTimeoutInMinutes / nodeSoakDurationInMinutes) into strings,
+        # which the AKS API rejects ("drainTimeoutInMinutes accept type int32, not type
+        # string"). A null-guarding ternary preserves each attribute's original type.
         for k, v in {
-          kubeletConfig = {
-            for profile_key, profile_value in coalesce(try(local.agent_pool_profiles_create_body_properties.kubeletConfig, null), {}) : profile_key => profile_value if profile_key != "seccompDefault" && profile_value != null
+          kubeletConfig = try(local.agent_pool_profiles_create_body_properties.kubeletConfig, null) == null ? null : {
+            for profile_key, profile_value in local.agent_pool_profiles_create_body_properties.kubeletConfig : profile_key => profile_value if profile_key != "seccompDefault" && profile_value != null
           }
-          localDNSProfile = {
-            for profile_key, profile_value in coalesce(try(local.agent_pool_profiles_create_body_properties.localDNSProfile, null), {}) : profile_key => profile_value if profile_key != "state" && profile_value != null
+          localDNSProfile = try(local.agent_pool_profiles_create_body_properties.localDNSProfile, null) == null ? null : {
+            for profile_key, profile_value in local.agent_pool_profiles_create_body_properties.localDNSProfile : profile_key => profile_value if profile_key != "state" && profile_value != null
           }
-          upgradeSettings = {
-            for profile_key, profile_value in coalesce(try(local.agent_pool_profiles_create_body_properties.upgradeSettings, null), {}) : profile_key => profile_value if profile_key != "maxBlockedNodes" && profile_value != null
+          upgradeSettings = try(local.agent_pool_profiles_create_body_properties.upgradeSettings, null) == null ? null : {
+            for profile_key, profile_value in local.agent_pool_profiles_create_body_properties.upgradeSettings : profile_key => profile_value if profile_key != "maxBlockedNodes" && profile_value != null
           }
         } : k => v if try(length(v), 0) > 0
       },
