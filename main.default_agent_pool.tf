@@ -109,4 +109,6 @@ resource "azapi_update_resource" "default_agent_pool" {
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_update_resource.kubernetes_version]
 }
