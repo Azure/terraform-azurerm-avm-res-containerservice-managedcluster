@@ -73,24 +73,31 @@ resource "azapi_update_resource" "default_agent_pool" {
         for k, v in module.default_agent_pool_data.body_properties : k => v if v != null && k != "nodeInitializationTaints" && !contains(["gpuProfile", "kubeletConfig", "localDNSProfile", "securityProfile", "upgradeSettings", "upgradeSettingsBlueGreen"], k)
       },
       {
+        # Strip null-valued attributes from each nested object so they are not sent in the
+        # PUT body. Do NOT wrap the source with `coalesce(obj, {})`: coalescing a populated
+        # object with the empty object `{}` unifies them to `map(string)`, silently coercing
+        # numeric attributes (e.g. upgradeSettings.drainTimeoutInMinutes /
+        # nodeSoakDurationInMinutes) into strings. The AKS API then rejects the request with
+        # "drainTimeoutInMinutes accept type int32, not type string". Guarding the null case
+        # with a ternary preserves each attribute's original type.
         for k, v in {
-          gpuProfile = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.gpuProfile, null), {}) : profile_key => profile_value if profile_value != null
+          gpuProfile = try(module.default_agent_pool_data.body_properties.gpuProfile, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.gpuProfile : profile_key => profile_value if profile_value != null
           }
-          kubeletConfig = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.kubeletConfig, null), {}) : profile_key => profile_value if profile_value != null
+          kubeletConfig = try(module.default_agent_pool_data.body_properties.kubeletConfig, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.kubeletConfig : profile_key => profile_value if profile_value != null
           }
-          localDNSProfile = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.localDNSProfile, null), {}) : profile_key => profile_value if profile_value != null
+          localDNSProfile = try(module.default_agent_pool_data.body_properties.localDNSProfile, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.localDNSProfile : profile_key => profile_value if profile_value != null
           }
-          securityProfile = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.securityProfile, null), {}) : profile_key => profile_value if profile_value != null
+          securityProfile = try(module.default_agent_pool_data.body_properties.securityProfile, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.securityProfile : profile_key => profile_value if profile_value != null
           }
-          upgradeSettings = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.upgradeSettings, null), {}) : profile_key => profile_value if profile_value != null
+          upgradeSettings = try(module.default_agent_pool_data.body_properties.upgradeSettings, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.upgradeSettings : profile_key => profile_value if profile_value != null
           }
-          upgradeSettingsBlueGreen = {
-            for profile_key, profile_value in coalesce(try(module.default_agent_pool_data.body_properties.upgradeSettingsBlueGreen, null), {}) : profile_key => profile_value if profile_value != null
+          upgradeSettingsBlueGreen = try(module.default_agent_pool_data.body_properties.upgradeSettingsBlueGreen, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.upgradeSettingsBlueGreen : profile_key => profile_value if profile_value != null
           }
         } : k => v if try(length(v), 0) > 0
       }
