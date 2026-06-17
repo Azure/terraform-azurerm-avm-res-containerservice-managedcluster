@@ -32,12 +32,10 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  is_recommended         = true
-  region_name_regex      = "euap"
-  region_name_regex_mode = "not_match"
+  region_filter = ["northeurope"]
 }
 
-# This allows us to randomize the region for the resource group.
+# This selects a known-good region for AKS and Log Analytics example testing.
 resource "random_integer" "region_index" {
   max = length(module.regions.regions) - 1
   min = 0
@@ -67,10 +65,8 @@ resource "azurerm_log_analytics_workspace" "this" {
 
 data "azurerm_client_config" "current" {}
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
+# This is the module call.
+# Use the resource group location selected above so the module and prerequisites deploy together.
 module "default" {
   source = "../.."
 
@@ -94,7 +90,8 @@ module "default" {
     upgrade_channel = "none"
   }
   default_agent_pool = {
-    vm_size = "Standard_DC2ds_v3"
+    count_of = 1
+    vm_size  = "Standard_DC2ds_v3"
 
     upgrade_settings = {
       max_surge = "10%"
