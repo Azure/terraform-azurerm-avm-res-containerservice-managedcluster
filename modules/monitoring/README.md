@@ -86,9 +86,17 @@ Description: The resource ID of the Container Insights data collection rule
 
 Description: The resource ID of the data collection endpoint
 
+### <a name="output_data_collection_endpoint_name"></a> [data\_collection\_endpoint\_name](#output\_data\_collection\_endpoint\_name)
+
+Description: The name of the data collection endpoint.
+
 ### <a name="output_data_collection_rule_id"></a> [data\_collection\_rule\_id](#output\_data\_collection\_rule\_id)
 
 Description: The resource ID of the data collection rule
+
+### <a name="output_data_collection_rule_name"></a> [data\_collection\_rule\_name](#output\_data\_collection\_rule\_name)
+
+Description: The name of the data collection rule.
 
 ### <a name="output_prometheus_rule_group_node_id"></a> [prometheus\_rule\_group\_node\_id](#output\_prometheus\_rule\_group\_node\_id)
 

@@ -88,11 +88,11 @@ Default network policy of the namespace, specifying ingress and egress rules.
 DESCRIPTION
 
   validation {
-    condition     = var.default_network_policy == null || var.default_network_policy.egress == null || contains(["AllowAll", "AllowSameNamespace", "DenyAll"], var.default_network_policy.egress)
+    condition     = try(var.default_network_policy == null || var.default_network_policy.egress == null || contains(["AllowAll", "AllowSameNamespace", "DenyAll"], var.default_network_policy.egress), true)
     error_message = "default_network_policy.egress must be one of: [\"AllowAll\", \"AllowSameNamespace\", \"DenyAll\"]."
   }
   validation {
-    condition     = var.default_network_policy == null || var.default_network_policy.ingress == null || contains(["AllowAll", "AllowSameNamespace", "DenyAll"], var.default_network_policy.ingress)
+    condition     = try(var.default_network_policy == null || var.default_network_policy.ingress == null || contains(["AllowAll", "AllowSameNamespace", "DenyAll"], var.default_network_policy.ingress), true)
     error_message = "default_network_policy.ingress must be one of: [\"AllowAll\", \"AllowSameNamespace\", \"DenyAll\"]."
   }
 }

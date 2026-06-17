@@ -1,7 +1,7 @@
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionendpoints?pivots=deployment-language-terraform
 resource "azapi_resource" "dce_msprom" {
   location  = var.location
-  name      = "MSProm-${var.location}-${basename(var.aks_cluster_id)}"
+  name      = local.msprom_data_collection_name
   parent_id = var.parent_id
   type      = "Microsoft.Insights/dataCollectionEndpoints@2023-03-11"
   body = {
@@ -14,7 +14,7 @@ resource "azapi_resource" "dce_msprom" {
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionrules?pivots=deployment-language-terraform
 resource "azapi_resource" "dcr_msprom" {
   location  = var.location
-  name      = "MSProm-${var.location}-${basename(var.aks_cluster_id)}"
+  name      = local.msprom_data_collection_name
   parent_id = var.parent_id
   type      = "Microsoft.Insights/dataCollectionRules@2023-03-11"
   body = {

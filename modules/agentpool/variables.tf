@@ -150,11 +150,11 @@ Profile of the managed cluster gateway agent pool.
 DESCRIPTION
 
   validation {
-    condition     = var.gateway_profile == null || var.gateway_profile.public_ip_prefix_size == null || var.gateway_profile.public_ip_prefix_size >= 28
+    condition     = try(var.gateway_profile == null || var.gateway_profile.public_ip_prefix_size == null || var.gateway_profile.public_ip_prefix_size >= 28, true)
     error_message = "gateway_profile.public_ip_prefix_size must be greater than or equal to 28."
   }
   validation {
-    condition     = var.gateway_profile == null || var.gateway_profile.public_ip_prefix_size == null || var.gateway_profile.public_ip_prefix_size <= 31
+    condition     = try(var.gateway_profile == null || var.gateway_profile.public_ip_prefix_size == null || var.gateway_profile.public_ip_prefix_size <= 31, true)
     error_message = "gateway_profile.public_ip_prefix_size must be less than or equal to 31."
   }
 }
@@ -192,19 +192,19 @@ GPU settings for the Agent Pool.
 DESCRIPTION
 
   validation {
-    condition     = var.gpu_profile == null || var.gpu_profile.driver == null || contains(["Install", "None"], var.gpu_profile.driver)
+    condition     = try(var.gpu_profile == null || var.gpu_profile.driver == null || contains(["Install", "None"], var.gpu_profile.driver), true)
     error_message = "gpu_profile.driver must be one of: [\"Install\", \"None\"]."
   }
   validation {
-    condition     = var.gpu_profile == null || var.gpu_profile.driver_type == null || contains(["CUDA", "GRID"], var.gpu_profile.driver_type)
+    condition     = try(var.gpu_profile == null || var.gpu_profile.driver_type == null || contains(["CUDA", "GRID"], var.gpu_profile.driver_type), true)
     error_message = "gpu_profile.driver_type must be one of: [\"CUDA\", \"GRID\"]."
   }
   validation {
-    condition     = var.gpu_profile == null || var.gpu_profile.nvidia == null || var.gpu_profile.nvidia.management_mode == null || contains(["Managed", "Unmanaged"], var.gpu_profile.nvidia.management_mode)
+    condition     = try(var.gpu_profile == null || var.gpu_profile.nvidia == null || var.gpu_profile.nvidia.management_mode == null || contains(["Managed", "Unmanaged"], var.gpu_profile.nvidia.management_mode), true)
     error_message = "gpu_profile.nvidia.management_mode must be one of: [\"Managed\", \"Unmanaged\"]."
   }
   validation {
-    condition     = var.gpu_profile == null || var.gpu_profile.nvidia == null || var.gpu_profile.nvidia.mig_strategy == null || contains(["Mixed", "None", "Single"], var.gpu_profile.nvidia.mig_strategy)
+    condition     = try(var.gpu_profile == null || var.gpu_profile.nvidia == null || var.gpu_profile.nvidia.mig_strategy == null || contains(["Mixed", "None", "Single"], var.gpu_profile.nvidia.mig_strategy), true)
     error_message = "gpu_profile.nvidia.mig_strategy must be one of: [\"Mixed\", \"None\", \"Single\"]."
   }
 }
@@ -252,11 +252,11 @@ Kubelet configurations of agent nodes. See [AKS custom node configuration](https
 DESCRIPTION
 
   validation {
-    condition     = var.kubelet_config == null || var.kubelet_config.container_log_max_files == null || var.kubelet_config.container_log_max_files >= 2
+    condition     = try(var.kubelet_config == null || var.kubelet_config.container_log_max_files == null || var.kubelet_config.container_log_max_files >= 2, true)
     error_message = "kubelet_config.container_log_max_files must be greater than or equal to 2."
   }
   validation {
-    condition     = var.kubelet_config == null || var.kubelet_config.seccomp_default == null || contains(["RuntimeDefault", "Unconfined"], var.kubelet_config.seccomp_default)
+    condition     = try(var.kubelet_config == null || var.kubelet_config.seccomp_default == null || contains(["RuntimeDefault", "Unconfined"], var.kubelet_config.seccomp_default), true)
     error_message = "kubelet_config.seccomp_default must be one of: [\"RuntimeDefault\", \"Unconfined\"]."
   }
 }
@@ -388,11 +388,11 @@ Configures the per-node local DNS, with VnetDNS and KubeDNS overrides. LocalDNS 
 DESCRIPTION
 
   validation {
-    condition     = var.local_dns_profile == null || var.local_dns_profile.mode == null || contains(["Disabled", "Preferred", "Required"], var.local_dns_profile.mode)
+    condition     = try(var.local_dns_profile == null || var.local_dns_profile.mode == null || contains(["Disabled", "Preferred", "Required"], var.local_dns_profile.mode), true)
     error_message = "local_dns_profile.mode must be one of: [\"Disabled\", \"Preferred\", \"Required\"]."
   }
   validation {
-    condition     = var.local_dns_profile == null || var.local_dns_profile.state == null || contains(["Disabled", "Enabled"], var.local_dns_profile.state)
+    condition     = try(var.local_dns_profile == null || var.local_dns_profile.state == null || contains(["Disabled", "Enabled"], var.local_dns_profile.state), true)
     error_message = "local_dns_profile.state must be one of: [\"Disabled\", \"Enabled\"]."
   }
 }
@@ -682,7 +682,7 @@ The security settings of an agent pool.
 DESCRIPTION
 
   validation {
-    condition     = var.security_profile == null || var.security_profile.ssh_access == null || contains(["Disabled", "LocalUser"], var.security_profile.ssh_access)
+    condition     = try(var.security_profile == null || var.security_profile.ssh_access == null || contains(["Disabled", "LocalUser"], var.security_profile.ssh_access), true)
     error_message = "security_profile.ssh_access must be one of: [\"Disabled\", \"LocalUser\"]."
   }
 }
@@ -753,31 +753,31 @@ Settings for upgrading an agentpool
 DESCRIPTION
 
   validation {
-    condition     = var.upgrade_settings == null || var.upgrade_settings.drain_timeout_in_minutes == null || var.upgrade_settings.drain_timeout_in_minutes >= 1
+    condition     = try(var.upgrade_settings == null || var.upgrade_settings.drain_timeout_in_minutes == null || var.upgrade_settings.drain_timeout_in_minutes >= 1, true)
     error_message = "upgrade_settings.drain_timeout_in_minutes must be greater than or equal to 1."
   }
   validation {
-    condition     = var.upgrade_settings == null || var.upgrade_settings.drain_timeout_in_minutes == null || var.upgrade_settings.drain_timeout_in_minutes <= 1440
+    condition     = try(var.upgrade_settings == null || var.upgrade_settings.drain_timeout_in_minutes == null || var.upgrade_settings.drain_timeout_in_minutes <= 1440, true)
     error_message = "upgrade_settings.drain_timeout_in_minutes must be less than or equal to 1440."
   }
   validation {
-    condition     = var.upgrade_settings == null || var.upgrade_settings.node_soak_duration_in_minutes == null || var.upgrade_settings.node_soak_duration_in_minutes >= 0
+    condition     = try(var.upgrade_settings == null || var.upgrade_settings.node_soak_duration_in_minutes == null || var.upgrade_settings.node_soak_duration_in_minutes >= 0, true)
     error_message = "upgrade_settings.node_soak_duration_in_minutes must be greater than or equal to 0."
   }
   validation {
-    condition     = var.upgrade_settings == null || var.upgrade_settings.node_soak_duration_in_minutes == null || var.upgrade_settings.node_soak_duration_in_minutes <= 30
+    condition     = try(var.upgrade_settings == null || var.upgrade_settings.node_soak_duration_in_minutes == null || var.upgrade_settings.node_soak_duration_in_minutes <= 30, true)
     error_message = "upgrade_settings.node_soak_duration_in_minutes must be less than or equal to 30."
   }
   validation {
-    condition     = var.upgrade_settings == null || var.upgrade_settings.undrainable_node_behavior == null || contains(["Cordon", "Schedule"], var.upgrade_settings.undrainable_node_behavior)
+    condition     = try(var.upgrade_settings == null || var.upgrade_settings.undrainable_node_behavior == null || contains(["Cordon", "Schedule"], var.upgrade_settings.undrainable_node_behavior), true)
     error_message = "upgrade_settings.undrainable_node_behavior must be one of: [\"Cordon\", \"Schedule\"]."
   }
   validation {
-    condition     = var.upgrade_settings == null || var.upgrade_settings.max_blocked_nodes == null || var.upgrade_settings.undrainable_node_behavior == "Cordon"
+    condition     = try(var.upgrade_settings == null || var.upgrade_settings.max_blocked_nodes == null || var.upgrade_settings.undrainable_node_behavior == "Cordon", true)
     error_message = "upgrade_settings.max_blocked_nodes can only be set when upgrade_settings.undrainable_node_behavior is \"Cordon\"."
   }
   validation {
-    condition     = var.upgrade_settings == null || var.upgrade_settings.max_blocked_nodes == null || !contains(["0", "0%"], var.upgrade_settings.max_blocked_nodes)
+    condition     = try(var.upgrade_settings == null || var.upgrade_settings.max_blocked_nodes == null || !contains(["0", "0%"], var.upgrade_settings.max_blocked_nodes), true)
     error_message = "upgrade_settings.max_blocked_nodes must be greater than zero when set."
   }
 }

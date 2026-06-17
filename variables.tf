@@ -92,7 +92,7 @@ variable "addon_profile_ingress_application_gateway" {
 
   validation {
     error_message = "If addon_profile_ingress_application_gateway.enabled is true, then addon_profile_ingress_application_gateway.config.application_gateway_id must be set."
-    condition     = !(var.addon_profile_ingress_application_gateway != null && var.addon_profile_ingress_application_gateway.enabled == true && (var.addon_profile_ingress_application_gateway.config == null || var.addon_profile_ingress_application_gateway.config.application_gateway_id == ""))
+    condition     = try(!(var.addon_profile_ingress_application_gateway != null && var.addon_profile_ingress_application_gateway.enabled == true && (var.addon_profile_ingress_application_gateway.config == null || var.addon_profile_ingress_application_gateway.config.application_gateway_id == "")), true)
   }
 }
 
@@ -121,7 +121,7 @@ variable "addon_profile_oms_agent" {
 
   validation {
     error_message = "If addon_profile_oms_agent.enabled is true, then addon_profile_oms_agent.config.log_analytics_workspace_resource_id must be set."
-    condition     = var.addon_profile_oms_agent == null || !(var.addon_profile_oms_agent.enabled == true && (var.addon_profile_oms_agent.config == null || var.addon_profile_oms_agent.config.log_analytics_workspace_resource_id == ""))
+    condition     = try(var.addon_profile_oms_agent == null || !(var.addon_profile_oms_agent.enabled == true && (var.addon_profile_oms_agent.config == null || var.addon_profile_oms_agent.config.log_analytics_workspace_resource_id == "")), true)
   }
 }
 
@@ -248,7 +248,7 @@ Parameters to be applied to the cluster-autoscaler when enabled
 DESCRIPTION
 
   validation {
-    condition     = var.auto_scaler_profile == null || var.auto_scaler_profile.expander == null || contains(["least-waste", "most-pods", "priority", "random"], var.auto_scaler_profile.expander)
+    condition     = try(var.auto_scaler_profile == null || var.auto_scaler_profile.expander == null || contains(["least-waste", "most-pods", "priority", "random"], var.auto_scaler_profile.expander), true)
     error_message = "auto_scaler_profile.expander must be one of: [\"least-waste\", \"most-pods\", \"priority\", \"random\"]."
   }
 }
@@ -268,11 +268,11 @@ Auto upgrade profile for a managed cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.auto_upgrade_profile == null || var.auto_upgrade_profile.node_os_upgrade_channel == null || contains(["NodeImage", "None", "SecurityPatch", "Unmanaged"], var.auto_upgrade_profile.node_os_upgrade_channel)
+    condition     = try(var.auto_upgrade_profile == null || var.auto_upgrade_profile.node_os_upgrade_channel == null || contains(["NodeImage", "None", "SecurityPatch", "Unmanaged"], var.auto_upgrade_profile.node_os_upgrade_channel), true)
     error_message = "auto_upgrade_profile.node_os_upgrade_channel must be one of: [\"NodeImage\", \"None\", \"SecurityPatch\", \"Unmanaged\"]."
   }
   validation {
-    condition     = var.auto_upgrade_profile == null || var.auto_upgrade_profile.upgrade_channel == null || contains(["node-image", "none", "patch", "rapid", "stable"], var.auto_upgrade_profile.upgrade_channel)
+    condition     = try(var.auto_upgrade_profile == null || var.auto_upgrade_profile.upgrade_channel == null || contains(["node-image", "none", "patch", "rapid", "stable"], var.auto_upgrade_profile.upgrade_channel), true)
     error_message = "auto_upgrade_profile.upgrade_channel must be one of: [\"node-image\", \"none\", \"patch\", \"rapid\", \"stable\"]."
   }
 }
@@ -315,7 +315,7 @@ The bootstrap profile.
 DESCRIPTION
 
   validation {
-    condition     = var.bootstrap_profile == null || var.bootstrap_profile.artifact_source == null || contains(["Cache", "Direct"], var.bootstrap_profile.artifact_source)
+    condition     = try(var.bootstrap_profile == null || var.bootstrap_profile.artifact_source == null || contains(["Cache", "Direct"], var.bootstrap_profile.artifact_source), true)
     error_message = "bootstrap_profile.artifact_source must be one of: [\"Cache\", \"Direct\"]."
   }
 }
@@ -543,7 +543,7 @@ DESCRIPTION
   nullable    = false
 
   validation {
-    condition     = var.default_agent_pool.kubelet_config == null || var.default_agent_pool.kubelet_config.seccomp_default == null
+    condition     = try(var.default_agent_pool.kubelet_config == null || var.default_agent_pool.kubelet_config.seccomp_default == null, true)
     error_message = "default_agent_pool.kubelet_config.seccomp_default is not supported because the managedClusters parent API rejects it and the default agent pool child API treats kubelet configuration as immutable after creation. Use agent_pools[*].kubelet_config.seccomp_default for user pools."
   }
 }
@@ -655,7 +655,7 @@ The complex type of the extended location.
 DESCRIPTION
 
   validation {
-    condition     = var.extended_location == null || var.extended_location.type == null || contains(["EdgeZone"], var.extended_location.type)
+    condition     = try(var.extended_location == null || var.extended_location.type == null || contains(["EdgeZone"], var.extended_location.type), true)
     error_message = "extended_location.type must be one of: [\"EdgeZone\"]."
   }
 }
@@ -686,13 +686,13 @@ This property is only honored by AKS Automatic clusters (`sku.name == "Automatic
 DESCRIPTION
 
   validation {
-    condition = var.hosted_system_profile == null || var.hosted_system_profile.enabled != true || (
+    condition = try(var.hosted_system_profile == null || var.hosted_system_profile.enabled != true || (
       var.hosted_system_profile.node_subnet_id != null && var.hosted_system_profile.system_node_subnet_id != null
-    )
+    ), true)
     error_message = "When hosted_system_profile.enabled is true, both hosted_system_profile.node_subnet_id and hosted_system_profile.system_node_subnet_id must be set."
   }
   validation {
-    condition     = var.hosted_system_profile == null || (var.sku != null && var.sku.name == "Automatic")
+    condition     = try(var.hosted_system_profile == null || (var.sku != null && var.sku.name == "Automatic"), true)
     error_message = "hosted_system_profile is only supported for AKS Automatic clusters (sku.name must be \"Automatic\")."
   }
 }
@@ -733,11 +733,11 @@ DESCRIPTION
 
   validation {
     error_message = "The only accepted key for identity_profile is 'kubeletidentity'."
-    condition     = var.identity_profile == null || alltrue([for k in keys(var.identity_profile) : k == "kubeletidentity"])
+    condition     = try(var.identity_profile == null || alltrue([for k in keys(var.identity_profile) : k == "kubeletidentity"]), true)
   }
   validation {
     error_message = "When kublet identity is specified in identity_profile, managed_identities.user_assigned_resource_ids must be configured."
-    condition     = var.identity_profile == null || !contains(keys(var.identity_profile), "kubeletidentity") || (var.managed_identities != null && length(var.managed_identities.user_assigned_resource_ids) == 1)
+    condition     = try(var.identity_profile == null || !contains(keys(var.identity_profile), "kubeletidentity") || (var.managed_identities != null && length(var.managed_identities.user_assigned_resource_ids) == 1), true)
   }
 }
 
@@ -800,7 +800,7 @@ Profile for Linux VMs in the container service cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.linux_profile == null || can(regex("^[A-Za-z][-A-Za-z0-9_]*$", var.linux_profile.admin_username))
+    condition     = try(var.linux_profile == null || can(regex("^[A-Za-z][-A-Za-z0-9_]*$", var.linux_profile.admin_username)), true)
     error_message = "linux_profile.admin_username must match the pattern: ^[A-Za-z][-A-Za-z0-9_]*$."
   }
 }
@@ -959,43 +959,43 @@ Profile of network configuration.
 DESCRIPTION
 
   validation {
-    condition     = var.network_profile == null || var.network_profile.dns_service_ip == null || can(regex("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", var.network_profile.dns_service_ip))
+    condition     = try(var.network_profile == null || var.network_profile.dns_service_ip == null || can(regex("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", var.network_profile.dns_service_ip)), true)
     error_message = "network_profile.dns_service_ip must match the pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.load_balancer_sku == null || contains(["basic", "standard"], var.network_profile.load_balancer_sku)
+    condition     = try(var.network_profile == null || var.network_profile.load_balancer_sku == null || contains(["basic", "standard"], var.network_profile.load_balancer_sku), true)
     error_message = "network_profile.load_balancer_sku must be one of: [\"basic\", \"standard\"]."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.network_dataplane == null || contains(["azure", "cilium"], var.network_profile.network_dataplane)
+    condition     = try(var.network_profile == null || var.network_profile.network_dataplane == null || contains(["azure", "cilium"], var.network_profile.network_dataplane), true)
     error_message = "network_profile.network_dataplane must be one of: [\"azure\", \"cilium\"]."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.network_mode == null || contains(["bridge", "transparent"], var.network_profile.network_mode)
+    condition     = try(var.network_profile == null || var.network_profile.network_mode == null || contains(["bridge", "transparent"], var.network_profile.network_mode), true)
     error_message = "network_profile.network_mode must be one of: [\"bridge\", \"transparent\"]."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.network_plugin == null || contains(["azure", "kubenet", "none"], var.network_profile.network_plugin)
+    condition     = try(var.network_profile == null || var.network_profile.network_plugin == null || contains(["azure", "kubenet", "none"], var.network_profile.network_plugin), true)
     error_message = "network_profile.network_plugin must be one of: [\"azure\", \"kubenet\", \"none\"]."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.network_plugin_mode == null || contains(["overlay"], var.network_profile.network_plugin_mode)
+    condition     = try(var.network_profile == null || var.network_profile.network_plugin_mode == null || contains(["overlay"], var.network_profile.network_plugin_mode), true)
     error_message = "network_profile.network_plugin_mode must be one of: [\"overlay\"]."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.network_policy == null || contains(["azure", "calico", "cilium", "none"], var.network_profile.network_policy)
+    condition     = try(var.network_profile == null || var.network_profile.network_policy == null || contains(["azure", "calico", "cilium", "none"], var.network_profile.network_policy), true)
     error_message = "network_profile.network_policy must be one of: [\"azure\", \"calico\", \"cilium\", \"none\"]."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.outbound_type == null || contains(["loadBalancer", "managedNATGateway", "none", "userAssignedNATGateway", "userDefinedRouting"], var.network_profile.outbound_type)
+    condition     = try(var.network_profile == null || var.network_profile.outbound_type == null || contains(["loadBalancer", "managedNATGateway", "none", "userAssignedNATGateway", "userDefinedRouting"], var.network_profile.outbound_type), true)
     error_message = "network_profile.outbound_type must be one of: [\"loadBalancer\", \"managedNATGateway\", \"none\", \"userAssignedNATGateway\", \"userDefinedRouting\"]."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.pod_cidr == null || can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}(\\/([0-9]|[1-2][0-9]|3[0-2]))?$", var.network_profile.pod_cidr))
+    condition     = try(var.network_profile == null || var.network_profile.pod_cidr == null || can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}(\\/([0-9]|[1-2][0-9]|3[0-2]))?$", var.network_profile.pod_cidr)), true)
     error_message = "network_profile.pod_cidr must match the pattern: ^([0-9]{1,3}\\.){3}[0-9]{1,3}(\\/([0-9]|[1-2][0-9]|3[0-2]))?$."
   }
   validation {
-    condition     = var.network_profile == null || var.network_profile.service_cidr == null || can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}(\\/([0-9]|[1-2][0-9]|3[0-2]))?$", var.network_profile.service_cidr))
+    condition     = try(var.network_profile == null || var.network_profile.service_cidr == null || can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}(\\/([0-9]|[1-2][0-9]|3[0-2]))?$", var.network_profile.service_cidr)), true)
     error_message = "network_profile.service_cidr must match the pattern: ^([0-9]{1,3}\\.){3}[0-9]{1,3}(\\/([0-9]|[1-2][0-9]|3[0-2]))?$."
   }
 }
@@ -1015,11 +1015,11 @@ The nodeProvisioningProfile of the resource.
 DESCRIPTION
 
   validation {
-    condition     = var.node_provisioning_profile == null || var.node_provisioning_profile.default_node_pools == null || contains(["Auto", "None"], var.node_provisioning_profile.default_node_pools)
+    condition     = try(var.node_provisioning_profile == null || var.node_provisioning_profile.default_node_pools == null || contains(["Auto", "None"], var.node_provisioning_profile.default_node_pools), true)
     error_message = "node_provisioning_profile.default_node_pools must be one of: [\"Auto\", \"None\"]."
   }
   validation {
-    condition     = var.node_provisioning_profile == null || var.node_provisioning_profile.mode == null || contains(["Auto", "Manual"], var.node_provisioning_profile.mode)
+    condition     = try(var.node_provisioning_profile == null || var.node_provisioning_profile.mode == null || contains(["Auto", "Manual"], var.node_provisioning_profile.mode), true)
     error_message = "node_provisioning_profile.mode must be one of: [\"Auto\", \"Manual\"]."
   }
 }
@@ -1045,7 +1045,7 @@ Node resource group lockdown profile for a managed cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.node_resource_group_profile == null || var.node_resource_group_profile.restriction_level == null || contains(["ReadOnly", "Unrestricted"], var.node_resource_group_profile.restriction_level)
+    condition     = try(var.node_resource_group_profile == null || var.node_resource_group_profile.restriction_level == null || contains(["ReadOnly", "Unrestricted"], var.node_resource_group_profile.restriction_level), true)
     error_message = "node_resource_group_profile.restriction_level must be one of: [\"ReadOnly\", \"Unrestricted\"]."
   }
 }
@@ -1164,7 +1164,7 @@ PublicNetworkAccess of the managedCluster. Allow or deny public network access f
 DESCRIPTION
 
   validation {
-    condition     = var.public_network_access == null || contains(["Disabled", "Enabled"], var.public_network_access)
+    condition     = try(var.public_network_access == null || contains(["Disabled", "Enabled"], var.public_network_access), true)
     error_message = "public_network_access must be one of: [\"Disabled\", \"Enabled\"]."
   }
 }
@@ -1244,7 +1244,7 @@ Security profile for the container service cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.security_profile == null || var.security_profile.custom_ca_trust_certificates == null || length(var.security_profile.custom_ca_trust_certificates) <= 10
+    condition     = try(var.security_profile == null || var.security_profile.custom_ca_trust_certificates == null || length(var.security_profile.custom_ca_trust_certificates) <= 10, true)
     error_message = "security_profile.custom_ca_trust_certificates must have at most 10 item(s)."
   }
 }
@@ -1298,7 +1298,7 @@ Service mesh profile for a managed cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.service_mesh_profile == null || contains(["Disabled", "Istio"], var.service_mesh_profile.mode)
+    condition     = try(var.service_mesh_profile == null || contains(["Disabled", "Istio"], var.service_mesh_profile.mode), true)
     error_message = "service_mesh_profile.mode must be one of: [\"Disabled\", \"Istio\"]."
   }
 }
@@ -1337,11 +1337,11 @@ See <https://learn.microsoft.com/azure/aks/intro-aks-automatic#aks-automatic-and
 DESCRIPTION
 
   validation {
-    condition     = var.sku == null || var.sku.name == null || contains(["Automatic", "Base"], var.sku.name)
+    condition     = try(var.sku == null || var.sku.name == null || contains(["Automatic", "Base"], var.sku.name), true)
     error_message = "sku.name must be one of: [\"Automatic\", \"Base\"]."
   }
   validation {
-    condition     = var.sku == null || var.sku.tier == null || contains(["Free", "Premium", "Standard"], var.sku.tier)
+    condition     = try(var.sku == null || var.sku.tier == null || contains(["Free", "Premium", "Standard"], var.sku.tier), true)
     error_message = "sku.tier must be one of: [\"Free\", \"Premium\", \"Standard\"]."
   }
 }
@@ -1385,7 +1385,7 @@ Different support tiers for AKS managed clusters
 DESCRIPTION
 
   validation {
-    condition     = var.support_plan == null || contains(["AKSLongTermSupport", "KubernetesOfficial"], var.support_plan)
+    condition     = try(var.support_plan == null || contains(["AKSLongTermSupport", "KubernetesOfficial"], var.support_plan), true)
     error_message = "support_plan must be one of: [\"AKSLongTermSupport\", \"KubernetesOfficial\"]."
   }
 }
@@ -1444,7 +1444,7 @@ Profile for Windows VMs in the managed cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.windows_profile == null || var.windows_profile.license_type == null || contains(["None", "Windows_Server"], var.windows_profile.license_type)
+    condition     = try(var.windows_profile == null || var.windows_profile.license_type == null || contains(["None", "Windows_Server"], var.windows_profile.license_type), true)
     error_message = "windows_profile.license_type must be one of: [\"None\", \"Windows_Server\"]."
   }
 }
@@ -1454,8 +1454,6 @@ variable "windows_profile_password" {
   default     = null
   description = "(Optional) The Admin Password for Windows VMs. Length must be between 14 and 123 characters."
   sensitive   = true
-
-  ephemeral = true
 
   validation {
     condition     = var.windows_profile_password == null ? true : length(var.windows_profile_password) >= 14 && length(var.windows_profile_password) <= 123

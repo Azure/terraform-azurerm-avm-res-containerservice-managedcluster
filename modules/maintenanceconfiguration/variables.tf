@@ -67,19 +67,19 @@ Maintenance window used to configure scheduled auto-upgrade for a Managed Cluste
 DESCRIPTION
 
   validation {
-    condition     = var.maintenance_window == null || var.maintenance_window.duration_hours >= 4
+    condition     = try(var.maintenance_window == null || var.maintenance_window.duration_hours >= 4, true)
     error_message = "maintenance_window.duration_hours must be greater than or equal to 4."
   }
   validation {
-    condition     = var.maintenance_window == null || var.maintenance_window.duration_hours <= 24
+    condition     = try(var.maintenance_window == null || var.maintenance_window.duration_hours <= 24, true)
     error_message = "maintenance_window.duration_hours must be less than or equal to 24."
   }
   validation {
-    condition     = var.maintenance_window == null || can(regex("^\\d{2}:\\d{2}$", var.maintenance_window.start_time))
+    condition     = try(var.maintenance_window == null || can(regex("^\\d{2}:\\d{2}$", var.maintenance_window.start_time)), true)
     error_message = "maintenance_window.start_time must match the pattern: ^\\d{2}:\\d{2}$."
   }
   validation {
-    condition     = var.maintenance_window == null || var.maintenance_window.utc_offset == null || can(regex("^(-|\\+)[0-9]{2}:[0-9]{2}$", var.maintenance_window.utc_offset))
+    condition     = try(var.maintenance_window == null || var.maintenance_window.utc_offset == null || can(regex("^(-|\\+)[0-9]{2}:[0-9]{2}$", var.maintenance_window.utc_offset)), true)
     error_message = "maintenance_window.utc_offset must match the pattern: ^(-|\\+)[0-9]{2}:[0-9]{2}$."
   }
 }
