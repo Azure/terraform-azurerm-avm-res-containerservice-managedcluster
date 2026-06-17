@@ -28,6 +28,11 @@ output "identity_tenant_id" {
   value       = try(azapi_resource.this.identity[0].tenant_id, null)
 }
 
+output "ingress_app_object_id" {
+  description = "The object ID of the Ingress Application Gateway add-on identity."
+  value       = try(azapi_resource.this.output.properties.addonProfiles.ingressApplicationGateway.identity.objectId, null)
+}
+
 output "ingress_profile_web_app_routing_identity" {
   description = "Details about a user assigned identity."
   value       = try(azapi_resource.this.output.properties.ingressProfile.webAppRouting.identity, {})
@@ -73,6 +78,15 @@ output "network_profile_load_balancer_profile_effective_outbound_ips" {
 output "network_profile_nat_gateway_profile_effective_outbound_ips" {
   description = "The effective outbound IP resources of the cluster NAT gateway."
   value       = try(azapi_resource.this.output.properties.networkProfile.natGatewayProfile.effectiveOutboundIPs, [])
+}
+
+output "node_resource_group_id" {
+  description = "The resource ID of the auto-created node resource group."
+  value = try(format(
+    "%s/resourceGroups/%s",
+    provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", var.parent_id).parent_id,
+    azapi_resource.this.output.properties.nodeResourceGroup
+  ), null)
 }
 
 output "node_resource_group_name" {

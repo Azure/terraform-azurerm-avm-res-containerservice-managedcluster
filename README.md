@@ -2140,6 +2140,10 @@ Description: The principal id of the assigned identity which is used by master c
 
 Description: The tenant id of the assigned identity which is used by master components.
 
+### <a name="output_ingress_app_object_id"></a> [ingress\_app\_object\_id](#output\_ingress\_app\_object\_id)
+
+Description: The object ID of the Ingress Application Gateway add-on identity.
+
 ### <a name="output_ingress_profile_web_app_routing_identity"></a> [ingress\_profile\_web\_app\_routing\_identity](#output\_ingress\_profile\_web\_app\_routing\_identity)
 
 Description: Details about a user assigned identity.
@@ -2179,6 +2183,10 @@ Description: The effective outbound IP resources of the cluster load balancer.
 ### <a name="output_network_profile_nat_gateway_profile_effective_outbound_ips"></a> [network\_profile\_nat\_gateway\_profile\_effective\_outbound\_ips](#output\_network\_profile\_nat\_gateway\_profile\_effective\_outbound\_ips)
 
 Description: The effective outbound IP resources of the cluster NAT gateway.
+
+### <a name="output_node_resource_group_id"></a> [node\_resource\_group\_id](#output\_node\_resource\_group\_id)
+
+Description: The resource ID of the auto-created node resource group.
 
 ### <a name="output_node_resource_group_name"></a> [node\_resource\_group\_name](#output\_node\_resource\_group\_name)
 
