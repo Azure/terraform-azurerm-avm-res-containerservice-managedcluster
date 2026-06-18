@@ -31,6 +31,11 @@ run "short_cluster_names_keep_legacy_monitoring_names" {
   }
 
   assert {
+    condition     = output.data_collection_endpoint_name == module.monitoring[0].data_collection_endpoint_name
+    error_message = "The root module should expose the monitoring data collection endpoint name."
+  }
+
+  assert {
     condition     = module.monitoring[0].data_collection_rule_name == module.monitoring[0].data_collection_endpoint_name
     error_message = "The MSProm data collection rule should keep matching the data collection endpoint name."
   }
@@ -63,3 +68,4 @@ run "long_cluster_names_are_capped_for_monitoring_resources" {
     error_message = "The capped MSProm data collection endpoint name must not contain consecutive hyphens or end with a hyphen."
   }
 }
+

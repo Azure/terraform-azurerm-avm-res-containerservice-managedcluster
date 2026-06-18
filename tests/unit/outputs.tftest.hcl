@@ -48,4 +48,44 @@ run "restored_outputs_are_available" {
     condition     = output.node_resource_group_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/MC_rg-test_test-aks_eastus"
     error_message = "node_resource_group_id should return the node resource group resource ID."
   }
+
+  assert {
+    condition     = output.data_collection_endpoint_id == null
+    error_message = "data_collection_endpoint_id should be null when monitoring is not onboarded."
+  }
+
+  assert {
+    condition     = output.data_collection_endpoint_name == null
+    error_message = "data_collection_endpoint_name should be null when monitoring is not onboarded."
+  }
+}
+
+run "monitoring_outputs_are_available" {
+  command = apply
+
+  variables {
+    addon_profile_oms_agent = {
+      enabled = true
+      config = {
+        log_analytics_workspace_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
+      }
+    }
+    azure_monitor_profile = {
+      metrics = {
+        enabled = true
+      }
+    }
+    onboard_monitoring      = true
+    prometheus_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Monitor/accounts/prom-test"
+  }
+
+  assert {
+    condition     = output.data_collection_endpoint_id == module.monitoring[0].data_collection_endpoint_id
+    error_message = "data_collection_endpoint_id should expose the monitoring submodule data collection endpoint ID."
+  }
+
+  assert {
+    condition     = output.data_collection_endpoint_name == "MSProm-eastus-test-aks"
+    error_message = "data_collection_endpoint_name should expose the monitoring submodule data collection endpoint name."
+  }
 }

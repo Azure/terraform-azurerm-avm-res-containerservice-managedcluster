@@ -2128,6 +2128,14 @@ Description: Base64 cluster CA certificate from user kubeconfig.
 
 Description: The version of Kubernetes the Managed Cluster is running. If kubernetesVersion was a fully specified version <major.minor.patch>, this field will be exactly equal to it. If kubernetesVersion was <major.minor>, this field will contain the full <major.minor.patch> version being used.
 
+### <a name="output_data_collection_endpoint_id"></a> [data\_collection\_endpoint\_id](#output\_data\_collection\_endpoint\_id)
+
+Description: The resource ID of the data collection endpoint created by the monitoring submodule.
+
+### <a name="output_data_collection_endpoint_name"></a> [data\_collection\_endpoint\_name](#output\_data\_collection\_endpoint\_name)
+
+Description: The name of the data collection endpoint created by the monitoring submodule.
+
 ### <a name="output_fqdn"></a> [fqdn](#output\_fqdn)
 
 Description: The FQDN of the master pool.
