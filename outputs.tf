@@ -13,6 +13,16 @@ output "current_kubernetes_version" {
   value       = try(azapi_resource.this.output.properties.currentKubernetesVersion, null)
 }
 
+output "data_collection_endpoint_id" {
+  description = "The resource ID of the data collection endpoint created by the monitoring submodule."
+  value       = try(module.monitoring[0].data_collection_endpoint_id, null)
+}
+
+output "data_collection_endpoint_name" {
+  description = "The name of the data collection endpoint created by the monitoring submodule."
+  value       = try(module.monitoring[0].data_collection_endpoint_name, null)
+}
+
 output "fqdn" {
   description = "The FQDN of the master pool."
   value       = try(azapi_resource.this.output.properties.fqdn, null)
