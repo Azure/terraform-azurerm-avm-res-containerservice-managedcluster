@@ -88,7 +88,7 @@ module "avm_res_keyvault_vault" {
 # ######################################################################################################################
 module "avm_res_containerregistry_registry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.4.0"
+  version = "0.5.1"
 
   location            = azurerm_resource_group.this.location
   name                = coalesce(var.acr_registry_name, module.naming.container_registry.name_unique)
