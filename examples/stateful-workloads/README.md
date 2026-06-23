@@ -74,7 +74,7 @@ data "azurerm_client_config" "current" {}
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.9.1"
+  version = "0.10.2"
 
   location            = azurerm_resource_group.this.location
   name                = coalesce(var.keyvault_name, module.naming.key_vault.name_unique)
@@ -95,7 +95,7 @@ module "avm_res_keyvault_vault" {
 # ######################################################################################################################
 module "avm_res_containerregistry_registry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.4.0"
+  version = "0.5.1"
 
   location            = azurerm_resource_group.this.location
   name                = coalesce(var.acr_registry_name, module.naming.container_registry.name_unique)
@@ -496,13 +496,13 @@ The following Modules are called:
 
 Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version: 0.4.0
+Version: 0.5.1
 
 ### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: 0.9.1
+Version: 0.10.2
 
 ### <a name="module_mongodb"></a> [mongodb](#module\_mongodb)
 
