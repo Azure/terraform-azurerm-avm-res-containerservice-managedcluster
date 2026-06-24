@@ -98,9 +98,17 @@ locals {
         resourceId = value.resource_id
       } }
       ingressProfile = var.ingress_profile == null ? null : {
+        gatewayAPI = var.ingress_profile.gateway_api == null ? null : {
+          installation = var.ingress_profile.gateway_api.installation
+        }
         webAppRouting = var.ingress_profile.web_app_routing == null ? null : {
           dnsZoneResourceIds = var.ingress_profile.web_app_routing.dns_zone_resource_ids == null ? null : [for item in var.ingress_profile.web_app_routing.dns_zone_resource_ids : item]
           enabled            = var.ingress_profile.web_app_routing.enabled
+          gatewayAPIImplementations = var.ingress_profile.web_app_routing.gateway_api_implementations == null ? null : {
+            appRoutingIstio = var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio == null ? null : {
+              mode = var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode
+            }
+          }
           nginx = var.ingress_profile.web_app_routing.nginx == null ? null : {
             defaultIngressControllerType = var.ingress_profile.web_app_routing.nginx.default_ingress_controller_type
           }

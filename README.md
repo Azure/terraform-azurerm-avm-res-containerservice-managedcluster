@@ -1219,9 +1219,14 @@ Default: `null`
 
 Description: Ingress profile for the container service cluster.
 
+- `gateway_api` - Settings for the managed Gateway API installation.
+  - `installation` - Configuration for the managed Gateway API installation. If not specified, the default is `Disabled`.
 - `web_app_routing` - Application Routing add-on settings for the ingress profile.
   - `dns_zone_resource_ids` - Resource IDs of the DNS zones to be associated with the Application Routing add-on. Used only when Application Routing add-on is enabled. Public and private DNS zones can be in different resource groups, but all public DNS zones must be in the same resource group and all private DNS zones must be in the same resource group.
   - `enabled` - Whether to enable the Application Routing add-on.
+  - `gateway_api_implementations` - Configurations for Gateway API providers to be used for managed ingress with App Routing.
+    - `app_routing_istio` - Configuration for using a sidecar-less Istio control plane for managed ingress via the Gateway API with App Routing.
+      - `mode` - Whether to enable Istio as a Gateway API implementation for managed ingress with App Routing.
   - `nginx` - The nginx property.
     - `default_ingress_controller_type` - Ingress type for the default NginxIngressController custom resource
 
@@ -1229,9 +1234,17 @@ Type:
 
 ```hcl
 object({
+    gateway_api = optional(object({
+      installation = optional(string)
+    }))
     web_app_routing = optional(object({
       dns_zone_resource_ids = optional(list(string))
       enabled               = optional(bool)
+      gateway_api_implementations = optional(object({
+        app_routing_istio = optional(object({
+          mode = optional(string)
+        }))
+      }))
       nginx = optional(object({
         default_ingress_controller_type = optional(string)
       }))
