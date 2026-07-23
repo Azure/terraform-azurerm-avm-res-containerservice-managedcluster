@@ -1,8 +1,9 @@
 resource "azapi_resource" "this" {
-  location             = var.location
-  name                 = var.name
-  parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters@2026-03-01"
+  location  = var.location
+  name      = var.name
+  parent_id = var.parent_id
+  # kubeProxyConfig is not available in the stable 2026-03-01 API.
+  type                 = var.kube_proxy_config == null ? "Microsoft.ContainerService/managedClusters@2026-03-01" : "Microsoft.ContainerService/managedClusters@2026-03-02-preview"
   body                 = local.resource_body
   create_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

@@ -794,6 +794,64 @@ The kind of the managed cluster. This is only used to distinguish different type
 DESCRIPTION
 }
 
+variable "kube_proxy_config" {
+  type = object({
+    enabled = bool
+    mode    = optional(string)
+    ipvs_config = optional(object({
+      scheduler               = optional(string)
+      tcp_fin_timeout_seconds = optional(number)
+      tcp_timeout_seconds     = optional(number)
+      udp_timeout_seconds     = optional(number)
+    }))
+  })
+  default     = null
+  description = <<DESCRIPTION
+Kube-proxy configuration for the managed cluster. This AKS feature is in preview and requires the `Microsoft.ContainerService/KubeProxyConfigurationPreview` subscription feature.
+
+- `enabled` - (Required) Whether AKS deploys the managed `kube-proxy` DaemonSet. Disabling kube-proxy is supported only with BYO CNI (`network_profile.network_plugin = "none"`). To re-enable kube-proxy after disabling it, set this value to `true` and apply before removing the `kube_proxy_config` input.
+- `mode` - Proxy mode. Possible values are `IPTABLES`, `IPVS`, and `NFTABLES`.
+- `ipvs_config` - IPVS-specific settings. This can be specified only when `mode` is `IPVS`.
+  - `scheduler` - IPVS scheduler. Possible values are `LeastConnection` and `RoundRobin`.
+  - `tcp_fin_timeout_seconds` - Positive integer timeout for IPVS TCP sessions after receiving a FIN, in seconds.
+  - `tcp_timeout_seconds` - Positive integer timeout for idle IPVS TCP sessions, in seconds.
+  - `udp_timeout_seconds` - Positive integer timeout for IPVS UDP packets, in seconds.
+
+For more information, see <https://learn.microsoft.com/azure/aks/configure-kube-proxy>.
+DESCRIPTION
+
+  validation {
+    condition     = try(var.kube_proxy_config == null || var.kube_proxy_config.mode == null || contains(["IPTABLES", "IPVS", "NFTABLES"], var.kube_proxy_config.mode), true)
+    error_message = "kube_proxy_config.mode must be one of: [\"IPTABLES\", \"IPVS\", \"NFTABLES\"]."
+  }
+  validation {
+    condition     = try(var.kube_proxy_config == null || var.kube_proxy_config.ipvs_config == null || var.kube_proxy_config.ipvs_config.scheduler == null || contains(["LeastConnection", "RoundRobin"], var.kube_proxy_config.ipvs_config.scheduler), true)
+    error_message = "kube_proxy_config.ipvs_config.scheduler must be one of: [\"LeastConnection\", \"RoundRobin\"]."
+  }
+  validation {
+    condition     = var.kube_proxy_config == null || try(var.kube_proxy_config.ipvs_config, null) == null || try(var.kube_proxy_config.mode, null) == "IPVS"
+    error_message = "kube_proxy_config.ipvs_config can be specified only when kube_proxy_config.mode is \"IPVS\"."
+  }
+  validation {
+    condition = try(var.kube_proxy_config == null || var.kube_proxy_config.ipvs_config == null || alltrue([
+      for timeout in [
+        var.kube_proxy_config.ipvs_config.tcp_fin_timeout_seconds,
+        var.kube_proxy_config.ipvs_config.tcp_timeout_seconds,
+        var.kube_proxy_config.ipvs_config.udp_timeout_seconds,
+      ] : timeout == null ? true : timeout > 0 && timeout == floor(timeout)
+    ]), true)
+    error_message = "kube_proxy_config IPVS timeout values must be positive integers."
+  }
+  validation {
+    condition     = var.kube_proxy_config == null || try(var.kube_proxy_config.enabled, null) != false || try(var.network_profile.network_plugin, null) == "none"
+    error_message = "kube_proxy_config.enabled can be false only when network_profile.network_plugin is \"none\" for BYO CNI."
+  }
+  validation {
+    condition     = var.kube_proxy_config == null || try(var.sku.name, "Base") != "Automatic"
+    error_message = "kube_proxy_config is not supported for AKS Automatic clusters."
+  }
+}
+
 variable "kubernetes_version" {
   type        = string
   default     = null
