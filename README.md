@@ -1262,6 +1262,37 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_kube_proxy_config"></a> [kube\_proxy\_config](#input\_kube\_proxy\_config)
+
+Description: Kube-proxy configuration for the managed cluster. This AKS feature is in preview and requires the `Microsoft.ContainerService/KubeProxyConfigurationPreview` subscription feature.
+
+- `enabled` - (Required) Whether AKS deploys the managed `kube-proxy` DaemonSet. Disabling kube-proxy is supported only with BYO CNI (`network_profile.network_plugin = "none"`). To re-enable kube-proxy after disabling it, set this value to `true` and apply before removing the `kube_proxy_config` input.
+- `mode` - Proxy mode. Possible values are `IPTABLES`, `IPVS`, and `NFTABLES`.
+- `ipvs_config` - IPVS-specific settings. This can be specified only when `mode` is `IPVS`.
+  - `scheduler` - IPVS scheduler. Possible values are `LeastConnection` and `RoundRobin`.
+  - `tcp_fin_timeout_seconds` - Positive integer timeout for IPVS TCP sessions after receiving a FIN, in seconds.
+  - `tcp_timeout_seconds` - Positive integer timeout for idle IPVS TCP sessions, in seconds.
+  - `udp_timeout_seconds` - Positive integer timeout for IPVS UDP packets, in seconds.
+
+For more information, see <https://learn.microsoft.com/azure/aks/configure-kube-proxy>.
+
+Type:
+
+```hcl
+object({
+    enabled = bool
+    mode    = optional(string)
+    ipvs_config = optional(object({
+      scheduler               = optional(string)
+      tcp_fin_timeout_seconds = optional(number)
+      tcp_timeout_seconds     = optional(number)
+      udp_timeout_seconds     = optional(number)
+    }))
+  })
+```
+
+Default: `null`
+
 ### <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version)
 
 Description: The version of Kubernetes specified by the user. Both patch version <major.minor.patch> (e.g. 1.20.13) and <major.minor> (e.g. 1.20) are supported. When <major.minor> is specified, the latest supported GA patch version is chosen automatically. Updating the cluster with the same <major.minor> once it has been created (e.g. 1.14.x -> 1.14) will not trigger an upgrade, even if a newer patch version is available. When you upgrade a supported AKS cluster, Kubernetes minor versions cannot be skipped. All upgrades must be performed sequentially by major version number. For example, upgrades between 1.14.x -> 1.15.x or 1.15.x -> 1.16.x are allowed, however 1.14.x -> 1.16.x is not allowed. See [upgrading an AKS cluster](https://docs.microsoft.com/azure/aks/upgrade-cluster) for more details.

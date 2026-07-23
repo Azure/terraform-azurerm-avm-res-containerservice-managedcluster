@@ -2,8 +2,22 @@ locals {
   network_profile = (
     (local.is_automatic && try(var.network_profile.outbound_type == "loadBalancer", true))
     ||
-    local.network_profile_filtered == null
-  ) ? null : { for k, v in local.network_profile_filtered : k => v if v != null }
+    (local.network_profile_filtered == null && var.kube_proxy_config == null)
+    ) ? null : merge(
+    local.network_profile_filtered == null ? {} : { for k, v in local.network_profile_filtered : k => v if v != null },
+    var.kube_proxy_config == null ? {} : {
+      kubeProxyConfig = {
+        enabled = var.kube_proxy_config.enabled
+        mode    = var.kube_proxy_config.mode
+        ipvsConfig = var.kube_proxy_config.ipvs_config == null ? null : {
+          scheduler            = var.kube_proxy_config.ipvs_config.scheduler
+          tcpFinTimeoutSeconds = var.kube_proxy_config.ipvs_config.tcp_fin_timeout_seconds
+          tcpTimeoutSeconds    = var.kube_proxy_config.ipvs_config.tcp_timeout_seconds
+          udpTimeoutSeconds    = var.kube_proxy_config.ipvs_config.udp_timeout_seconds
+        }
+      }
+    }
+  )
   network_profile_filtered = var.network_profile == null ? null : { for k, v in local.network_profile_full : k => v if can(regex(local.network_profile_properties_regex, k)) && v != null }
   network_profile_full = var.network_profile == null ? null : {
     advancedNetworking = var.network_profile.advanced_networking == null ? null : {
