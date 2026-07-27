@@ -10,6 +10,7 @@ module "nodepools" {
   count_of                      = each.value.count_of
   create_before_destroy         = var.create_agentpools_before_destroy
   creation_data                 = each.value.creation_data
+  delete_options                = each.value.delete_options
   enable_auto_scaling           = each.value.enable_auto_scaling
   enable_encryption_at_host     = each.value.enable_encryption_at_host
   enable_fips                   = each.value.enable_fips
