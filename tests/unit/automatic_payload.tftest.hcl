@@ -60,6 +60,7 @@ run "automatic_cluster_supported_profiles_are_passed_through" {
         enabled = true
       }
     }
+
     workload_auto_scaler_profile = {
       keda = {
         enabled = true
@@ -98,5 +99,37 @@ run "automatic_cluster_supported_profiles_are_passed_through" {
   assert {
     condition     = azapi_resource.this.body.properties.workloadAutoScalerProfile.keda.enabled == true
     error_message = "Automatic cluster payload should pass through workloadAutoScalerProfile."
+  }
+}
+
+run "automatic_cluster_pod_cidr_is_passed_through" {
+  command = plan
+
+  variables {
+    network_profile = {
+      outbound_type = "managedNATGateway"
+      pod_cidr      = "172.28.0.0/16"
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.podCidr == "172.28.0.0/16"
+    error_message = "Automatic cluster payload should pass through networkProfile.podCidr."
+  }
+}
+
+run "automatic_cluster_load_balancer_omits_network_profile" {
+  command = plan
+
+  variables {
+    network_profile = {
+      outbound_type = "loadBalancer"
+      pod_cidr      = "172.28.0.0/16"
+    }
+  }
+
+  assert {
+    condition     = !can(azapi_resource.this.body.properties.networkProfile)
+    error_message = "Automatic cluster payload should omit networkProfile when outboundType is loadBalancer."
   }
 }
