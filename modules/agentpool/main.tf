@@ -31,6 +31,10 @@ resource "azapi_resource" "this" {
   # Azure still validates the request at apply time.
   schema_validation_enabled = false
 
+  delete_query_parameters = var.delete_options.ignore_pod_disruption_budget ? {
+    "ignore-pod-disruption-budget" = ["true"]
+  } : null
+
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
 
@@ -65,6 +69,10 @@ resource "azapi_resource" "this_create_before_destroy" {
   # AzAPI's embedded AKS schema does not include this preview API yet.
   # Azure still validates the request at apply time.
   schema_validation_enabled = false
+
+  delete_query_parameters = var.delete_options.ignore_pod_disruption_budget ? {
+    "ignore-pod-disruption-budget" = ["true"]
+  } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]

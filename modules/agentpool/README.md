@@ -105,6 +105,22 @@ object({
 
 Default: `null`
 
+### <a name="input_delete_options"></a> [delete\_options](#input\_delete\_options)
+
+Description: Options applied only when deleting this agent pool.
+
+- `ignore_pod_disruption_budget` - Whether to delete the agent pool without honoring PodDisruptionBudgets. When enabled, the delete request includes `ignore-pod-disruption-budget=true`. This can cause service disruption and should be used only when deleting the pool is more important than preserving workload availability. For more information, see [Delete an Azure Kubernetes Service node pool](https://learn.microsoft.com/azure/aks/delete-node-pool).
+
+Type:
+
+```hcl
+object({
+    ignore_pod_disruption_budget = optional(bool, false)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_enable_auto_scaling"></a> [enable\_auto\_scaling](#input\_enable\_auto\_scaling)
 
 Description: Whether to enable auto-scaler

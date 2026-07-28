@@ -9,6 +9,9 @@ variable "agent_pools" {
     creation_data = optional(object({
       source_resource_id = optional(string)
     }))
+    delete_options = optional(object({
+      ignore_pod_disruption_budget = optional(bool, false)
+    }), {})
     enable_auto_scaling         = optional(bool)
     enable_encryption_at_host   = optional(bool)
     enable_fips                 = optional(bool)
@@ -196,6 +199,11 @@ Kubelet configurations of agent nodes. See [AKS custom node configuration](https
 - `image_gc_low_threshold` - The percent of disk usage before which image garbage collection is never run. This cannot be set higher than imageGcHighThreshold. The default is 80%
 - `pod_max_pids` - The maximum number of processes per pod.
 - `topology_manager_policy` - The Topology Manager policy to use. For more information see [Kubernetes Topology Manager](https://kubernetes.io/docs/tasks/administer-cluster/topology-manager). The default is 'none'. Allowed values are 'none', 'best-effort', 'restricted', and 'single-numa-node'.
+
+**delete_options**
+Options applied only when deleting this agent pool.
+
+- `ignore_pod_disruption_budget` - Whether to delete the agent pool without honoring PodDisruptionBudgets. When enabled, the delete request includes `ignore-pod-disruption-budget=true`. This can cause service disruption and should be used only when deleting the pool is more important than preserving workload availability. For more information, see [Delete an Azure Kubernetes Service node pool](https://learn.microsoft.com/azure/aks/delete-node-pool).
 
 **os_sku**
 Specifies the OS SKU used by the agent pool. The default is Ubuntu if OSType is Linux. The default is Windows2019 when Kubernetes <= 1.24 or Windows2022 when Kubernetes >= 1.25 if OSType is Windows.
