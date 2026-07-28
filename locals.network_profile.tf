@@ -76,6 +76,7 @@ locals {
   network_profile_properties_automatic = [
     "dnsServiceIP",
     "outboundType",
+    "podCidr",
     "serviceCidr"
   ]
   network_profile_properties_regex           = local.is_automatic ? local.network_profile_properties_regex_automatic : local.network_profile_properties_regex_standard
