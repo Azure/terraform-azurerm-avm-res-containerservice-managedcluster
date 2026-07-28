@@ -89,6 +89,19 @@ Data used when creating a target resource from a source resource.
 DESCRIPTION
 }
 
+variable "delete_options" {
+  type = object({
+    ignore_pod_disruption_budget = optional(bool, false)
+  })
+  default     = {}
+  nullable    = false
+  description = <<DESCRIPTION
+Options applied only when deleting this agent pool.
+
+- `ignore_pod_disruption_budget` - Whether to delete the agent pool without honoring PodDisruptionBudgets. When enabled, the delete request includes `ignore-pod-disruption-budget=true`. This can cause service disruption and should be used only when deleting the pool is more important than preserving workload availability. For more information, see [Delete an Azure Kubernetes Service node pool](https://learn.microsoft.com/azure/aks/delete-node-pool).
+DESCRIPTION
+}
+
 variable "enable_auto_scaling" {
   type        = bool
   default     = null
