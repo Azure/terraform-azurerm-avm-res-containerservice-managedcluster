@@ -4,7 +4,7 @@ locals {
     ||
     (local.network_profile_filtered == null && var.kube_proxy_config == null)
     ) ? null : merge(
-    local.network_profile_filtered == null ? {} : { for k, v in local.network_profile_filtered : k => v if v != null },
+    try({ for k, v in local.network_profile_filtered : k => v if v != null }, {}),
     var.kube_proxy_config == null ? {} : {
       kubeProxyConfig = {
         enabled = var.kube_proxy_config.enabled
