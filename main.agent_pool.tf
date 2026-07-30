@@ -37,7 +37,7 @@ module "nodepools" {
   node_labels                   = each.value.node_labels
   node_public_ip_prefix_id      = each.value.node_public_ip_prefix_id
   node_taints                   = each.value.node_taints
-  orchestrator_version          = each.value.orchestrator_version
+  orchestrator_version          = each.value.orchestrator_version != null ? each.value.orchestrator_version : var.kubernetes_version
   os_disk_size_gb               = each.value.os_disk_size_gb
   os_disk_type                  = each.value.os_disk_type
   os_sku                        = each.value.os_sku

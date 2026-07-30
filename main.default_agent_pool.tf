@@ -34,7 +34,7 @@ module "default_agent_pool_data" {
   node_labels                   = var.default_agent_pool.node_labels
   node_public_ip_prefix_id      = var.default_agent_pool.node_public_ip_prefix_id
   node_taints                   = var.default_agent_pool.node_taints
-  orchestrator_version          = var.default_agent_pool.orchestrator_version
+  orchestrator_version          = var.default_agent_pool.orchestrator_version != null ? var.default_agent_pool.orchestrator_version : var.kubernetes_version
   os_disk_size_gb               = var.default_agent_pool.os_disk_size_gb
   os_disk_type                  = var.default_agent_pool.os_disk_type
   os_sku                        = var.default_agent_pool.os_sku
