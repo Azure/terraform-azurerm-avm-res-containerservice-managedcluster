@@ -97,27 +97,68 @@ moved {
   to   = azapi_resource.this
 }
 
-# required AVM resources interfaces
-resource "azurerm_management_lock" "this" {
+# required AVM resource interfaces
+resource "azapi_resource" "lock" {
   count = var.lock != null ? 1 : 0
 
-  lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
-  scope      = azapi_resource.this.id
-  notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
+  name      = coalesce(module.interfaces.lock_azapi.name, "lock-${var.lock.kind}")
+  parent_id = azapi_resource.this.id
+  type      = module.interfaces.lock_azapi.type
+  body = merge(module.interfaces.lock_azapi.body, {
+    properties = merge(module.interfaces.lock_azapi.body.properties, {
+      notes = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
+    })
+  })
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs  = []
+  response_export_values = []
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+
+  depends_on = [
+    azapi_resource.diagnostic_settings,
+    azapi_resource.private_dns_zone_groups,
+    azapi_resource.role_assignments,
+  ]
 }
 
-resource "azurerm_role_assignment" "this" {
-  for_each = var.role_assignments
+resource "azapi_resource" "role_assignments" {
+  for_each = module.interfaces.role_assignments_azapi
 
-  principal_id                           = each.value.principal_id
-  scope                                  = azapi_resource.this.id
-  condition                              = each.value.condition
-  condition_version                      = each.value.condition_version
-  delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
-  name                                   = module.interfaces.role_assignments_azapi[each.key].name
-  role_definition_id                     = module.interfaces.role_assignments_azapi[each.key].body.properties.roleDefinitionId
-  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
+  name                   = each.value.name
+  parent_id              = azapi_resource.this.id
+  type                   = each.value.type
+  body                   = each.value.body
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_null_property   = true
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs  = []
+  response_export_values = []
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 resource "azapi_resource_action" "this_user_kubeconfig" {
