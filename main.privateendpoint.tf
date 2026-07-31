@@ -1,80 +1,89 @@
-resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
-  for_each = { for k, v in var.private_endpoints : k => v if var.private_endpoints_manage_dns_zone_group }
+resource "azapi_resource" "private_endpoints" {
+  for_each = module.interfaces.private_endpoints_azapi
 
-  location                      = each.value.location != null ? each.value.location : var.location
-  name                          = each.value.name != null ? each.value.name : "pe-${var.name}"
-  resource_group_name           = coalesce(each.value.resource_group_name, basename(var.parent_id))
-  subnet_id                     = each.value.subnet_resource_id
-  custom_network_interface_name = each.value.network_interface_name
-  tags                          = each.value.tags
-
-  private_service_connection {
-    is_manual_connection           = false
-    name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    private_connection_resource_id = azapi_resource.this.id
-    subresource_names              = ["management"]
+  location = coalesce(var.private_endpoints[each.key].location, var.location)
+  name     = each.value.name
+  parent_id = var.private_endpoints[each.key].resource_group_name == null ? var.parent_id : format(
+    "/subscriptions/%s/resourceGroups/%s",
+    split("/", var.parent_id)[2],
+    var.private_endpoints[each.key].resource_group_name
+  )
+  type = each.value.type
+  body = merge(each.value.body, {
+    properties = merge(each.value.body.properties, {
+      customNetworkInterfaceName = var.private_endpoints[each.key].network_interface_name
+    })
+  })
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_null_property   = true
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs  = ["properties.subnet.id"]
+  response_export_values = []
+  retry = {
+    error_message_regex  = ["ScopeLocked"]
+    interval_seconds     = 15
+    max_interval_seconds = 60
   }
+  schema_validation_enabled = false
+  tags                      = each.value.tags
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
-  dynamic "ip_configuration" {
-    for_each = each.value.ip_configurations
+  dynamic "timeouts" {
+    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
 
     content {
-      name               = ip_configuration.value.name
-      private_ip_address = ip_configuration.value.private_ip_address
-      member_name        = "management"
-      subresource_name   = "management"
-    }
-  }
-
-  dynamic "private_dns_zone_group" {
-    for_each = length(each.value.private_dns_zone_resource_ids) > 0 ? ["this"] : []
-
-    content {
-      name                 = each.value.private_dns_zone_group_name
-      private_dns_zone_ids = each.value.private_dns_zone_resource_ids
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 }
 
-# The PE resource when we are managing **not** the private_dns_zone_group block
-# An example use case is customers using Azure Policy to create private DNS zones
-# e.g. <https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale>
-resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
-  for_each = { for k, v in var.private_endpoints : k => v if !var.private_endpoints_manage_dns_zone_group }
-
-  location                      = each.value.location != null ? each.value.location : var.location
-  name                          = each.value.name != null ? each.value.name : "pe-${var.name}"
-  resource_group_name           = coalesce(each.value.resource_group_name, basename(var.parent_id))
-  subnet_id                     = each.value.subnet_resource_id
-  custom_network_interface_name = each.value.network_interface_name
-  tags                          = each.value.tags
-
-  private_service_connection {
-    is_manual_connection           = false
-    name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    private_connection_resource_id = azapi_resource.this.id
-    subresource_names              = ["management"]
+resource "azapi_resource" "private_dns_zone_groups" {
+  for_each = {
+    for key, private_dns_zone_group in module.interfaces.private_dns_zone_groups_azapi :
+    key => private_dns_zone_group if length(var.private_endpoints[key].private_dns_zone_resource_ids) > 0
   }
 
-  dynamic "ip_configuration" {
-    for_each = each.value.ip_configurations
+  name      = each.value.name
+  parent_id = azapi_resource.private_endpoints[each.key].id
+  type      = each.value.type
+  body = merge(each.value.body, {
+    properties = merge(each.value.body.properties, {
+      privateDnsZoneConfigs = [
+        for private_dns_zone_resource_id in var.private_endpoints[each.key].private_dns_zone_resource_ids : {
+          name = basename(private_dns_zone_resource_id)
+          properties = {
+            privateDnsZoneId = private_dns_zone_resource_id
+          }
+        }
+      ]
+    })
+  })
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_null_property   = true
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs  = []
+  response_export_values = []
+  retry = {
+    error_message_regex  = ["ScopeLocked"]
+    interval_seconds     = 15
+    max_interval_seconds = 60
+  }
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
 
     content {
-      name               = ip_configuration.value.name
-      private_ip_address = ip_configuration.value.private_ip_address
-      member_name        = "management"
-      subresource_name   = "management"
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
-
-  lifecycle {
-    ignore_changes = [private_dns_zone_group]
-  }
-}
-
-resource "azurerm_private_endpoint_application_security_group_association" "this" {
-  for_each = local.private_endpoint_application_security_group_associations
-
-  application_security_group_id = each.value.asg_resource_id
-  private_endpoint_id           = var.private_endpoints_manage_dns_zone_group ? azurerm_private_endpoint.this_managed_dns_zone_groups[each.value.pe_key].id : azurerm_private_endpoint.this_unmanaged_dns_zone_groups[each.value.pe_key].id
 }

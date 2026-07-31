@@ -1,5 +1,4 @@
 mock_provider "azapi" {}
-mock_provider "azurerm" {}
 mock_provider "modtm" {}
 mock_provider "random" {}
 
@@ -68,4 +67,3 @@ run "long_cluster_names_are_capped_for_monitoring_resources" {
     error_message = "The capped MSProm data collection endpoint name must not contain consecutive hyphens or end with a hyphen."
   }
 }
-

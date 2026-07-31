@@ -20,7 +20,7 @@ The final plan must not replace the role assignment. Repeat the import for every
 
 The lock, role assignment, and diagnostic setting states move automatically. Private endpoints require explicit state adoption because one legacy `azurerm_private_endpoint` state object can contain both the endpoint and its private DNS zone group, while AzAPI manages those as two resources.
 
-For each private endpoint, first record its Azure resource ID, then remove only the legacy Terraform state entries. These commands do not delete Azure resources:
+Update the module source to 0.8.0 and run `terraform init -upgrade`, but do not plan or apply yet. For each private endpoint, first record its Azure resource ID, then remove only the legacy Terraform state entries. These commands do not delete Azure resources:
 
 ```shell
 terraform state rm 'module.<module>.azurerm_private_endpoint_application_security_group_association.this["<pe-key>-<asg-key>"]'
@@ -29,6 +29,6 @@ terraform import 'module.<module>.azapi_resource.private_endpoints["<pe-key>"]' 
 terraform import 'module.<module>.azapi_resource.private_dns_zone_groups["<pe-key>"]' '<private-endpoint-resource-id>/privateDnsZoneGroups/<dns-zone-group-name>'
 ```
 
-For an endpoint created with `private_endpoints_manage_dns_zone_group = false`, use the corresponding `this_unmanaged_dns_zone_groups` address and omit the private DNS zone group import.
+Omit the ASG command when the endpoint has no ASG associations. For an endpoint created with `private_endpoints_manage_dns_zone_group = false`, use the corresponding `this_unmanaged_dns_zone_groups` address and omit the private DNS zone group import. Also omit that import when the endpoint has no `private_dns_zone_resource_ids`.
 
 Run `terraform plan` after all imports. Do not apply if Terraform proposes deleting or replacing the managed cluster, lock, role assignment, diagnostic setting, private endpoint, DNS zone group, or ASG association.
