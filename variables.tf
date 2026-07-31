@@ -1251,6 +1251,7 @@ DESCRIPTION
 
 variable "role_assignments" {
   type = map(object({
+    name                                   = optional(string, null)
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
@@ -1264,6 +1265,7 @@ variable "role_assignments" {
   description = <<DESCRIPTION
   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
+  - `name` - (Optional) The name of the role assignment. If not set, a random UUID will be generated and retained by the AVM interfaces utility. Changing this forces the creation of a new resource.
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.
   - `description` - (Optional) The description of the role assignment.
@@ -1276,6 +1278,14 @@ variable "role_assignments" {
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
   DESCRIPTION
   nullable    = false
+
+  validation {
+    error_message = "Each role assignment `name`, when supplied, must be a valid lowercase GUID (e.g. 11111111-1111-1111-1111-111111111111)."
+    condition = alltrue([
+      for role_assignment in var.role_assignments :
+      role_assignment.name == null || can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", role_assignment.name))
+    ])
+  }
 }
 
 variable "security_profile" {
