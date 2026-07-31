@@ -14,7 +14,7 @@ terraform import 'module.<module>.module.interfaces.random_uuid.role_assignment_
 terraform plan
 ```
 
-The final plan must not replace the role assignment. Repeat the import for every entry in `role_assignments`. New role assignments can set the optional `name` attribute to a lowercase GUID or let the utility generate and retain one.
+The final plan must not replace the role assignment. Repeat the import for every entry in `role_assignments`. The utility generates and retains the UUID for new role assignments.
 
 ## Upgrade to 0.8.0
 
