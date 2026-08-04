@@ -14,6 +14,8 @@ terraform {
 }
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ContainerRegistry", "Microsoft.ContainerService", "Microsoft.KeyVault", "Microsoft.ManagedIdentity"]
+
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false

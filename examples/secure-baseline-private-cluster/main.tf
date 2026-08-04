@@ -20,6 +20,8 @@ terraform {
 provider "azapi" {}
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Monitor", "Microsoft.Network", "Microsoft.OperationalInsights"]
+
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
