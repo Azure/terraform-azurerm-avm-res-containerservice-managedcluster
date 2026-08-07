@@ -11,7 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.0.0"
+      version = ">= 4.46.0, < 5.0.2"
     }
     random = {
       source  = "hashicorp/random"
@@ -21,6 +21,8 @@ terraform {
 }
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.Monitor", "Microsoft.OperationalInsights"]
+
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -177,7 +179,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.11)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.0.2)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 

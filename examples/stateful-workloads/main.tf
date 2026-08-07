@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.0.0"
+      version = ">= 4.46.0, < 5.0.2"
     }
     random = {
       source  = "hashicorp/random"
@@ -14,6 +14,8 @@ terraform {
 }
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ContainerRegistry", "Microsoft.ContainerService", "Microsoft.KeyVault", "Microsoft.ManagedIdentity"]
+
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -88,7 +90,7 @@ module "avm_res_keyvault_vault" {
 # ######################################################################################################################
 module "avm_res_containerregistry_registry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.6.0"
+  version = "0.7.0"
 
   location            = azurerm_resource_group.this.location
   name                = coalesce(var.acr_registry_name, module.naming.container_registry.name_unique)
