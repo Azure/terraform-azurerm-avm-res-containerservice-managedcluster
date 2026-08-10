@@ -102,13 +102,28 @@ run "private_endpoint_payload_preserves_legacy_identity" {
   command = plan
 
   assert {
+    condition     = azapi_resource.private_endpoints["primary"].name == "pe-test"
+    error_message = "The private endpoint must preserve an explicitly configured name."
+  }
+
+  assert {
     condition     = azapi_resource.private_endpoints["primary"].body.properties.customNetworkInterfaceName == "nic-test"
     error_message = "The private endpoint must preserve an explicitly configured NIC name."
   }
 
   assert {
+    condition     = azapi_resource.private_endpoints["primary"].body.properties.privateLinkServiceConnections[0].name == "pse-test-aks"
+    error_message = "The private endpoint must preserve the legacy default connection name."
+  }
+
+  assert {
     condition     = azapi_resource.private_endpoints["primary"].body.properties.applicationSecurityGroups[0].id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/applicationSecurityGroups/asg-test"
     error_message = "The private endpoint payload must retain ASG associations."
+  }
+
+  assert {
+    condition     = azapi_resource.private_dns_zone_groups["primary"].name == "default"
+    error_message = "The private DNS zone group must preserve its configured name."
   }
 
   assert {
