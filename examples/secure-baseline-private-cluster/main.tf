@@ -20,7 +20,7 @@ terraform {
 provider "azapi" {}
 
 provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Monitor", "Microsoft.Network", "Microsoft.OperationalInsights"]
+  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Monitor", "Microsoft.Network", "Microsoft.OperationalInsights", "Microsoft.ServiceNetworking"]
 
   features {
     resource_group {

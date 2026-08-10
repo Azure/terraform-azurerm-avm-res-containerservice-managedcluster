@@ -14,7 +14,7 @@ terraform {
 }
 
 provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerRegistry", "Microsoft.ContainerService", "Microsoft.KeyVault", "Microsoft.ManagedIdentity"]
+  resource_providers_to_register = ["Microsoft.ContainerRegistry", "Microsoft.ContainerService", "Microsoft.KeyVault", "Microsoft.ManagedIdentity", "Microsoft.Storage"]
 
   features {
     resource_group {
