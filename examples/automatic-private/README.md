@@ -179,8 +179,16 @@ module "automatic" {
     system_node_subnet_id = azurerm_subnet.system.id
   }
   ingress_profile = {
+    gateway_api = {
+      installation = "Disabled"
+    }
     web_app_routing = {
       enabled = true
+      gateway_api_implementations = {
+        app_routing_istio = {
+          mode = "Disabled"
+        }
+      }
       nginx = {
         default_ingress_controller_type = "Internal"
       }

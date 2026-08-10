@@ -777,11 +777,11 @@ Ingress profile for the container service cluster.
 DESCRIPTION
 
   validation {
-    condition     = try(var.ingress_profile == null || var.ingress_profile.gateway_api == null || var.ingress_profile.gateway_api.installation == null || contains(["", "Disabled", "Standard"], var.ingress_profile.gateway_api.installation), true)
+    condition     = var.ingress_profile == null || contains(["", "Disabled", "Standard"], coalesce(try(var.ingress_profile.gateway_api.installation, null), ""))
     error_message = "ingress_profile.gateway_api.installation must be one of: [\"Disabled\", \"Standard\"]."
   }
   validation {
-    condition     = try(var.ingress_profile == null || var.ingress_profile.web_app_routing == null || var.ingress_profile.web_app_routing.gateway_api_implementations == null || var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio == null || var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode == null || contains(["", "Disabled", "Enabled"], var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode), true)
+    condition     = var.ingress_profile == null || contains(["", "Disabled", "Enabled"], coalesce(try(var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode, null), ""))
     error_message = "ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode must be one of: [\"Disabled\", \"Enabled\"]."
   }
 }

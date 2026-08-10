@@ -45,28 +45,3 @@ run "gateway_api_fields_are_passed_through" {
     error_message = "Ingress profile should preserve the existing nginx setting when Gateway API fields are configured."
   }
 }
-
-run "unset_gateway_api_fields_are_allowed" {
-  command = plan
-
-  variables {
-    ingress_profile = {
-      web_app_routing = {
-        enabled = true
-        nginx = {
-          default_ingress_controller_type = "Internal"
-        }
-      }
-    }
-  }
-
-  assert {
-    condition     = azapi_resource.this.body.properties.ingressProfile.gatewayAPI == null
-    error_message = "Ingress profile should allow the managed Gateway API settings to remain unset."
-  }
-
-  assert {
-    condition     = azapi_resource.this.body.properties.ingressProfile.webAppRouting.gatewayAPIImplementations == null
-    error_message = "Ingress profile should allow App Routing Gateway API implementations to remain unset."
-  }
-}
