@@ -49,6 +49,6 @@ avm.tflint_module.merged.hcl
 .DS_Store
 examples/*/policy
 *.mptfbackup
-.avm
 
 *.tfrc
+.avm/managed-files.json
