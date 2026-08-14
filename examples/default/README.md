@@ -21,6 +21,8 @@ terraform {
 }
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.OperationalInsights"]
+
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -91,7 +93,7 @@ module "default" {
   }
   default_agent_pool = {
     count_of = 1
-    vm_size  = "Standard_DC2ds_v3"
+    vm_size  = "Standard_B2s_v2"
 
     upgrade_settings = {
       max_surge = "10%"

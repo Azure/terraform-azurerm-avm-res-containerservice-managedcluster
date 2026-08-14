@@ -11,6 +11,24 @@ This example deploys Application Gateway for Containers alongside a private AKS 
 - Application Gateway for Containers with one frontend and one association
 - User-assigned managed identities with the required RBAC roles for AKS and the ALB Controller
 
+## Post-deployment steps
+
+After Terraform completes, enable the ALB Controller managed add-on and configure Gateway API resources:
+
+```bash
+# 1. Enable the ALB Controller add-on on the AKS cluster
+az aks update -g <resource_group_name> -n <aks_cluster_name> --enable-alb-controller
+
+# 2. Verify ALB Controller pods are running
+az aks command invoke -g <resource_group_name> -n <aks_cluster_name> \
+  --command "kubectl get pods -n alb-system"
+
+# 3. Apply Kubernetes Gateway API resources (GatewayClass, Gateway, HTTPRoute)
+# See: https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-create-application-gateway-for-containers-byo-deployment
+```
+
+For a consumer with an existing hub-spoke network, replace the inline virtual network and subnet resources with references to existing subnet IDs.
+
 ```hcl
 terraform {
   required_version = "~> 1.14"
@@ -34,6 +52,8 @@ terraform {
 provider "azapi" {}
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Monitor", "Microsoft.Network", "Microsoft.OperationalInsights", "Microsoft.ServiceNetworking"]
+
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false

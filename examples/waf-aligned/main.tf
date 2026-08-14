@@ -14,6 +14,8 @@ terraform {
 }
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Network", "Microsoft.OperationalInsights"]
+
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -125,10 +127,9 @@ resource "azurerm_role_assignment" "private_dns_zone_contributor" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
-  name                  = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
-  private_dns_zone_name = azurerm_private_dns_zone.zone.name
-  resource_group_name   = azurerm_resource_group.this.name
-  virtual_network_id    = azurerm_virtual_network.vnet.id
+  name                = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
+  private_dns_zone_id = azurerm_private_dns_zone.zone.id
+  virtual_network_id  = azurerm_virtual_network.vnet.id
 }
 
 resource "azurerm_log_analytics_workspace" "workspace" {

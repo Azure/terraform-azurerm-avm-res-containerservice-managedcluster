@@ -25,6 +25,8 @@ terraform {
 }
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Monitor", "Microsoft.Network", "Microsoft.OperationalInsights"]
+
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -129,10 +131,9 @@ resource "azurerm_private_dns_zone" "this" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "this" {
-  name                  = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
-  private_dns_zone_name = azurerm_private_dns_zone.this.name
-  resource_group_name   = azurerm_resource_group.this.name
-  virtual_network_id    = azurerm_virtual_network.this.id
+  name                = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
+  private_dns_zone_id = azurerm_private_dns_zone.this.id
+  virtual_network_id  = azurerm_virtual_network.this.id
 }
 
 resource "azurerm_role_assignment" "private_dns_zone_contributor" {
@@ -178,8 +179,16 @@ module "automatic" {
     system_node_subnet_id = azurerm_subnet.system.id
   }
   ingress_profile = {
+    gateway_api = {
+      installation = "Disabled"
+    }
     web_app_routing = {
       enabled = true
+      gateway_api_implementations = {
+        app_routing_istio = {
+          mode = "Disabled"
+        }
+      }
       nginx = {
         default_ingress_controller_type = "Internal"
       }
