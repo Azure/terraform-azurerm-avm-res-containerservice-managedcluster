@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.0.2"
+      version = ">= 4.46.0, < 5.1.1"
     }
     random = {
       source  = "hashicorp/random"
@@ -69,7 +69,7 @@ data "azurerm_client_config" "current" {}
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.2"
+  version = "0.11.0"
 
   location            = azurerm_resource_group.this.location
   name                = coalesce(var.keyvault_name, module.naming.key_vault.name_unique)
@@ -90,7 +90,7 @@ module "avm_res_keyvault_vault" {
 # ######################################################################################################################
 module "avm_res_containerregistry_registry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.7.0"
+  version = "0.8.0"
 
   location            = azurerm_resource_group.this.location
   name                = coalesce(var.acr_registry_name, module.naming.container_registry.name_unique)
