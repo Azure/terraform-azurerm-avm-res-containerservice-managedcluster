@@ -777,11 +777,11 @@ Ingress profile for the container service cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.ingress_profile == null || contains(["", "Disabled", "Standard"], coalesce(try(var.ingress_profile.gateway_api.installation, null), ""))
+    condition     = var.ingress_profile == null || contains(["", "Disabled", "Standard"], try(coalesce(var.ingress_profile.gateway_api.installation, ""), ""))
     error_message = "ingress_profile.gateway_api.installation must be one of: [\"Disabled\", \"Standard\"]."
   }
   validation {
-    condition     = var.ingress_profile == null || contains(["", "Disabled", "Enabled"], coalesce(try(var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode, null), ""))
+    condition     = var.ingress_profile == null || contains(["", "Disabled", "Enabled"], try(coalesce(var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode, ""), ""))
     error_message = "ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode must be one of: [\"Disabled\", \"Enabled\"]."
   }
 }

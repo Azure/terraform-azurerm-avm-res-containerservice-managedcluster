@@ -9,6 +9,8 @@ module "monitoring" {
   parent_id                  = var.parent_id
   prometheus_workspace_id    = var.prometheus_workspace_id
   tags                       = var.tags
+
+  depends_on = [azapi_resource.this]
 }
 
 # Alerting module - conditionally instantiated
@@ -20,4 +22,6 @@ module "alerting" {
   alert_email    = var.alert_email
   parent_id      = var.parent_id
   tags           = var.tags
+
+  depends_on = [azapi_resource.this]
 }

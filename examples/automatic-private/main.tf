@@ -77,6 +77,30 @@ resource "azurerm_virtual_network" "this" {
   address_space       = ["172.19.0.0/16"]
 }
 
+resource "azurerm_public_ip" "nat_gateway" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
+  name                = "pip-nat-${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "Standard"
+
+  lifecycle {
+    ignore_changes = [ip_tags]
+  }
+}
+
+resource "azurerm_nat_gateway" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = "nat-${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "Standard"
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "this" {
+  nat_gateway_id       = azurerm_nat_gateway.this.id
+  public_ip_address_id = azurerm_public_ip.nat_gateway.id
+}
+
 resource "azurerm_subnet" "api_server" {
   address_prefixes     = ["172.19.0.0/28"]
   name                 = "apiServerSubnet"
@@ -100,6 +124,20 @@ resource "azurerm_subnet" "system" {
   name                 = "systemSubnet"
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.this.name
+
+  lifecycle {
+    ignore_changes = [delegation]
+  }
+}
+
+resource "azurerm_subnet_nat_gateway_association" "cluster" {
+  nat_gateway_id = azurerm_nat_gateway.this.id
+  subnet_id      = azurerm_subnet.cluster.id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "system" {
+  nat_gateway_id = azurerm_nat_gateway.this.id
+  subnet_id      = azurerm_subnet.system.id
 }
 
 resource "azurerm_user_assigned_identity" "this" {
@@ -168,16 +206,8 @@ module "automatic" {
     system_node_subnet_id = azurerm_subnet.system.id
   }
   ingress_profile = {
-    gateway_api = {
-      installation = "Disabled"
-    }
     web_app_routing = {
       enabled = true
-      gateway_api_implementations = {
-        app_routing_istio = {
-          mode = "Disabled"
-        }
-      }
       nginx = {
         default_ingress_controller_type = "Internal"
       }
@@ -204,8 +234,7 @@ module "automatic" {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.this.id]
   }
   network_profile = {
-    # Change this to userDefinedRouting to prevent creation of public IP.
-    outbound_type = "loadBalancer"
+    outbound_type = "userAssignedNATGateway"
   }
   onboard_alerts          = true
   onboard_monitoring      = true
