@@ -251,6 +251,9 @@ module "automatic" {
   }
 
   depends_on = [
-    azurerm_role_assignment.network_contributor
+    azurerm_nat_gateway_public_ip_association.this,
+    azurerm_role_assignment.network_contributor,
+    azurerm_subnet_nat_gateway_association.cluster,
+    azurerm_subnet_nat_gateway_association.system,
   ]
 }
