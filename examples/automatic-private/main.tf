@@ -83,6 +83,7 @@ resource "azurerm_public_ip" "nat_gateway" {
   name                = "pip-nat-${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard"
+  zones               = ["1", "2", "3"]
 
   lifecycle {
     ignore_changes = [ip_tags]
