@@ -741,6 +741,39 @@ DESCRIPTION
   }
 }
 
+variable "ignore_body_changes" {
+  type = object({
+    containerservice_managed_clusters = optional(list(string), [])
+    containerservice_managed_clusters_agent_pools = optional(object({
+      containerservice_managed_clusters_agent_pools = optional(list(string), [])
+    }), {})
+    containerservice_managed_clusters_maintenance_configurations = optional(object({
+      containerservice_managed_clusters_maintenance_configurations = optional(list(string), [])
+    }), {})
+    containerservice_managed_clusters_managed_namespaces = optional(object({
+      containerservice_managed_clusters_managed_namespaces = optional(list(string), [])
+    }), {})
+    authorization_locks                               = optional(list(string), [])
+    authorization_role_assignments                    = optional(list(string), [])
+    insights_diagnostic_settings                      = optional(list(string), [])
+    network_private_endpoints                         = optional(list(string), [])
+    network_private_endpoints_private_dns_zone_groups = optional(list(string), [])
+    insights_action_groups = optional(object({
+      insights_action_groups = optional(list(string), [])
+      insights_metric_alerts = optional(list(string), [])
+    }), {})
+    insights_data_collection_endpoints = optional(object({
+      insights_data_collection_endpoints         = optional(list(string), [])
+      insights_data_collection_rules             = optional(list(string), [])
+      insights_data_collection_rule_associations = optional(list(string), [])
+      alertsmanagement_prometheus_rule_groups    = optional(list(string), [])
+    }), {})
+  })
+  default     = {}
+  description = "Body-relative dot-notation paths to ignore for each AzAPI resource. Empty lists are omitted; changes take effect only after an apply."
+  nullable    = false
+}
+
 variable "ingress_profile" {
   type = object({
     gateway_api = optional(object({
@@ -1217,6 +1250,42 @@ DESCRIPTION
   nullable    = false
 }
 
+variable "private_endpoints_manage_dns_zone_group" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+Whether to manage private DNS zone groups with this module.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "private_link_resources" {
+  type = list(object({
+    group_id         = optional(string)
+    id               = optional(string)
+    name             = optional(string)
+    required_members = optional(list(string))
+    type             = optional(string)
+  }))
+  default     = null
+  description = <<DESCRIPTION
+Private link resources associated with the cluster.
+DESCRIPTION
+}
+
+variable "public_network_access" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+PublicNetworkAccess of the managedCluster. Allow or deny public network access for AKS
+DESCRIPTION
+
+  validation {
+    condition     = try(var.public_network_access == null || contains(["Disabled", "Enabled"], var.public_network_access), true)
+    error_message = "public_network_access must be one of: [\"Disabled\", \"Enabled\"]."
+  }
+}
+
 variable "resource_types" {
   type = object({
     containerservice_managed_clusters = optional(string, "Microsoft.ContainerService/managedClusters@2026-03-01")
@@ -1282,86 +1351,6 @@ Retry configuration applied to every supported AzAPI resource declared by the mo
 - `interval_seconds` - (Optional) Initial interval between retries in seconds.
 - `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
 DESCRIPTION
-}
-
-variable "timeouts" {
-  type = object({
-    create = optional(string)
-    read   = optional(string)
-    update = optional(string)
-    delete = optional(string)
-  })
-  default     = null
-  description = "Default per-operation timeouts applied to every supported AzAPI resource declared by the module and its applicable submodules. Defaults to provider defaults."
-}
-
-variable "ignore_body_changes" {
-  type = object({
-    containerservice_managed_clusters = optional(list(string), [])
-    containerservice_managed_clusters_agent_pools = optional(object({
-      containerservice_managed_clusters_agent_pools = optional(list(string), [])
-    }), {})
-    containerservice_managed_clusters_maintenance_configurations = optional(object({
-      containerservice_managed_clusters_maintenance_configurations = optional(list(string), [])
-    }), {})
-    containerservice_managed_clusters_managed_namespaces = optional(object({
-      containerservice_managed_clusters_managed_namespaces = optional(list(string), [])
-    }), {})
-    authorization_locks                               = optional(list(string), [])
-    authorization_role_assignments                    = optional(list(string), [])
-    insights_diagnostic_settings                      = optional(list(string), [])
-    network_private_endpoints                         = optional(list(string), [])
-    network_private_endpoints_private_dns_zone_groups = optional(list(string), [])
-    insights_action_groups = optional(object({
-      insights_action_groups = optional(list(string), [])
-      insights_metric_alerts = optional(list(string), [])
-    }), {})
-    insights_data_collection_endpoints = optional(object({
-      insights_data_collection_endpoints         = optional(list(string), [])
-      insights_data_collection_rules             = optional(list(string), [])
-      insights_data_collection_rule_associations = optional(list(string), [])
-      alertsmanagement_prometheus_rule_groups    = optional(list(string), [])
-    }), {})
-  })
-  default     = {}
-  description = "Body-relative dot-notation paths to ignore for each AzAPI resource. Empty lists are omitted; changes take effect only after an apply."
-  nullable    = false
-}
-
-variable "private_endpoints_manage_dns_zone_group" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-Whether to manage private DNS zone groups with this module.
-DESCRIPTION
-  nullable    = false
-}
-
-variable "private_link_resources" {
-  type = list(object({
-    group_id         = optional(string)
-    id               = optional(string)
-    name             = optional(string)
-    required_members = optional(list(string))
-    type             = optional(string)
-  }))
-  default     = null
-  description = <<DESCRIPTION
-Private link resources associated with the cluster.
-DESCRIPTION
-}
-
-variable "public_network_access" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-PublicNetworkAccess of the managedCluster. Allow or deny public network access for AKS
-DESCRIPTION
-
-  validation {
-    condition     = try(var.public_network_access == null || contains(["Disabled", "Enabled"], var.public_network_access), true)
-    error_message = "public_network_access must be one of: [\"Disabled\", \"Enabled\"]."
-  }
 }
 
 variable "role_assignments" {
@@ -1591,6 +1580,17 @@ variable "tags" {
   description = <<DESCRIPTION
 (Optional) Tags of the resource.
 DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default     = null
+  description = "Default per-operation timeouts applied to every supported AzAPI resource declared by the module and its applicable submodules. Defaults to provider defaults."
 }
 
 variable "upgrade_settings" {

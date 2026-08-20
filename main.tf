@@ -7,8 +7,8 @@ resource "azapi_resource" "this" {
   body                 = local.resource_body
   create_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  ignore_null_property = true
   ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters) > 0 ? var.ignore_body_changes.containerservice_managed_clusters : null
+  ignore_null_property = true
   read_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs = [
     "properties.nodeResourceGroup",
@@ -28,6 +28,7 @@ resource "azapi_resource" "this" {
     "properties.oidcIssuerProfile.issuerURL",
     "properties.privateFQDN",
   ]
+  retry = var.retry
   # AzAPI's embedded AKS schema does not include 2026-03-01 yet.
   # Azure still validates the request at apply time.
   schema_validation_enabled = false
@@ -37,7 +38,6 @@ resource "azapi_resource" "this" {
   }
   tags           = var.tags
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  retry          = var.retry
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned_user_assigned
@@ -82,8 +82,8 @@ resource "azapi_update_resource" "kubernetes_version" {
     azapi_resource.this.id,
   ]
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  retry                  = var.retry
   response_export_values = []
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
@@ -125,10 +125,10 @@ resource "azapi_resource" "lock" {
   })
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes    = length(var.ignore_body_changes.authorization_locks) > 0 ? var.ignore_body_changes.authorization_locks : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs  = []
   response_export_values = []
-  ignore_body_changes    = length(var.ignore_body_changes.authorization_locks) > 0 ? var.ignore_body_changes.authorization_locks : null
   retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
@@ -159,11 +159,11 @@ resource "azapi_resource" "role_assignments" {
   body                   = each.value.body
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes    = length(var.ignore_body_changes.authorization_role_assignments) > 0 ? var.ignore_body_changes.authorization_role_assignments : null
   ignore_null_property   = true
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs  = []
   response_export_values = []
-  ignore_body_changes    = length(var.ignore_body_changes.authorization_role_assignments) > 0 ? var.ignore_body_changes.authorization_role_assignments : null
   retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 

@@ -21,6 +21,7 @@ module "nodepools" {
   gpu_instance_profile          = each.value.gpu_instance_profile
   gpu_profile                   = each.value.gpu_profile
   host_group_id                 = each.value.host_group_id
+  ignore_body_changes           = var.ignore_body_changes.containerservice_managed_clusters_agent_pools
   kubelet_config                = each.value.kubelet_config
   kubelet_disk_type             = each.value.kubelet_disk_type
   linux_os_config               = each.value.linux_os_config
@@ -46,16 +47,15 @@ module "nodepools" {
   pod_ip_allocation_mode        = each.value.pod_ip_allocation_mode
   pod_subnet_id                 = each.value.pod_subnet_id
   proximity_placement_group_id  = each.value.proximity_placement_group_id
+  resource_types                = var.resource_types.containerservice_managed_clusters_agent_pools
+  retry                         = var.retry
   scale_down_mode               = each.value.scale_down_mode
   scale_set_eviction_policy     = each.value.scale_set_eviction_policy
   scale_set_priority            = each.value.scale_set_priority
   security_profile              = each.value.security_profile
   spot_max_price                = each.value.spot_max_price
   tags                          = each.value.tags
-  resource_types                = var.resource_types.containerservice_managed_clusters_agent_pools
-  retry                         = var.retry
   timeouts                      = var.timeouts == null ? var.agentpool_timeouts : var.timeouts
-  ignore_body_changes           = var.ignore_body_changes.containerservice_managed_clusters_agent_pools
   type                          = each.value.type
   upgrade_settings              = each.value.upgrade_settings
   upgrade_settings_blue_green   = each.value.upgrade_settings_blue_green

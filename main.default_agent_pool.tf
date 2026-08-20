@@ -18,6 +18,7 @@ module "default_agent_pool_data" {
   gpu_instance_profile          = var.default_agent_pool.gpu_instance_profile
   gpu_profile                   = var.default_agent_pool.gpu_profile
   host_group_id                 = var.default_agent_pool.host_group_id
+  ignore_body_changes           = var.ignore_body_changes.containerservice_managed_clusters_agent_pools
   kubelet_config                = var.default_agent_pool.kubelet_config
   kubelet_disk_type             = var.default_agent_pool.kubelet_disk_type
   linux_os_config               = var.default_agent_pool.linux_os_config
@@ -43,16 +44,15 @@ module "default_agent_pool_data" {
   pod_ip_allocation_mode        = var.default_agent_pool.pod_ip_allocation_mode
   pod_subnet_id                 = var.default_agent_pool.pod_subnet_id
   proximity_placement_group_id  = var.default_agent_pool.proximity_placement_group_id
+  resource_types                = var.resource_types.containerservice_managed_clusters_agent_pools
+  retry                         = var.retry
   scale_down_mode               = var.default_agent_pool.scale_down_mode
   scale_set_eviction_policy     = var.default_agent_pool.scale_set_eviction_policy
   scale_set_priority            = var.default_agent_pool.scale_set_priority
   security_profile              = var.default_agent_pool.security_profile
   spot_max_price                = var.default_agent_pool.spot_max_price
   tags                          = var.tags
-  resource_types                = var.resource_types.containerservice_managed_clusters_agent_pools
-  retry                         = var.retry
   timeouts                      = var.timeouts == null ? var.agentpool_timeouts : var.timeouts
-  ignore_body_changes           = var.ignore_body_changes.containerservice_managed_clusters_agent_pools
   type                          = var.default_agent_pool.type
   upgrade_settings              = var.default_agent_pool.upgrade_settings
   upgrade_settings_blue_green   = var.default_agent_pool.upgrade_settings_blue_green
@@ -110,8 +110,8 @@ resource "azapi_update_resource" "default_agent_pool" {
     azapi_resource.this.id,
   ]
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  retry                  = var.retry
   response_export_values = []
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
