@@ -106,6 +106,20 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative dot-notation paths to ignore for managed namespaces. Changes take effect only after an apply.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_managed_namespaces = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_labels"></a> [labels](#input\_labels)
 
 Description: The labels of managed namespace.
@@ -114,11 +128,58 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource type overrides for managed cluster managed namespaces.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_managed_namespaces = optional(string, "Microsoft.ContainerService/managedClusters/managedNamespaces@2026-03-01")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every supported AzAPI resource declared by this module.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: A mapping of tags to assign to the resource.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Default per-operation timeouts applied to every supported AzAPI resource declared by this module.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
 
 Default: `null`
 

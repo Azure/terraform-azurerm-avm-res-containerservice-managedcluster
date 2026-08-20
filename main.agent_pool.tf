@@ -52,7 +52,10 @@ module "nodepools" {
   security_profile              = each.value.security_profile
   spot_max_price                = each.value.spot_max_price
   tags                          = each.value.tags
-  timeouts                      = var.agentpool_timeouts
+  resource_types                = var.resource_types.containerservice_managed_clusters_agent_pools
+  retry                         = var.retry
+  timeouts                      = var.timeouts == null ? var.agentpool_timeouts : var.timeouts
+  ignore_body_changes           = var.ignore_body_changes.containerservice_managed_clusters_agent_pools
   type                          = each.value.type
   upgrade_settings              = each.value.upgrade_settings
   upgrade_settings_blue_green   = each.value.upgrade_settings_blue_green

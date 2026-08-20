@@ -125,3 +125,42 @@ variable "tags" {
 A mapping of tags to assign to the resource.
 DESCRIPTION
 }
+
+variable "resource_types" {
+  type = object({
+    containerservice_managed_clusters_managed_namespaces = optional(string, "Microsoft.ContainerService/managedClusters/managedNamespaces@2026-03-01")
+  })
+  default     = {}
+  description = "AzAPI resource type overrides for managed cluster managed namespaces."
+  nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default     = null
+  description = "Retry configuration applied to every supported AzAPI resource declared by this module."
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default     = null
+  description = "Default per-operation timeouts applied to every supported AzAPI resource declared by this module."
+}
+
+variable "ignore_body_changes" {
+  type = object({
+    containerservice_managed_clusters_managed_namespaces = optional(list(string), [])
+  })
+  default     = {}
+  description = "Body-relative dot-notation paths to ignore for managed namespaces. Changes take effect only after an apply."
+  nullable    = false
+}

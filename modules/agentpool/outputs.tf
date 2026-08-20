@@ -37,3 +37,8 @@ output "type" {
   description = "Resource type"
   value       = try(local.created_resource.output.type, null)
 }
+
+output "resource_type" {
+  description = "The configured AzAPI resource type."
+  value       = var.resource_types.containerservice_managed_clusters_agent_pools
+}

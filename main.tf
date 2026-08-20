@@ -3,11 +3,12 @@ resource "azapi_resource" "this" {
   name      = var.name
   parent_id = var.parent_id
   # kubeProxyConfig is not available in the stable 2026-03-01 API.
-  type                 = var.kube_proxy_config == null ? "Microsoft.ContainerService/managedClusters@2026-03-01" : "Microsoft.ContainerService/managedClusters@2026-03-02-preview"
+  type                 = var.kube_proxy_config == null ? var.resource_types.containerservice_managed_clusters : "${split("@", var.resource_types.containerservice_managed_clusters)[0]}@2026-03-02-preview"
   body                 = local.resource_body
   create_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_null_property = true
+  ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters) > 0 ? var.ignore_body_changes.containerservice_managed_clusters : null
   read_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs = [
     "properties.nodeResourceGroup",
@@ -36,6 +37,7 @@ resource "azapi_resource" "this" {
   }
   tags           = var.tags
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  retry          = var.retry
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned_user_assigned
@@ -47,13 +49,13 @@ resource "azapi_resource" "this" {
   }
 
   dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [1]
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
 
     content {
-      create = var.cluster_timeouts.create
-      delete = var.cluster_timeouts.delete
-      read   = var.cluster_timeouts.read
-      update = var.cluster_timeouts.update
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 
@@ -80,8 +82,20 @@ resource "azapi_update_resource" "kubernetes_version" {
     azapi_resource.this.id,
   ]
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  retry                  = var.retry
   response_export_values = []
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 resource "random_string" "dns_prefix" {
@@ -103,7 +117,7 @@ resource "azapi_resource" "lock" {
 
   name      = coalesce(module.interfaces.lock_azapi.name, "lock-${var.lock.kind}")
   parent_id = azapi_resource.this.id
-  type      = module.interfaces.lock_azapi.type
+  type      = var.resource_types.authorization_locks
   body = merge(module.interfaces.lock_azapi.body, {
     properties = merge(module.interfaces.lock_azapi.body.properties, {
       notes = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
@@ -114,10 +128,12 @@ resource "azapi_resource" "lock" {
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs  = []
   response_export_values = []
+  ignore_body_changes    = length(var.ignore_body_changes.authorization_locks) > 0 ? var.ignore_body_changes.authorization_locks : null
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
 
     content {
       create = timeouts.value.create
@@ -139,7 +155,7 @@ resource "azapi_resource" "role_assignments" {
 
   name                   = each.value.name
   parent_id              = azapi_resource.this.id
-  type                   = each.value.type
+  type                   = var.resource_types.authorization_role_assignments
   body                   = each.value.body
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -147,10 +163,12 @@ resource "azapi_resource" "role_assignments" {
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs  = []
   response_export_values = []
+  ignore_body_changes    = length(var.ignore_body_changes.authorization_role_assignments) > 0 ? var.ignore_body_changes.authorization_role_assignments : null
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
 
     content {
       create = timeouts.value.create
@@ -169,6 +187,18 @@ resource "azapi_resource_action" "this_user_kubeconfig" {
   resource_id            = azapi_resource.this.id
   type                   = azapi_resource.this.type
   response_export_values = ["kubeconfigs"]
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 resource "azapi_resource_action" "this_admin_kubeconfig" {
@@ -179,6 +209,18 @@ resource "azapi_resource_action" "this_admin_kubeconfig" {
   resource_id            = azapi_resource.this.id
   type                   = azapi_resource.this.type
   response_export_values = ["kubeconfigs"]
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 locals {

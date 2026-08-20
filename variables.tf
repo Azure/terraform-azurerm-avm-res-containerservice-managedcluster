@@ -1179,6 +1179,7 @@ variable "private_endpoints" {
   type = map(object({
     name = optional(string, null)
     role_assignments = optional(map(object({
+      name                                   = optional(string, null)
       role_definition_id_or_name             = string
       principal_id                           = string
       description                            = optional(string, null)
@@ -1189,11 +1190,13 @@ variable "private_endpoints" {
       principal_type                         = optional(string, null)
     })), {})
     lock = optional(object({
-      kind = string
-      name = optional(string, null)
+      kind  = string
+      name  = optional(string, null)
+      notes = optional(string, null)
     }), null)
     tags                                    = optional(map(string), null)
     subnet_resource_id                      = string
+    subresource_name                        = optional(string, null)
     private_dns_zone_group_name             = optional(string, "default")
     private_dns_zone_resource_ids           = optional(set(string), [])
     application_security_group_associations = optional(map(string), {})
@@ -1204,12 +1207,124 @@ variable "private_endpoints" {
     ip_configurations = optional(map(object({
       name               = string
       private_ip_address = string
+      member_name        = optional(string)
     })), {})
   }))
   default     = {}
   description = <<DESCRIPTION
 A map of private endpoints to create on this resource.
 DESCRIPTION
+  nullable    = false
+}
+
+variable "resource_types" {
+  type = object({
+    containerservice_managed_clusters = optional(string, "Microsoft.ContainerService/managedClusters@2026-03-01")
+    containerservice_managed_clusters_agent_pools = optional(object({
+      containerservice_managed_clusters_agent_pools = optional(string)
+    }), {})
+    containerservice_managed_clusters_maintenance_configurations = optional(object({
+      containerservice_managed_clusters_maintenance_configurations = optional(string)
+    }), {})
+    containerservice_managed_clusters_managed_namespaces = optional(object({
+      containerservice_managed_clusters_managed_namespaces = optional(string)
+    }), {})
+    authorization_locks                               = optional(string, "Microsoft.Authorization/locks@2020-05-01")
+    authorization_role_assignments                    = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    insights_diagnostic_settings                      = optional(string, "Microsoft.Insights/diagnosticSettings@2021-05-01-preview")
+    network_private_endpoints                         = optional(string, "Microsoft.Network/privateEndpoints@2024-10-01")
+    network_private_endpoints_private_dns_zone_groups = optional(string, "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-10-01")
+    insights_action_groups = optional(object({
+      insights_action_groups = optional(string)
+      insights_metric_alerts = optional(string)
+    }), {})
+    insights_data_collection_endpoints = optional(object({
+      insights_data_collection_endpoints         = optional(string)
+      insights_data_collection_rules             = optional(string)
+      insights_data_collection_rule_associations = optional(string)
+      alertsmanagement_prometheus_rule_groups    = optional(string)
+    }), {})
+  })
+  default     = {}
+  description = <<DESCRIPTION
+AzAPI resource type overrides. Each value defaults to the API version tested by the scope that declares the resource.
+
+- `containerservice_managed_clusters` - The type of the managed cluster and its actions.
+- `containerservice_managed_clusters_agent_pools` - Types used by the agent pool submodule.
+- `containerservice_managed_clusters_maintenance_configurations` - Types used by the maintenance configuration submodule.
+- `containerservice_managed_clusters_managed_namespaces` - Types used by the namespace submodule.
+- `authorization_locks` - The type of the management lock resource.
+- `authorization_role_assignments` - The type of the role assignment resource.
+- `insights_diagnostic_settings` - The type of the diagnostic settings resource.
+- `network_private_endpoints` - The type of the private endpoint resource.
+- `network_private_endpoints_private_dns_zone_groups` - The type of the private DNS zone group resource.
+- `insights_action_groups` - Types used by the alerting submodule.
+- `insights_data_collection_endpoints` - Types used by the monitoring submodule.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default = {
+    error_message_regex  = ["ScopeLocked"]
+    interval_seconds     = 15
+    max_interval_seconds = 60
+  }
+  description = <<DESCRIPTION
+Retry configuration applied to every supported AzAPI resource declared by the module and its applicable submodules.
+
+- `error_message_regex` - (Optional) A list of regex patterns matching error messages that trigger a retry.
+- `interval_seconds` - (Optional) Initial interval between retries in seconds.
+- `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
+DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default     = null
+  description = "Default per-operation timeouts applied to every supported AzAPI resource declared by the module and its applicable submodules. Defaults to provider defaults."
+}
+
+variable "ignore_body_changes" {
+  type = object({
+    containerservice_managed_clusters = optional(list(string), [])
+    containerservice_managed_clusters_agent_pools = optional(object({
+      containerservice_managed_clusters_agent_pools = optional(list(string), [])
+    }), {})
+    containerservice_managed_clusters_maintenance_configurations = optional(object({
+      containerservice_managed_clusters_maintenance_configurations = optional(list(string), [])
+    }), {})
+    containerservice_managed_clusters_managed_namespaces = optional(object({
+      containerservice_managed_clusters_managed_namespaces = optional(list(string), [])
+    }), {})
+    authorization_locks                               = optional(list(string), [])
+    authorization_role_assignments                    = optional(list(string), [])
+    insights_diagnostic_settings                      = optional(list(string), [])
+    network_private_endpoints                         = optional(list(string), [])
+    network_private_endpoints_private_dns_zone_groups = optional(list(string), [])
+    insights_action_groups = optional(object({
+      insights_action_groups = optional(list(string), [])
+      insights_metric_alerts = optional(list(string), [])
+    }), {})
+    insights_data_collection_endpoints = optional(object({
+      insights_data_collection_endpoints         = optional(list(string), [])
+      insights_data_collection_rules             = optional(list(string), [])
+      insights_data_collection_rule_associations = optional(list(string), [])
+      alertsmanagement_prometheus_rule_groups    = optional(list(string), [])
+    }), {})
+  })
+  default     = {}
+  description = "Body-relative dot-notation paths to ignore for each AzAPI resource. Empty lists are omitted; changes take effect only after an apply."
   nullable    = false
 }
 

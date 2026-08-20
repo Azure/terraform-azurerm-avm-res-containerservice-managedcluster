@@ -3,7 +3,7 @@ resource "azapi_resource" "diagnostic_settings" {
 
   name                      = coalesce(each.value.name, "diag-${var.name}")
   parent_id                 = azapi_resource.this.id
-  type                      = each.value.type
+  type                      = var.resource_types.insights_diagnostic_settings
   body                      = each.value.body
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -11,11 +11,13 @@ resource "azapi_resource" "diagnostic_settings" {
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs     = []
   response_export_values    = []
+  ignore_body_changes       = length(var.ignore_body_changes.insights_diagnostic_settings) > 0 ? var.ignore_body_changes.insights_diagnostic_settings : null
+  retry                     = var.retry
   schema_validation_enabled = false
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
 
     content {
       create = timeouts.value.create

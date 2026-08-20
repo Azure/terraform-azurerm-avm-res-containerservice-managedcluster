@@ -13,8 +13,9 @@ resource "azapi_resource" "this" {
 
   name                 = var.name
   parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview"
+  type                 = var.resource_types.containerservice_managed_clusters_agent_pools
   body                 = local.resource_body
+  ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters_agent_pools) > 0 ? var.ignore_body_changes.containerservice_managed_clusters_agent_pools : null
   ignore_null_property = true
   locks = [
     var.parent_id
@@ -30,6 +31,7 @@ resource "azapi_resource" "this" {
   # AzAPI's embedded AKS schema does not include this preview API yet.
   # Azure still validates the request at apply time.
   schema_validation_enabled = false
+  retry                     = var.retry
 
   delete_query_parameters = var.delete_options.ignore_pod_disruption_budget ? {
     "ignore-pod-disruption-budget" = ["true"]
@@ -52,8 +54,9 @@ resource "azapi_resource" "this_create_before_destroy" {
 
   name                 = "${var.name}${substr(sha256(uuid()), 0, 4)}"
   parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview"
+  type                 = var.resource_types.containerservice_managed_clusters_agent_pools
   body                 = local.resource_body
+  ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters_agent_pools) > 0 ? var.ignore_body_changes.containerservice_managed_clusters_agent_pools : null
   ignore_null_property = true
   locks = [
     var.parent_id
@@ -69,6 +72,7 @@ resource "azapi_resource" "this_create_before_destroy" {
   # AzAPI's embedded AKS schema does not include this preview API yet.
   # Azure still validates the request at apply time.
   schema_validation_enabled = false
+  retry                     = var.retry
 
   delete_query_parameters = var.delete_options.ignore_pod_disruption_budget ? {
     "ignore-pod-disruption-budget" = ["true"]

@@ -224,6 +224,20 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative dot-notation paths to ignore for managed cluster agent pools. Changes take effect only after an apply.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_agent_pools = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_kubelet_config"></a> [kubelet\_config](#input\_kubelet\_config)
 
 Description: Kubelet configurations of agent nodes. See [AKS custom node configuration](https://docs.microsoft.com/azure/aks/custom-node-configuration) for more details.
@@ -585,6 +599,36 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource type overrides for managed cluster agent pools.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_agent_pools = optional(string, "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every supported AzAPI resource declared by this module.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_scale_down_mode"></a> [scale\_down\_mode](#input\_scale\_down\_mode)
 
 Description: Describes how VMs are added to or removed from Agent Pools. See [billing states](https://docs.microsoft.com/azure/virtual-machines/states-billing).
@@ -820,6 +864,10 @@ Description: The current deployment or provisioning state.
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: The ID of the created resource.
+
+### <a name="output_resource_type"></a> [resource\_type](#output\_resource\_type)
+
+Description: The configured AzAPI resource type.
 
 ### <a name="output_type"></a> [type](#output\_type)
 

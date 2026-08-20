@@ -49,7 +49,10 @@ module "default_agent_pool_data" {
   security_profile              = var.default_agent_pool.security_profile
   spot_max_price                = var.default_agent_pool.spot_max_price
   tags                          = var.tags
-  timeouts                      = null # Timeouts are not required for data only output
+  resource_types                = var.resource_types.containerservice_managed_clusters_agent_pools
+  retry                         = var.retry
+  timeouts                      = var.timeouts == null ? var.agentpool_timeouts : var.timeouts
+  ignore_body_changes           = var.ignore_body_changes.containerservice_managed_clusters_agent_pools
   type                          = var.default_agent_pool.type
   upgrade_settings              = var.default_agent_pool.upgrade_settings
   upgrade_settings_blue_green   = var.default_agent_pool.upgrade_settings_blue_green
@@ -66,7 +69,7 @@ module "default_agent_pool_data" {
 resource "azapi_update_resource" "default_agent_pool" {
   name      = module.default_agent_pool_data.name
   parent_id = azapi_resource.this.id
-  type      = "Microsoft.ContainerService/managedClusters/agentpools@2026-01-02-preview"
+  type      = module.default_agent_pool_data.resource_type
   body = {
     properties = merge(
       {
@@ -107,8 +110,20 @@ resource "azapi_update_resource" "default_agent_pool" {
     azapi_resource.this.id,
   ]
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  retry                  = var.retry
   response_export_values = []
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 
   depends_on = [azapi_update_resource.kubernetes_version]
 }
