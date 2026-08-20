@@ -38,6 +38,20 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative dot-notation paths to ignore for maintenance configurations. Changes take effect only after an apply.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_maintenance_configurations = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_maintenance_window"></a> [maintenance\_window](#input\_maintenance\_window)
 
 Description: Maintenance window used to configure scheduled auto-upgrade for a Managed Cluster.
@@ -111,6 +125,36 @@ list(object({
 
 Default: `null`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource type overrides for managed cluster maintenance configurations.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_maintenance_configurations = optional(string, "Microsoft.ContainerService/managedClusters/maintenanceConfigurations@2026-03-01")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every supported AzAPI resource declared by this module.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_time_in_week"></a> [time\_in\_week](#input\_time\_in\_week)
 
 Description: Time slots during the week when planned maintenance is allowed to proceed. If two array entries specify the same day of the week, the applied configuration is the union of times in both entries.
@@ -122,6 +166,23 @@ list(object({
     day        = optional(string)
     hour_slots = optional(list(number))
   }))
+```
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Default per-operation timeouts applied to every supported AzAPI resource declared by this module.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
 ```
 
 Default: `null`

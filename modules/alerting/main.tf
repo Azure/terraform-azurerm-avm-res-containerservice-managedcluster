@@ -3,7 +3,7 @@ resource "azapi_resource" "ag" {
   location  = "Global"
   name      = "RecommendedAlertRules-AG-1"
   parent_id = var.parent_id
-  type      = "Microsoft.Insights/actionGroups@2024-10-01-preview"
+  type      = var.resource_types.insights_action_groups
   body = {
     properties = {
       groupShortName = "recalert1"
@@ -17,7 +17,19 @@ resource "azapi_resource" "ag" {
       ]
     }
   }
-  tags = var.tags
+  tags                = var.tags
+  ignore_body_changes = length(var.ignore_body_changes.insights_action_groups) > 0 ? var.ignore_body_changes.insights_action_groups : null
+  retry               = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/metricalerts?pivots=deployment-language-terraform
@@ -25,7 +37,7 @@ resource "azapi_resource" "metricalert_cpu" {
   location  = "Global"
   name      = "CPU Usage Percentage - ${basename(var.aks_cluster_id)}"
   parent_id = var.parent_id
-  type      = "Microsoft.Insights/metricAlerts@2018-03-01"
+  type      = var.resource_types.insights_metric_alerts
   body = {
     properties = {
       severity            = 3
@@ -56,14 +68,26 @@ resource "azapi_resource" "metricalert_cpu" {
       ]
     }
   }
-  tags = var.tags
+  tags                = var.tags
+  ignore_body_changes = length(var.ignore_body_changes.insights_metric_alerts) > 0 ? var.ignore_body_changes.insights_metric_alerts : null
+  retry               = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 }
 
 resource "azapi_resource" "metricalert_memory" {
   location  = "Global"
   name      = "Memory Working Set Percentage - ${basename(var.aks_cluster_id)}"
   parent_id = var.parent_id
-  type      = "Microsoft.Insights/metricAlerts@2018-03-01"
+  type      = var.resource_types.insights_metric_alerts
   body = {
     properties = {
       severity            = 3
@@ -94,5 +118,17 @@ resource "azapi_resource" "metricalert_memory" {
       ]
     }
   }
-  tags = var.tags
+  tags                = var.tags
+  ignore_body_changes = length(var.ignore_body_changes.insights_metric_alerts) > 0 ? var.ignore_body_changes.insights_metric_alerts : null
+  retry               = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 }

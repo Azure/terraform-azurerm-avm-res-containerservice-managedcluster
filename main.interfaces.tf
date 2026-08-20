@@ -45,11 +45,11 @@ locals {
       ip_configurations = {
         for ip_configuration_key, ip_configuration in private_endpoint.ip_configurations :
         ip_configuration_key => merge(ip_configuration, {
-          member_name = "management"
+          member_name = coalesce(ip_configuration.member_name, "management")
         })
       }
       location                      = private_endpoint.location
-      lock                          = null
+      lock                          = private_endpoint.lock
       name                          = coalesce(private_endpoint.name, "pe-${var.name}")
       network_interface_name        = private_endpoint.network_interface_name
       private_dns_zone_group_name   = private_endpoint.private_dns_zone_group_name
@@ -59,9 +59,9 @@ locals {
         "pse-${var.name}"
       )
       resource_group_name = private_endpoint.resource_group_name
-      role_assignments    = {}
+      role_assignments    = private_endpoint.role_assignments
       subnet_resource_id  = private_endpoint.subnet_resource_id
-      subresource_name    = "management"
+      subresource_name    = coalesce(private_endpoint.subresource_name, "management")
       tags                = private_endpoint.tags
     }
   }

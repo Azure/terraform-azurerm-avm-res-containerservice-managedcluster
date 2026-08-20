@@ -8,29 +8,26 @@ resource "azapi_resource" "private_endpoints" {
     split("/", var.parent_id)[2],
     var.private_endpoints[each.key].resource_group_name
   )
-  type = each.value.type
+  type = var.resource_types.network_private_endpoints
   body = merge(each.value.body, {
     properties = merge(each.value.body.properties, {
       customNetworkInterfaceName = var.private_endpoints[each.key].network_interface_name
     })
   })
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  ignore_null_property   = true
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  replace_triggers_refs  = ["properties.subnet.id"]
-  response_export_values = []
-  retry = {
-    error_message_regex  = ["ScopeLocked"]
-    interval_seconds     = 15
-    max_interval_seconds = 60
-  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes       = length(var.ignore_body_changes.network_private_endpoints) > 0 ? var.ignore_body_changes.network_private_endpoints : null
+  ignore_null_property      = true
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs     = ["properties.subnet.id"]
+  response_export_values    = []
+  retry                     = var.retry
   schema_validation_enabled = false
   tags                      = each.value.tags
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
 
     content {
       create = timeouts.value.create
@@ -49,7 +46,7 @@ resource "azapi_resource" "private_dns_zone_groups" {
 
   name      = each.value.name
   parent_id = azapi_resource.private_endpoints[each.key].id
-  type      = each.value.type
+  type      = var.resource_types.network_private_endpoints_private_dns_zone_groups
   body = merge(each.value.body, {
     properties = merge(each.value.body.properties, {
       privateDnsZoneConfigs = [
@@ -62,22 +59,19 @@ resource "azapi_resource" "private_dns_zone_groups" {
       ]
     })
   })
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  ignore_null_property   = true
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  replace_triggers_refs  = []
-  response_export_values = []
-  retry = {
-    error_message_regex  = ["ScopeLocked"]
-    interval_seconds     = 15
-    max_interval_seconds = 60
-  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes       = length(var.ignore_body_changes.network_private_endpoints_private_dns_zone_groups) > 0 ? var.ignore_body_changes.network_private_endpoints_private_dns_zone_groups : null
+  ignore_null_property      = true
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs     = []
+  response_export_values    = []
+  retry                     = var.retry
   schema_validation_enabled = false
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+    for_each = var.timeouts == null ? (var.cluster_timeouts == null ? [] : [var.cluster_timeouts]) : [var.timeouts]
 
     content {
       create = timeouts.value.create

@@ -729,6 +729,34 @@ Timeouts for create, read, update, and delete operations.
 DESCRIPTION
 }
 
+variable "resource_types" {
+  type = object({
+    containerservice_managed_clusters_agent_pools = optional(string, "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview")
+  })
+  default     = {}
+  description = "AzAPI resource type overrides for managed cluster agent pools."
+  nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default     = null
+  description = "Retry configuration applied to every supported AzAPI resource declared by this module."
+}
+
+variable "ignore_body_changes" {
+  type = object({
+    containerservice_managed_clusters_agent_pools = optional(list(string), [])
+  })
+  default     = {}
+  description = "Body-relative dot-notation paths to ignore for managed cluster agent pools. Changes take effect only after an apply."
+  nullable    = false
+}
+
 variable "type" {
   type        = string
   default     = null
