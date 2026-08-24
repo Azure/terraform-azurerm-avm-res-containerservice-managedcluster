@@ -113,7 +113,6 @@ resource "azapi_resource" "lock" {
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  replace_triggers_refs  = []
   response_export_values = []
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
@@ -146,7 +145,6 @@ resource "azapi_resource" "role_assignments" {
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_null_property   = true
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  replace_triggers_refs  = []
   response_export_values = []
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 

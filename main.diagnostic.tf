@@ -9,7 +9,6 @@ resource "azapi_resource" "diagnostic_settings" {
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_null_property      = true
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  replace_triggers_refs     = []
   response_export_values    = []
   schema_validation_enabled = false
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
