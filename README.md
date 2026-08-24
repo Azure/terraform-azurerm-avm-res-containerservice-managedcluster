@@ -2283,7 +2283,7 @@ Version:
 
 Source: Azure/avm-utl-interfaces/azure
 
-Version: 0.6.0
+Version: 0.7.0
 
 ### <a name="module_maintenanceconfiguration"></a> [maintenanceconfiguration](#module\_maintenanceconfiguration)
 
