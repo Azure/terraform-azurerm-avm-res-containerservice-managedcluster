@@ -22,7 +22,7 @@ az aks command invoke -g <resource_group_name> -n <aks_cluster_name> \
 # See: https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-create-application-gateway-for-containers-byo-deployment
 ```
 
-This preview feature requires the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features before deployment. The E2E pre-hook verifies both registrations:
+This preview feature requires the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features before deployment:
 
 ```bash
 az feature register --namespace Microsoft.ContainerService --name ManagedGatewayAPIPreview
