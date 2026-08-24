@@ -11,6 +11,9 @@ module "monitoring" {
   retry                      = var.retry
   tags                       = var.tags
   timeouts                   = local.effective_timeouts
+
+  # `aks_cluster_id` is a constructed string, so order these behind the cluster explicitly.
+  depends_on = [azapi_resource.this]
 }
 
 # Alerting module - conditionally instantiated
@@ -24,4 +27,6 @@ module "alerting" {
   retry          = var.retry
   tags           = var.tags
   timeouts       = local.effective_timeouts
+
+  depends_on = [azapi_resource.this]
 }
