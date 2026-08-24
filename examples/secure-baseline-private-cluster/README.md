@@ -42,10 +42,6 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.9"
     }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.2.1"
-    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
@@ -54,16 +50,6 @@ terraform {
 }
 
 provider "azapi" {}
-
-provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Monitor", "Microsoft.Network", "Microsoft.OperationalInsights", "Microsoft.ServiceNetworking"]
-
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
 
 locals {
   name_prefix          = "aks-sbp-${substr(data.azapi_client_config.current.subscription_id, 0, 8)}"
@@ -345,8 +331,6 @@ The following requirements are needed by this module:
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.14)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
-
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.2.1)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
 

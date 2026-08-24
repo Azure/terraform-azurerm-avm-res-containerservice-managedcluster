@@ -13,13 +13,16 @@ resource "azapi_resource" "this" {
 
   name                 = var.name
   parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview"
+  type                 = var.resource_types.containerservice_managed_clusters_agent_pools
   body                 = local.resource_body
+  ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters_agent_pools) > 0 ? var.ignore_body_changes.containerservice_managed_clusters_agent_pools : null
   ignore_null_property = true
   locks = [
     var.parent_id
   ]
-  replace_triggers_refs = local.replace_triggers_refs
+  replace_triggers_refs = [
+    "properties.vmSize",
+  ]
   response_export_values = [
     "properties.currentOrchestratorVersion",
     "properties.localDNSProfile.state",
@@ -27,6 +30,7 @@ resource "azapi_resource" "this" {
     "properties.provisioningState",
     "type"
   ]
+  retry = var.retry
   # AzAPI's embedded AKS schema does not include this preview API yet.
   # Azure still validates the request at apply time.
   schema_validation_enabled = false
@@ -52,13 +56,16 @@ resource "azapi_resource" "this_create_before_destroy" {
 
   name                 = "${var.name}${substr(sha256(uuid()), 0, 4)}"
   parent_id            = var.parent_id
-  type                 = "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview"
+  type                 = var.resource_types.containerservice_managed_clusters_agent_pools
   body                 = local.resource_body
+  ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters_agent_pools) > 0 ? var.ignore_body_changes.containerservice_managed_clusters_agent_pools : null
   ignore_null_property = true
   locks = [
     var.parent_id
   ]
-  replace_triggers_refs = local.replace_triggers_refs
+  replace_triggers_refs = [
+    "properties.vmSize",
+  ]
   response_export_values = [
     "properties.currentOrchestratorVersion",
     "properties.localDNSProfile.state",
@@ -66,6 +73,7 @@ resource "azapi_resource" "this_create_before_destroy" {
     "properties.provisioningState",
     "type"
   ]
+  retry = var.retry
   # AzAPI's embedded AKS schema does not include this preview API yet.
   # Azure still validates the request at apply time.
   schema_validation_enabled = false

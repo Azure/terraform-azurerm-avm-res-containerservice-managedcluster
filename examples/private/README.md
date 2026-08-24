@@ -9,9 +9,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.2.1"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.9"
     }
     random = {
       source  = "hashicorp/random"
@@ -20,15 +20,9 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Network"]
+provider "azapi" {}
 
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+data "azapi_client_config" "current" {}
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
@@ -61,70 +55,145 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = local.location
-  name     = module.naming.resource_group.name_unique
+resource "azapi_resource" "this" {
+  location               = local.location
+  name                   = module.naming.resource_group.name_unique
+  parent_id              = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type                   = "Microsoft.Resources/resourceGroups@2024-03-01"
+  response_export_values = []
 }
 
-resource "azurerm_virtual_network" "vnet" {
-  location            = azurerm_resource_group.this.location
-  name                = "private-vnet"
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.1.0.0/16"]
-}
-
-resource "azurerm_subnet" "api_server" {
-  address_prefixes     = ["10.1.0.0/28"]
-  name                 = "apiServerSubnet"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-
-  lifecycle {
-    ignore_changes = [delegation]
+resource "azapi_resource" "vnet" {
+  location  = azapi_resource.this.location
+  name      = "private-vnet"
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.Network/virtualNetworks@2024-05-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.1.0.0/16"]
+      }
+    }
   }
+  response_export_values = []
 }
 
-resource "azurerm_subnet" "subnet" {
-  address_prefixes     = ["10.1.1.0/24"]
-  name                 = "default"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+# The subnets are chained with depends_on so they are written to the parent
+# virtual network one at a time; parallel subnet writes conflict on the VNet.
+resource "azapi_resource" "api_server_subnet" {
+  name      = "apiServerSubnet"
+  parent_id = azapi_resource.vnet.id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      addressPrefix = "10.1.0.0/28"
+      delegations = [
+        {
+          name = "aks-delegation"
+          properties = {
+            serviceName = "Microsoft.ContainerService/managedClusters"
+          }
+        }
+      ]
+    }
+  }
+  response_export_values = []
 }
 
-resource "azurerm_subnet" "unp1_subnet" {
-  address_prefixes     = ["10.1.2.0/24"]
-  name                 = "unp1"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+resource "azapi_resource" "subnet" {
+  name      = "default"
+  parent_id = azapi_resource.vnet.id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      addressPrefix = "10.1.1.0/24"
+    }
+  }
+  response_export_values = []
+
+  depends_on = [azapi_resource.api_server_subnet]
 }
 
-resource "azurerm_private_dns_zone" "zone" {
-  name                = "privatelink.${azurerm_resource_group.this.location}.azmk8s.io"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "unp1_subnet" {
+  name      = "unp1"
+  parent_id = azapi_resource.vnet.id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      addressPrefix = "10.1.2.0/24"
+    }
+  }
+  response_export_values = []
+
+  depends_on = [azapi_resource.subnet]
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
-  name                = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
-  private_dns_zone_id = azurerm_private_dns_zone.zone.id
-  virtual_network_id  = azurerm_virtual_network.vnet.id
+resource "azapi_resource" "dns_zone" {
+  location  = "global"
+  name      = "privatelink.${azapi_resource.this.location}.azmk8s.io"
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.Network/privateDnsZones@2024-06-01"
+  body = {
+    properties = {}
+  }
+  response_export_values = []
 }
 
-resource "azurerm_user_assigned_identity" "identity" {
-  location            = azurerm_resource_group.this.location
-  name                = "aks-identity"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "vnet_link" {
+  location  = "global"
+  name      = "privatelink-${azapi_resource.this.location}-azmk8s-io"
+  parent_id = azapi_resource.dns_zone.id
+  type      = "Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01"
+  body = {
+    properties = {
+      registrationEnabled = false
+      virtualNetwork = {
+        id = azapi_resource.vnet.id
+      }
+    }
+  }
+  response_export_values = []
 }
 
-resource "azurerm_role_assignment" "private_dns_zone_contributor" {
-  principal_id         = azurerm_user_assigned_identity.identity.principal_id
-  scope                = azurerm_private_dns_zone.zone.id
-  role_definition_name = "Private DNS Zone Contributor"
+resource "azapi_resource" "identity" {
+  location               = azapi_resource.this.location
+  name                   = "aks-identity"
+  parent_id              = azapi_resource.this.id
+  type                   = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
+  response_export_values = ["properties.principalId"]
 }
 
-resource "azurerm_role_assignment" "network_contributor" {
-  principal_id         = azurerm_user_assigned_identity.identity.principal_id
-  scope                = azurerm_virtual_network.vnet.id
-  role_definition_name = "Network Contributor"
+# Role assignment resource names must be GUIDs.
+resource "random_uuid" "private_dns_zone_contributor" {}
+
+resource "azapi_resource" "private_dns_zone_contributor" {
+  name      = random_uuid.private_dns_zone_contributor.result
+  parent_id = azapi_resource.dns_zone.id
+  type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
+  body = {
+    properties = {
+      principalId      = azapi_resource.identity.output.properties.principalId
+      principalType    = "ServicePrincipal"
+      roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/b12aa53e-6015-4669-85d0-8515ebb3ae7f"
+    }
+  }
+  response_export_values = []
+}
+
+resource "random_uuid" "network_contributor" {}
+
+resource "azapi_resource" "network_contributor" {
+  name      = random_uuid.network_contributor.result
+  parent_id = azapi_resource.vnet.id
+  type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
+  body = {
+    properties = {
+      principalId      = azapi_resource.identity.output.properties.principalId
+      principalType    = "ServicePrincipal"
+      roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
+    }
+  }
+  response_export_values = []
 }
 
 resource "random_string" "dns_prefix" {
@@ -135,17 +204,15 @@ resource "random_string" "dns_prefix" {
   upper   = false # No uppercase letters
 }
 
-data "azurerm_client_config" "current" {}
-
 module "private" {
   source = "../.."
 
-  location  = azurerm_resource_group.this.location
+  location  = azapi_resource.this.location
   name      = module.naming.kubernetes_cluster.name_unique
-  parent_id = azurerm_resource_group.this.id
+  parent_id = azapi_resource.this.id
   aad_profile = {
     enable_azure_rbac      = true
-    tenant_id              = data.azurerm_client_config.current.tenant_id
+    tenant_id              = data.azapi_client_config.current.tenant_id
     admin_group_object_ids = []
     managed                = true
   }
@@ -160,7 +227,7 @@ module "private" {
       max_pods            = 30
       min_count           = 2
       os_disk_size_gb     = 128
-      vnet_subnet_id      = azurerm_subnet.unp1_subnet.id
+      vnet_subnet_id      = azapi_resource.unp1_subnet.id
       upgrade_settings = {
         max_surge = "10%"
       }
@@ -174,7 +241,7 @@ module "private" {
   }
   api_server_access_profile = {
     enable_private_cluster = true
-    private_dns_zone       = azurerm_private_dns_zone.zone.id
+    private_dns_zone       = azapi_resource.dns_zone.id
   }
   default_agent_pool = {
     name                = "default"
@@ -183,7 +250,7 @@ module "private" {
     max_count           = 4
     max_pods            = 30
     min_count           = 2
-    vnet_subnet_id      = azurerm_subnet.subnet.id
+    vnet_subnet_id      = azapi_resource.subnet.id
     node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
 
     upgrade_settings = {
@@ -193,7 +260,7 @@ module "private" {
   fqdn_subdomain = random_string.dns_prefix.result
   managed_identities = {
     system_assigned            = false
-    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
+    user_assigned_resource_ids = [azapi_resource.identity.id]
   }
   network_profile = {
     # In enterprise environments you typically want to manage outbound traffic using your own routing.
@@ -217,8 +284,9 @@ module "private" {
   }
 
   depends_on = [
-    azurerm_role_assignment.private_dns_zone_contributor,
-    azurerm_role_assignment.network_contributor,
+    azapi_resource.network_contributor,
+    azapi_resource.private_dns_zone_contributor,
+    azapi_resource.vnet_link,
   ]
 }
 ```
@@ -230,7 +298,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.2.1)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -238,20 +306,22 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_private_dns_zone.zone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
-- [azurerm_private_dns_zone_virtual_network_link.vnet_link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_role_assignment.network_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_role_assignment.private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_subnet.api_server](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_subnet.unp1_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_user_assigned_identity.identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
-- [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azapi_resource.api_server_subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.dns_zone](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.network_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_dns_zone_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.unp1_subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.vnet_link](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [random_uuid.network_contributor](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [random_uuid.private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

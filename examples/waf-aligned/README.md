@@ -9,9 +9,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.2.1"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.9"
     }
     random = {
       source  = "hashicorp/random"
@@ -20,17 +20,9 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Network", "Microsoft.OperationalInsights"]
+provider "azapi" {}
 
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
-data "azurerm_client_config" "current" {}
+data "azapi_client_config" "current" {}
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
@@ -59,92 +51,202 @@ module "naming" {
   version = "0.4.3"
 }
 
-resource "azurerm_resource_group" "this" {
-  location = local.location
-  name     = module.naming.resource_group.name_unique
+resource "azapi_resource" "this" {
+  location               = local.location
+  name                   = module.naming.resource_group.name_unique
+  parent_id              = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type                   = "Microsoft.Resources/resourceGroups@2024-03-01"
+  response_export_values = []
 }
 
-resource "azurerm_virtual_network" "vnet" {
-  location            = azurerm_resource_group.this.location
-  name                = "waf-vnet"
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.1.0.0/16"]
-}
-
-resource "azurerm_subnet" "api_server" {
-  address_prefixes     = ["10.1.0.0/28"]
-  name                 = "apiServerSubnet"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-
-  lifecycle {
-    ignore_changes = [delegation]
+resource "azapi_resource" "vnet" {
+  location  = azapi_resource.this.location
+  name      = "waf-vnet"
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.Network/virtualNetworks@2024-05-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.1.0.0/16"]
+      }
+    }
   }
+  response_export_values = []
 }
 
-resource "azurerm_subnet" "subnet" {
-  address_prefixes     = ["10.1.1.0/24"]
-  name                 = "default"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+# Subnets are chained so writes to the parent virtual network happen serially.
+resource "azapi_resource" "subnet_api_server" {
+  name      = "apiServerSubnet"
+  parent_id = azapi_resource.vnet.id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      addressPrefix = "10.1.0.0/28"
+      delegations = [{
+        name = "aks-delegation"
+        properties = {
+          serviceName = "Microsoft.ContainerService/managedClusters"
+        }
+      }]
+    }
+  }
+  response_export_values = []
 }
 
-resource "azurerm_subnet" "unp1" {
-  address_prefixes     = ["10.1.2.0/24"]
-  name                 = "unp1"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+resource "azapi_resource" "subnet_default" {
+  name      = "default"
+  parent_id = azapi_resource.vnet.id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      addressPrefix = "10.1.1.0/24"
+    }
+  }
+  response_export_values = []
+
+  depends_on = [azapi_resource.subnet_api_server]
 }
 
-resource "azurerm_private_dns_zone" "zone" {
-  name                = "privatelink.${azurerm_resource_group.this.location}.azmk8s.io"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "subnet_unp1" {
+  name      = "unp1"
+  parent_id = azapi_resource.vnet.id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      addressPrefix = "10.1.2.0/24"
+    }
+  }
+  response_export_values = []
+
+  depends_on = [azapi_resource.subnet_default]
+}
+
+resource "azapi_resource" "private_dns_zone" {
+  location  = "global"
+  name      = "privatelink.${azapi_resource.this.location}.azmk8s.io"
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.Network/privateDnsZones@2024-06-01"
+  body = {
+    properties = {}
+  }
+  response_export_values = []
 }
 
 # Identity for the managed cluster
-resource "azurerm_user_assigned_identity" "identity" {
-  location            = azurerm_resource_group.this.location
-  name                = "aks-identity"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "identity" {
+  location               = azapi_resource.this.location
+  name                   = "aks-identity"
+  parent_id              = azapi_resource.this.id
+  type                   = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
+  response_export_values = ["properties.principalId"]
 }
 
 # Identity for the kubelet, used to pull images from ACR for example
-resource "azurerm_user_assigned_identity" "kubelet_identity" {
-  location            = azurerm_resource_group.this.location
-  name                = "aks-kubelet-identity"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "kubelet_identity" {
+  location               = azapi_resource.this.location
+  name                   = "aks-kubelet-identity"
+  parent_id              = azapi_resource.this.id
+  type                   = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
+  response_export_values = ["properties.principalId"]
 }
 
-resource "azurerm_role_assignment" "managed_identity_operator" {
-  principal_id         = azurerm_user_assigned_identity.identity.principal_id
-  scope                = azurerm_user_assigned_identity.kubelet_identity.id
-  role_definition_name = "Managed Identity Operator"
+# Role assignment resource names must be GUIDs.
+resource "random_uuid" "managed_identity_operator" {}
+
+resource "random_uuid" "network_contributor" {}
+
+resource "random_uuid" "private_dns_zone_contributor" {}
+
+resource "azapi_resource" "role_managed_identity_operator" {
+  name      = random_uuid.managed_identity_operator.result
+  parent_id = azapi_resource.kubelet_identity.id
+  type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
+  body = {
+    properties = {
+      principalId      = azapi_resource.identity.output.properties.principalId
+      principalType    = "ServicePrincipal"
+      roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/f1a07417-d97a-45cb-824c-7a7467783830"
+    }
+  }
+  # The user-assigned identity may not have replicated to Entra ID yet.
+  retry = {
+    error_message_regex  = ["PrincipalNotFound", "does not exist in the directory"]
+    interval_seconds     = 10
+    max_interval_seconds = 60
+  }
+  response_export_values = []
 }
 
-resource "azurerm_role_assignment" "network_contributor" {
-  principal_id         = azurerm_user_assigned_identity.identity.principal_id
-  scope                = azurerm_virtual_network.vnet.id
-  role_definition_name = "Network Contributor"
+resource "azapi_resource" "role_network_contributor" {
+  name      = random_uuid.network_contributor.result
+  parent_id = azapi_resource.vnet.id
+  type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
+  body = {
+    properties = {
+      principalId      = azapi_resource.identity.output.properties.principalId
+      principalType    = "ServicePrincipal"
+      roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
+    }
+  }
+  # The user-assigned identity may not have replicated to Entra ID yet.
+  retry = {
+    error_message_regex  = ["PrincipalNotFound", "does not exist in the directory"]
+    interval_seconds     = 10
+    max_interval_seconds = 60
+  }
+  response_export_values = []
 }
 
-resource "azurerm_role_assignment" "private_dns_zone_contributor" {
-  principal_id         = azurerm_user_assigned_identity.identity.principal_id
-  scope                = azurerm_private_dns_zone.zone.id
-  role_definition_name = "Private DNS Zone Contributor"
+resource "azapi_resource" "role_private_dns_zone_contributor" {
+  name      = random_uuid.private_dns_zone_contributor.result
+  parent_id = azapi_resource.private_dns_zone.id
+  type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
+  body = {
+    properties = {
+      principalId      = azapi_resource.identity.output.properties.principalId
+      principalType    = "ServicePrincipal"
+      roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/b12aa53e-6015-4669-85d0-8515ebb3ae7f"
+    }
+  }
+  # The user-assigned identity may not have replicated to Entra ID yet.
+  retry = {
+    error_message_regex  = ["PrincipalNotFound", "does not exist in the directory"]
+    interval_seconds     = 10
+    max_interval_seconds = 60
+  }
+  response_export_values = []
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
-  name                = "privatelink-${azurerm_resource_group.this.location}-azmk8s-io"
-  private_dns_zone_id = azurerm_private_dns_zone.zone.id
-  virtual_network_id  = azurerm_virtual_network.vnet.id
+resource "azapi_resource" "private_dns_zone_vnet_link" {
+  location  = "global"
+  name      = "privatelink-${azapi_resource.this.location}-azmk8s-io"
+  parent_id = azapi_resource.private_dns_zone.id
+  type      = "Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01"
+  body = {
+    properties = {
+      registrationEnabled = false
+      virtualNetwork = {
+        id = azapi_resource.vnet.id
+      }
+    }
+  }
+  response_export_values = []
 }
 
-resource "azurerm_log_analytics_workspace" "workspace" {
-  location            = azurerm_resource_group.this.location
-  name                = "waf-log-analytics"
-  resource_group_name = azurerm_resource_group.this.name
-  retention_in_days   = 30
-  sku                 = "PerGB2018"
+resource "azapi_resource" "log_analytics_workspace" {
+  location  = azapi_resource.this.location
+  name      = "waf-log-analytics"
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.OperationalInsights/workspaces@2023-09-01"
+  body = {
+    properties = {
+      retentionInDays = 30
+      sku = {
+        name = "PerGB2018"
+      }
+    }
+  }
+  response_export_values = []
 }
 
 resource "random_string" "dns_prefix" {
@@ -158,11 +260,11 @@ resource "random_string" "dns_prefix" {
 module "waf_aligned" {
   source = "../.."
 
-  location  = azurerm_resource_group.this.location
+  location  = azapi_resource.this.location
   name      = module.naming.kubernetes_cluster.name_unique
-  parent_id = azurerm_resource_group.this.id
+  parent_id = azapi_resource.this.id
   aad_profile = {
-    tenant_id              = data.azurerm_client_config.current.tenant_id
+    tenant_id              = data.azapi_client_config.current.tenant_id
     enable_azure_rbac      = true
     admin_group_object_ids = []
     managed                = true
@@ -170,7 +272,7 @@ module "waf_aligned" {
   addon_profile_oms_agent = {
     enabled = true
     config = {
-      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.workspace.id
+      log_analytics_workspace_resource_id = azapi_resource.log_analytics_workspace.id
       use_aad_auth                        = true
     }
   }
@@ -183,7 +285,7 @@ module "waf_aligned" {
       max_pods            = 50
       min_count           = 2
       os_disk_size_gb     = 60
-      vnet_subnet_id      = azurerm_subnet.unp1.id
+      vnet_subnet_id      = azapi_resource.subnet_unp1.id
 
       upgrade_settings = {
         max_surge = "10%"
@@ -193,8 +295,8 @@ module "waf_aligned" {
   api_server_access_profile = {
     enable_private_cluster  = true
     enable_vnet_integration = true
-    private_dns_zone        = azurerm_private_dns_zone.zone.id
-    subnet_id               = azurerm_subnet.api_server.id
+    private_dns_zone        = azapi_resource.private_dns_zone.id
+    subnet_id               = azapi_resource.subnet_api_server.id
   }
   auto_scaler_profile = {
     expander                   = "random"
@@ -213,7 +315,7 @@ module "waf_aligned" {
     max_count           = 5
     max_pods            = 50
     min_count           = 2
-    vnet_subnet_id      = azurerm_subnet.subnet.id
+    vnet_subnet_id      = azapi_resource.subnet_default.id
     mode                = "System"
     node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
     upgrade_settings = {
@@ -224,7 +326,7 @@ module "waf_aligned" {
   fqdn_subdomain         = random_string.dns_prefix.result
   identity_profile = {
     kubeletidentity = {
-      resource_id = azurerm_user_assigned_identity.kubelet_identity.id
+      resource_id = azapi_resource.kubelet_identity.id
     }
   }
   maintenanceconfiguration = {
@@ -246,7 +348,7 @@ module "waf_aligned" {
   }
   managed_identities = {
     system_assigned            = false
-    user_assigned_resource_ids = [azurerm_user_assigned_identity.identity.id]
+    user_assigned_resource_ids = [azapi_resource.identity.id]
   }
   network_profile = {
     # In enterprise environments you typically want to manage outbound traffic using your own routing.
@@ -270,14 +372,14 @@ module "waf_aligned" {
   }
   role_assignments = {
     rbac_admin = {
-      principal_id                     = data.azurerm_client_config.current.object_id
+      principal_id                     = data.azapi_client_config.current.object_id
       role_definition_id_or_name       = "Azure Kubernetes Service RBAC Cluster Admin"
       skip_service_principal_aad_check = false
     }
   }
   security_profile = {
     defender = {
-      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.workspace.id
+      log_analytics_workspace_resource_id = azapi_resource.log_analytics_workspace.id
       security_monitoring = {
         enabled = true
       }
@@ -289,9 +391,9 @@ module "waf_aligned" {
   }
 
   depends_on = [
-    azurerm_role_assignment.private_dns_zone_contributor,
-    azurerm_role_assignment.network_contributor,
-    azurerm_role_assignment.managed_identity_operator,
+    azapi_resource.role_private_dns_zone_contributor,
+    azapi_resource.role_network_contributor,
+    azapi_resource.role_managed_identity_operator,
   ]
 }
 ```
@@ -303,7 +405,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.2.1)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -311,22 +413,25 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_log_analytics_workspace.workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
-- [azurerm_private_dns_zone.zone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
-- [azurerm_private_dns_zone_virtual_network_link.vnet_link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_role_assignment.managed_identity_operator](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_role_assignment.network_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_role_assignment.private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_subnet.api_server](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_subnet.unp1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_user_assigned_identity.identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
-- [azurerm_user_assigned_identity.kubelet_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
-- [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azapi_resource.identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.kubelet_identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.log_analytics_workspace](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_dns_zone](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_dns_zone_vnet_link](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.role_managed_identity_operator](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.role_network_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.role_private_dns_zone_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_api_server](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_default](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_unp1](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.dns_prefix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [random_uuid.managed_identity_operator](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [random_uuid.network_contributor](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [random_uuid.private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

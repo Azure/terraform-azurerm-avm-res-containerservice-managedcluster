@@ -43,6 +43,7 @@ module "default_agent_pool_data" {
   pod_ip_allocation_mode        = var.default_agent_pool.pod_ip_allocation_mode
   pod_subnet_id                 = var.default_agent_pool.pod_subnet_id
   proximity_placement_group_id  = var.default_agent_pool.proximity_placement_group_id
+  retry                         = var.retry
   scale_down_mode               = var.default_agent_pool.scale_down_mode
   scale_set_eviction_policy     = var.default_agent_pool.scale_set_eviction_policy
   scale_set_priority            = var.default_agent_pool.scale_set_priority
@@ -66,7 +67,7 @@ module "default_agent_pool_data" {
 resource "azapi_update_resource" "default_agent_pool" {
   name      = module.default_agent_pool_data.name
   parent_id = azapi_resource.this.id
-  type      = "Microsoft.ContainerService/managedClusters/agentpools@2026-01-02-preview"
+  type      = var.resource_types.containerservice_managed_clusters_agent_pools
   body = {
     properties = merge(
       {

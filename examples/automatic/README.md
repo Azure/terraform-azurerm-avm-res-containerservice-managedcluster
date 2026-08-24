@@ -9,9 +9,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.2.1"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.9"
     }
     random = {
       source  = "hashicorp/random"
@@ -20,17 +20,9 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.Monitor", "Microsoft.OperationalInsights"]
+provider "azapi" {}
 
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
-data "azurerm_client_config" "current" {}
+data "azapi_client_config" "current" {}
 
 # Ensure to select a region that meets criteria for AKS Automatic clusters.
 # See this doc for more info: https://learn.microsoft.com/azure/aks/automatic/quick-automatic-managed-network?pivots=azure-portal#limitations
@@ -66,35 +58,51 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = local.location
-  name     = module.naming.resource_group.name_unique
+resource "azapi_resource" "this" {
+  location               = local.location
+  name                   = module.naming.resource_group.name_unique
+  parent_id              = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type                   = "Microsoft.Resources/resourceGroups@2024-03-01"
+  response_export_values = []
 }
 
-resource "azurerm_monitor_workspace" "example" {
-  location            = azurerm_resource_group.this.location
-  name                = "prom-${random_string.suffix.result}"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "monitor_workspace" {
+  location  = azapi_resource.this.location
+  name      = "prom-${random_string.suffix.result}"
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.Monitor/accounts@2023-04-03"
+  body = {
+    properties = {}
+  }
+  response_export_values = []
 }
 
-resource "azurerm_log_analytics_workspace" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.log_analytics_workspace.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  retention_in_days   = 30
-  sku                 = "PerGB2018"
+resource "azapi_resource" "log_analytics_workspace" {
+  location  = azapi_resource.this.location
+  name      = module.naming.log_analytics_workspace.name_unique
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.OperationalInsights/workspaces@2023-09-01"
+  body = {
+    properties = {
+      retentionInDays = 30
+      sku = {
+        name = "PerGB2018"
+      }
+    }
+  }
+  response_export_values = []
 }
 
 module "automatic" {
   source = "../.."
 
-  location  = azurerm_resource_group.this.location
+  location  = azapi_resource.this.location
   name      = module.naming.kubernetes_cluster.name_unique
-  parent_id = azurerm_resource_group.this.id
+  parent_id = azapi_resource.this.id
   addon_profile_oms_agent = {
     enabled = true
     config = {
-      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.this.id
+      log_analytics_workspace_resource_id = azapi_resource.log_analytics_workspace.id
       use_aad_auth                        = true
     }
   }
@@ -118,10 +126,10 @@ module "automatic" {
   }
   onboard_alerts          = true
   onboard_monitoring      = true
-  prometheus_workspace_id = azurerm_monitor_workspace.example.id
+  prometheus_workspace_id = azapi_resource.monitor_workspace.id
   role_assignments = {
     "admin" = {
-      principal_id               = data.azurerm_client_config.current.object_id
+      principal_id               = data.azapi_client_config.current.object_id
       role_definition_id_or_name = "Azure Kubernetes Service RBAC Admin"
     }
   }
@@ -139,7 +147,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.2.1)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -147,12 +155,12 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
-- [azurerm_monitor_workspace.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_workspace) (resource)
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azapi_resource.log_analytics_workspace](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.monitor_workspace](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

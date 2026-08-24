@@ -8,7 +8,9 @@ module "monitoring" {
   log_analytics_workspace_id = var.addon_profile_oms_agent.config.log_analytics_workspace_resource_id
   parent_id                  = var.parent_id
   prometheus_workspace_id    = var.prometheus_workspace_id
+  retry                      = var.retry
   tags                       = var.tags
+  timeouts                   = local.effective_timeouts
 }
 
 # Alerting module - conditionally instantiated
@@ -19,5 +21,7 @@ module "alerting" {
   aks_cluster_id = local.aks_cluster_id
   alert_email    = var.alert_email
   parent_id      = var.parent_id
+  retry          = var.retry
   tags           = var.tags
+  timeouts       = local.effective_timeouts
 }

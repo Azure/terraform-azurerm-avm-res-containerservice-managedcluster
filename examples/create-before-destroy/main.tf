@@ -2,9 +2,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.2.1"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.9"
     }
     random = {
       source  = "hashicorp/random"
@@ -12,17 +12,6 @@ terraform {
     }
   }
 }
-
-provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService"]
-
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
@@ -47,23 +36,26 @@ module "naming" {
   version = "0.4.3"
 }
 
-# This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = local.location
-  name     = module.naming.resource_group.name_unique
-}
+data "azapi_client_config" "current" {}
 
-data "azurerm_client_config" "current" {}
+# This is required for resource modules
+resource "azapi_resource" "this" {
+  location               = local.location
+  name                   = module.naming.resource_group.name_unique
+  parent_id              = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type                   = "Microsoft.Resources/resourceGroups@2024-03-01"
+  response_export_values = []
+}
 
 module "create_before_destroy" {
   source = "../.."
 
-  location  = azurerm_resource_group.this.location
+  location  = azapi_resource.this.location
   name      = module.naming.kubernetes_cluster.name_unique
-  parent_id = azurerm_resource_group.this.id
+  parent_id = azapi_resource.this.id
   aad_profile = {
     enable_azure_rbac      = true
-    tenant_id              = data.azurerm_client_config.current.tenant_id
+    tenant_id              = data.azapi_client_config.current.tenant_id
     admin_group_object_ids = []
     managed                = true
   }
