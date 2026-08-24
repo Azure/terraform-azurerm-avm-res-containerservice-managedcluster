@@ -43,6 +43,11 @@ output "ingress_app_object_id" {
   value       = try(azapi_resource.this.output.properties.addonProfiles.ingressApplicationGateway.identity.objectId, null)
 }
 
+output "ingress_profile_application_load_balancer_identity" {
+  description = "Details about the user assigned identity created for the Application Gateway for Containers ALB Controller add-on."
+  value       = try(azapi_resource.this.output.properties.ingressProfile.applicationLoadBalancer.identity, {})
+}
+
 output "ingress_profile_web_app_routing_identity" {
   description = "Details about a user assigned identity."
   value       = try(azapi_resource.this.output.properties.ingressProfile.webAppRouting.identity, {})

@@ -743,6 +743,9 @@ DESCRIPTION
 
 variable "ingress_profile" {
   type = object({
+    application_load_balancer = optional(object({
+      enabled = optional(bool)
+    }))
     gateway_api = optional(object({
       installation = optional(string)
     }))
@@ -763,6 +766,8 @@ variable "ingress_profile" {
   description = <<DESCRIPTION
 Ingress profile for the container service cluster.
 
+- `application_load_balancer` - Settings for the Application Gateway for Containers ALB Controller add-on.
+  - `enabled` - Whether to enable the Application Gateway for Containers ALB Controller add-on. Requires the managed Gateway API add-on, workload identity, and the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features.
 - `gateway_api` - Settings for the managed Gateway API installation.
   - `installation` - Configuration for the managed Gateway API installation. If not specified, the default is `Disabled`.
 - `web_app_routing` - Application Routing add-on settings for the ingress profile.
@@ -777,11 +782,11 @@ Ingress profile for the container service cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.ingress_profile == null || contains(["", "Disabled", "Standard"], coalesce(try(var.ingress_profile.gateway_api.installation, null), ""))
+    condition     = var.ingress_profile == null || contains(["", "Disabled", "Standard"], try(coalesce(var.ingress_profile.gateway_api.installation, ""), ""))
     error_message = "ingress_profile.gateway_api.installation must be one of: [\"Disabled\", \"Standard\"]."
   }
   validation {
-    condition     = var.ingress_profile == null || contains(["", "Disabled", "Enabled"], coalesce(try(var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode, null), ""))
+    condition     = var.ingress_profile == null || contains(["", "Disabled", "Enabled"], try(coalesce(var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode, ""), ""))
     error_message = "ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode must be one of: [\"Disabled\", \"Enabled\"]."
   }
 }

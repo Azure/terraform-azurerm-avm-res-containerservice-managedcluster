@@ -1226,6 +1226,8 @@ Default: `null`
 
 Description: Ingress profile for the container service cluster.
 
+- `application_load_balancer` - Settings for the Application Gateway for Containers ALB Controller add-on.
+  - `enabled` - Whether to enable the Application Gateway for Containers ALB Controller add-on. Requires the managed Gateway API add-on, workload identity, and the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features.
 - `gateway_api` - Settings for the managed Gateway API installation.
   - `installation` - Configuration for the managed Gateway API installation. If not specified, the default is `Disabled`.
 - `web_app_routing` - Application Routing add-on settings for the ingress profile.
@@ -1241,6 +1243,9 @@ Type:
 
 ```hcl
 object({
+    application_load_balancer = optional(object({
+      enabled = optional(bool)
+    }))
     gateway_api = optional(object({
       installation = optional(string)
     }))
@@ -2203,6 +2208,10 @@ Description: The tenant id of the assigned identity which is used by master comp
 
 Description: The object ID of the Ingress Application Gateway add-on identity.
 
+### <a name="output_ingress_profile_application_load_balancer_identity"></a> [ingress\_profile\_application\_load\_balancer\_identity](#output\_ingress\_profile\_application\_load\_balancer\_identity)
+
+Description: Details about the user assigned identity created for the Application Gateway for Containers ALB Controller add-on.
+
 ### <a name="output_ingress_profile_web_app_routing_identity"></a> [ingress\_profile\_web\_app\_routing\_identity](#output\_ingress\_profile\_web\_app\_routing\_identity)
 
 Description: Details about a user assigned identity.
@@ -2283,7 +2292,7 @@ Version:
 
 Source: Azure/avm-utl-interfaces/azure
 
-Version: 0.6.0
+Version: 0.7.0
 
 ### <a name="module_maintenanceconfiguration"></a> [maintenanceconfiguration](#module\_maintenanceconfiguration)
 

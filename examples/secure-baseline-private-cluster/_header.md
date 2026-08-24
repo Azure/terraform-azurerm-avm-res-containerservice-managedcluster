@@ -7,22 +7,26 @@ This example deploys Application Gateway for Containers alongside a private AKS 
 - Virtual network with three subnets: AKS nodes, Application Gateway for Containers association, and API server VNet integration
 - Private AKS cluster with Azure CNI, Workload Identity, and OIDC issuer enabled
 - Application Gateway for Containers with one frontend and one association
-- User-assigned managed identities with the required RBAC roles for AKS and the ALB Controller
+- User-assigned managed identity for AKS plus the add-on-created ALB Controller identity, with the required RBAC roles
 
-## Post-deployment steps
+## End-to-end validation
 
-After Terraform completes, enable the ALB Controller managed add-on and configure Gateway API resources:
+Terraform enables the managed Gateway API and Application Gateway for Containers ALB Controller add-ons. It also grants the add-on-created identity the roles it needs to manage the BYO traffic controller and delegated subnet.
 
 ```bash
-# 1. Enable the ALB Controller add-on on the AKS cluster
-az aks update -g <resource_group_name> -n <aks_cluster_name> --enable-alb-controller
-
-# 2. Verify ALB Controller pods are running
+# Verify the ALB Controller pods are running
 az aks command invoke -g <resource_group_name> -n <aks_cluster_name> \
-  --command "kubectl get pods -n alb-system"
+  --command "kubectl get pods -n kube-system | grep alb-controller"
 
-# 3. Apply Kubernetes Gateway API resources (GatewayClass, Gateway, HTTPRoute)
+# Apply Kubernetes Gateway API resources (GatewayClass, Gateway, HTTPRoute)
 # See: https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-create-application-gateway-for-containers-byo-deployment
+```
+
+This preview feature requires the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features before deployment. The E2E pre-hook verifies both registrations:
+
+```bash
+az feature register --namespace Microsoft.ContainerService --name ManagedGatewayAPIPreview
+az feature register --namespace Microsoft.ContainerService --name ApplicationLoadBalancerPreview
 ```
 
 For a consumer with an existing hub-spoke network, replace the inline virtual network and subnet resources with references to existing subnet IDs.

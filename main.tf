@@ -2,8 +2,8 @@ resource "azapi_resource" "this" {
   location  = var.location
   name      = var.name
   parent_id = var.parent_id
-  # kubeProxyConfig is not available in the stable 2026-03-01 API.
-  type                 = var.kube_proxy_config == null ? "Microsoft.ContainerService/managedClusters@2026-03-01" : "Microsoft.ContainerService/managedClusters@2026-03-02-preview"
+  # applicationLoadBalancer requires the 2025-09-02-preview API. kubeProxyConfig is not available in the stable 2026-03-01 API.
+  type                 = try(var.ingress_profile.application_load_balancer, null) != null ? "Microsoft.ContainerService/managedClusters@2025-09-02-preview" : var.kube_proxy_config == null ? "Microsoft.ContainerService/managedClusters@2026-03-01" : "Microsoft.ContainerService/managedClusters@2026-03-02-preview"
   body                 = local.resource_body
   create_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -19,6 +19,7 @@ resource "azapi_resource" "this" {
     "properties.currentKubernetesVersion",
     "properties.fqdn",
     "properties.identityProfile.kubeletidentity",
+    "properties.ingressProfile.applicationLoadBalancer.identity",
     "properties.ingressProfile.webAppRouting.identity",
     "properties.maxAgentPools",
     "properties.networkProfile.loadBalancerProfile.effectiveOutboundIPs",

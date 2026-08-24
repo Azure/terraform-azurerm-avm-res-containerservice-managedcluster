@@ -15,7 +15,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.0.0, < 5.1.1"
+      version = ">= 4.0.0, < 5.2.1"
     }
     random = {
       source  = "hashicorp/random"
@@ -88,6 +88,31 @@ resource "azurerm_virtual_network" "this" {
   address_space       = ["172.19.0.0/16"]
 }
 
+resource "azurerm_public_ip" "nat_gateway" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
+  name                = "pip-nat-${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "Standard"
+  zones               = ["1", "2", "3"]
+
+  lifecycle {
+    ignore_changes = [ip_tags]
+  }
+}
+
+resource "azurerm_nat_gateway" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = "nat-${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "Standard"
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "this" {
+  nat_gateway_id       = azurerm_nat_gateway.this.id
+  public_ip_address_id = azurerm_public_ip.nat_gateway.id
+}
+
 resource "azurerm_subnet" "api_server" {
   address_prefixes     = ["172.19.0.0/28"]
   name                 = "apiServerSubnet"
@@ -111,6 +136,20 @@ resource "azurerm_subnet" "system" {
   name                 = "systemSubnet"
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.this.name
+
+  lifecycle {
+    ignore_changes = [delegation]
+  }
+}
+
+resource "azurerm_subnet_nat_gateway_association" "cluster" {
+  nat_gateway_id = azurerm_nat_gateway.this.id
+  subnet_id      = azurerm_subnet.cluster.id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "system" {
+  nat_gateway_id = azurerm_nat_gateway.this.id
+  subnet_id      = azurerm_subnet.system.id
 }
 
 resource "azurerm_user_assigned_identity" "this" {
@@ -215,8 +254,7 @@ module "automatic" {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.this.id]
   }
   network_profile = {
-    # Change this to userDefinedRouting to prevent creation of public IP.
-    outbound_type = "loadBalancer"
+    outbound_type = "userAssignedNATGateway"
   }
   onboard_alerts          = true
   onboard_monitoring      = true
@@ -233,7 +271,10 @@ module "automatic" {
   }
 
   depends_on = [
-    azurerm_role_assignment.network_contributor
+    azurerm_nat_gateway_public_ip_association.this,
+    azurerm_role_assignment.network_contributor,
+    azurerm_subnet_nat_gateway_association.cluster,
+    azurerm_subnet_nat_gateway_association.system,
   ]
 }
 ```
@@ -245,7 +286,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0, < 5.1.1)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0.0, < 5.2.1)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -255,14 +296,19 @@ The following resources are used by this module:
 
 - [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
 - [azurerm_monitor_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_workspace) (resource)
+- [azurerm_nat_gateway.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
+- [azurerm_nat_gateway_public_ip_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_association) (resource)
 - [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_private_dns_zone_virtual_network_link.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
+- [azurerm_public_ip.nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_role_assignment.network_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.api_server](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.cluster](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.system](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_subnet_nat_gateway_association.cluster](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) (resource)
+- [azurerm_subnet_nat_gateway_association.system](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
