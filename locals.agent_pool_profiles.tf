@@ -10,7 +10,7 @@ locals {
   agent_pool_profiles = [
     merge(
       {
-        for k, v in local.agent_pool_profiles_create_body_properties : k => v if can(regex(local.agent_pool_profiles_regex, k)) && !contains(local.agent_pool_profiles_excluded_properties, k) && k != "securityProfile" && v != null
+        for k, v in module.default_agent_pool_data.body_properties : k => v if !contains(local.agent_pool_profiles_excluded_properties, k) && k != "securityProfile" && v != null
       },
       {
         # Strip null-valued attributes from each nested object. Do NOT wrap the source with
@@ -20,14 +20,14 @@ locals {
         # which the AKS API rejects ("drainTimeoutInMinutes accept type int32, not type
         # string"). A null-guarding ternary preserves each attribute's original type.
         for k, v in {
-          kubeletConfig = try(local.agent_pool_profiles_create_body_properties.kubeletConfig, null) == null ? null : {
-            for profile_key, profile_value in local.agent_pool_profiles_create_body_properties.kubeletConfig : profile_key => profile_value if profile_key != "seccompDefault" && profile_value != null
+          kubeletConfig = try(module.default_agent_pool_data.body_properties.kubeletConfig, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.kubeletConfig : profile_key => profile_value if profile_key != "seccompDefault" && profile_value != null
           }
-          localDNSProfile = try(local.agent_pool_profiles_create_body_properties.localDNSProfile, null) == null ? null : {
-            for profile_key, profile_value in local.agent_pool_profiles_create_body_properties.localDNSProfile : profile_key => profile_value if profile_key != "state" && profile_value != null
+          localDNSProfile = try(module.default_agent_pool_data.body_properties.localDNSProfile, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.localDNSProfile : profile_key => profile_value if profile_key != "state" && profile_value != null
           }
-          upgradeSettings = try(local.agent_pool_profiles_create_body_properties.upgradeSettings, null) == null ? null : {
-            for profile_key, profile_value in local.agent_pool_profiles_create_body_properties.upgradeSettings : profile_key => profile_value if profile_key != "maxBlockedNodes" && profile_value != null
+          upgradeSettings = try(module.default_agent_pool_data.body_properties.upgradeSettings, null) == null ? null : {
+            for profile_key, profile_value in module.default_agent_pool_data.body_properties.upgradeSettings : profile_key => profile_value if profile_key != "maxBlockedNodes" && profile_value != null
           }
         } : k => v if try(length(v), 0) > 0
       },
@@ -36,12 +36,6 @@ locals {
       }
     )
   ]
-  agent_pool_profiles_create_body_properties = merge(
-    module.default_agent_pool_data.body_properties,
-    {
-      count = local.is_automatic ? var.default_agent_pool.count_of : module.default_agent_pool_data.body_properties.count
-    }
-  )
   agent_pool_profiles_excluded_properties = [
     "artifactStreamingProfile",
     "enableOSDiskFullCaching",
@@ -54,15 +48,5 @@ locals {
     "upgradeSettings",
     "upgradeSettingsBlueGreen",
     "upgradeStrategy",
-  ]
-  agent_pool_profiles_regex           = local.is_automatic ? local.agent_pool_profiles_regex_automatic : local.agent_pool_profiles_regex_standard
-  agent_pool_profiles_regex_automatic = "^(${join("|", local.agent_pool_properties_automatic)})$"
-  agent_pool_profiles_regex_standard  = "^(.*)$"
-  agent_pool_properties_automatic = [
-    "name",
-    "mode",
-    "count",
-    "vnetSubnetID",
-    "tags",
   ]
 }

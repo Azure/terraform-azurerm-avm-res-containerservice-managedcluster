@@ -26,7 +26,7 @@ locals {
         tenantID            = var.aad_profile.tenant_id
       }
       addonProfiles     = local.addon_profiles
-      agentPoolProfiles = local.agent_pool_profiles
+      agentPoolProfiles = local.is_automatic ? null : local.agent_pool_profiles
       aiToolchainOperatorProfile = var.ai_toolchain_operator_profile == null ? null : {
         enabled = var.ai_toolchain_operator_profile.enabled
       }
@@ -275,7 +275,6 @@ locals {
   resource_body_properties_automatic = [
     "aadProfile",
     "addonProfiles",
-    "agentPoolProfiles",
     "apiServerAccessProfile",
     "autoUpgradeProfile",
     "azureMonitorProfile",

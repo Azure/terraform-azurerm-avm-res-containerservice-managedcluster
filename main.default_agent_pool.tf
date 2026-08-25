@@ -64,6 +64,8 @@ module "default_agent_pool_data" {
 # This is in place so we can update the default agent pool, as we ignore changes to the object array in the parent resource.
 # TODO: Remove this when <https://github.com/Azure/terraform-provider-azapi/pull/1033> is merged and released.
 resource "azapi_update_resource" "default_agent_pool" {
+  count = local.is_automatic ? 0 : 1
+
   name      = module.default_agent_pool_data.name
   parent_id = azapi_resource.this.id
   type      = "Microsoft.ContainerService/managedClusters/agentpools@2026-01-02-preview"

@@ -12,7 +12,22 @@ variables {
   }
 }
 
-run "automatic_autoscaling_default_pool_keeps_create_count" {
+# API 2026-03-01 lets AKS Automatic manage system pools without agentPoolProfiles.
+run "automatic_cluster_omits_default_agent_pool" {
+  command = plan
+
+  assert {
+    condition     = !contains(keys(azapi_resource.this.body.properties), "agentPoolProfiles")
+    error_message = "Automatic cluster payload should omit agentPoolProfiles."
+  }
+
+  assert {
+    condition     = length(azapi_update_resource.default_agent_pool) == 0
+    error_message = "Automatic clusters should not update an explicit default agent pool."
+  }
+}
+
+run "automatic_cluster_ignores_default_agent_pool_configuration" {
   command = plan
 
   variables {
@@ -21,12 +36,48 @@ run "automatic_autoscaling_default_pool_keeps_create_count" {
       enable_auto_scaling = true
       min_count           = 1
       max_count           = 3
+      vnet_subnet_id      = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodes"
+      upgrade_settings = {
+        drain_timeout_in_minutes      = 30
+        node_soak_duration_in_minutes = 15
+      }
     }
   }
 
   assert {
-    condition     = azapi_resource.this.body.properties.agentPoolProfiles[0].count == 1
-    error_message = "Automatic cluster create payload should include the default agent pool count even when autoscaling is configured."
+    condition     = !contains(keys(azapi_resource.this.body.properties), "agentPoolProfiles")
+    error_message = "Automatic cluster payload should omit agentPoolProfiles even when default_agent_pool is configured."
+  }
+
+  assert {
+    condition     = length(azapi_update_resource.default_agent_pool) == 0
+    error_message = "Automatic clusters should not update an explicit default agent pool when default_agent_pool is configured."
+  }
+}
+
+run "standard_cluster_retains_implicit_default_pool" {
+  command = plan
+
+  variables {
+    sku = {
+      name = "Base"
+      tier = "Free"
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.agentPoolProfiles[0].name == "systempool"
+    error_message = "Non-Automatic clusters should retain the implicit systempool when default_agent_pool is not configured."
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.agentPoolProfiles[0].count == 3
+    error_message = "The implicit default agent pool should retain its default node count."
+  }
+
+  assert {
+    condition     = length(azapi_update_resource.default_agent_pool) == 1
+    error_message = "Non-Automatic clusters should retain the default agent pool update."
   }
 }
 
