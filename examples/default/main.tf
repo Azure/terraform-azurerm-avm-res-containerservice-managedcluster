@@ -2,9 +2,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.1.1"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.9"
     }
     random = {
       source  = "hashicorp/random"
@@ -13,15 +13,7 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.OperationalInsights"]
-
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
@@ -46,38 +38,51 @@ module "naming" {
   version = "0.4.3"
 }
 
+data "azapi_client_config" "current" {}
+
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = local.location
-  name     = module.naming.resource_group.name_unique
+resource "azapi_resource" "resource_group" {
+  location               = local.location
+  name                   = module.naming.resource_group.name_unique
+  parent_id              = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type                   = "Microsoft.Resources/resourceGroups@2024-03-01"
+  response_export_values = []
 }
 
-resource "azurerm_log_analytics_workspace" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.log_analytics_workspace.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "log_analytics_workspace" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.log_analytics_workspace.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.OperationalInsights/workspaces@2023-09-01"
+  body = {
+    properties = {
+      retentionInDays = 30
+      sku = {
+        name = "PerGB2018"
+      }
+    }
+  }
+  response_export_values = []
 }
-
-data "azurerm_client_config" "current" {}
 
 # This is the module call.
 # Use the resource group location selected above so the module and prerequisites deploy together.
 module "default" {
   source = "../.."
 
-  location  = azurerm_resource_group.this.location
+  location  = azapi_resource.resource_group.location
   name      = module.naming.kubernetes_cluster.name_unique
-  parent_id = azurerm_resource_group.this.id
+  parent_id = azapi_resource.resource_group.id
   aad_profile = {
     enable_azure_rbac      = true
-    tenant_id              = data.azurerm_client_config.current.tenant_id
+    tenant_id              = data.azapi_client_config.current.tenant_id
     admin_group_object_ids = []
     managed                = true
   }
   addon_profile_oms_agent = {
     enabled = true
     config = {
-      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.this.id
+      log_analytics_workspace_resource_id = azapi_resource.log_analytics_workspace.id
       use_aad_auth                        = true
     }
   }
@@ -95,7 +100,7 @@ module "default" {
   diagnostic_settings = {
     to_la = {
       name                  = "to-la"
-      workspace_resource_id = azurerm_log_analytics_workspace.this.id
+      workspace_resource_id = azapi_resource.log_analytics_workspace.id
     }
   }
   dns_prefix = "defaultexample"

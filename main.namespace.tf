@@ -11,5 +11,7 @@ module "namespace" {
   default_network_policy = each.value.default_network_policy
   delete_policy          = each.value.delete_policy
   labels                 = each.value.labels
+  retry                  = var.retry
   tags                   = each.value.tags
+  timeouts               = local.effective_timeouts
 }

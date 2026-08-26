@@ -98,6 +98,9 @@ locals {
         resourceId = value.resource_id
       } }
       ingressProfile = var.ingress_profile == null ? null : {
+        applicationLoadBalancer = try(var.ingress_profile.application_load_balancer, null) == null ? null : {
+          enabled = try(var.ingress_profile.application_load_balancer.enabled, null)
+        }
         gatewayAPI = var.ingress_profile.gateway_api == null ? null : {
           installation = var.ingress_profile.gateway_api.installation
         }

@@ -1,9 +1,9 @@
 output "acr_registry_id" {
-  value = module.avm_res_containerregistry_registry.resource_id
+  value = azapi_resource.acr.id
 }
 
 output "acr_registry_name" {
-  value = module.avm_res_containerregistry_registry.name
+  value = azapi_resource.acr.name
 }
 
 output "aks_cluster_name" {
@@ -23,38 +23,38 @@ output "aks_oidc_issuer_url" {
 }
 
 output "identity_name" {
-  value = length(module.mongodb) > 0 ? module.mongodb[0].identity_name : ""
+  value = length(azapi_resource.mongodb_identity) > 0 ? azapi_resource.mongodb_identity[0].name : ""
 }
 
 output "identity_name_client_id" {
-  value = length(module.mongodb) > 0 ? module.mongodb[0].identity_name_client_id : ""
+  value = length(azapi_resource.mongodb_identity) > 0 ? azapi_resource.mongodb_identity[0].output.properties.clientId : ""
 }
 
 output "identity_name_id" {
-  value = length(module.mongodb) > 0 ? module.mongodb[0].identity_name_id : ""
+  value = length(azapi_resource.mongodb_identity) > 0 ? azapi_resource.mongodb_identity[0].id : ""
 }
 
 output "identity_name_principal_id" {
-  value = length(module.mongodb) > 0 ? module.mongodb[0].identity_name_principal_id : ""
+  value = length(azapi_resource.mongodb_identity) > 0 ? azapi_resource.mongodb_identity[0].output.properties.principalId : ""
 }
 
 output "identity_name_tenant_id" {
-  value = length(module.mongodb) > 0 ? module.mongodb[0].identity_name_tenant_id : ""
+  value = length(azapi_resource.mongodb_identity) > 0 ? azapi_resource.mongodb_identity[0].output.properties.tenantId : ""
 }
 
 output "key_vault_id" {
-  value = module.avm_res_keyvault_vault.resource_id
+  value = azapi_resource.key_vault.id
 }
 
 output "key_vault_uri" {
-  value = module.avm_res_keyvault_vault.uri
+  value = azapi_resource.key_vault.output.properties.vaultUri
 }
 
 output "storage_account_key" {
   sensitive = true
-  value     = length(module.mongodb) > 0 ? module.mongodb[0].storage_account_key : ""
+  value     = length(data.azapi_resource_action.mongodb_storage_keys) > 0 ? data.azapi_resource_action.mongodb_storage_keys[0].output.keys[0].value : ""
 }
 
 output "storage_account_name" {
-  value = length(module.mongodb) > 0 ? module.mongodb[0].storage_account_name : ""
+  value = length(azapi_resource.mongodb_storage) > 0 ? azapi_resource.mongodb_storage[0].name : ""
 }

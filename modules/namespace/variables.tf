@@ -110,6 +110,21 @@ DESCRIPTION
   }
 }
 
+variable "ignore_body_changes" {
+  type = object({
+    containerservice_managed_clusters_managed_namespaces = optional(list(string), [])
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Body-relative paths to ignore for each AzAPI resource, in dot notation. Changes take
+effect only after apply, and ignored configuration is not sent to Azure until the
+path is removed.
+
+- `containerservice_managed_clusters_managed_namespaces` - Paths ignored on the managed namespace.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "labels" {
   type        = map(string)
   default     = null
@@ -118,10 +133,57 @@ The labels of managed namespace.
 DESCRIPTION
 }
 
+variable "resource_types" {
+  type = object({
+    containerservice_managed_clusters_managed_namespaces = optional(string, "Microsoft.ContainerService/managedClusters/managedNamespaces@2026-03-01")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+AzAPI resource types and API versions used by this module.
+
+- `containerservice_managed_clusters_managed_namespaces` - Resource type and API version for the managed namespace.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Retry configuration applied to the AzAPI resources in this module.
+
+- `error_message_regex` - Regular expressions matching error messages that should be retried.
+- `interval_seconds` - Initial delay between retries, in seconds.
+- `max_interval_seconds` - Maximum delay between retries, in seconds.
+DESCRIPTION
+}
+
 variable "tags" {
   type        = map(string)
   default     = null
   description = <<DESCRIPTION
 A mapping of tags to assign to the resource.
+DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Timeouts applied to the AzAPI resources in this module.
+
+- `create` - Timeout for create operations.
+- `read` - Timeout for read operations.
+- `update` - Timeout for update operations.
+- `delete` - Timeout for delete operations.
 DESCRIPTION
 }

@@ -9,7 +9,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.11, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 ## Resources
 
@@ -223,6 +223,24 @@ Description: The fully qualified resource ID of the Dedicated Host Group to prov
 Type: `string`
 
 Default: `null`
+
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative paths to ignore on the agent pool resource, in dot notation. Changes take  
+effect only after apply, and ignored configuration is not sent to Azure until the path  
+is removed.
+
+- `containerservice_managed_clusters_agent_pools` - Paths ignored on the agent pool.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_agent_pools = optional(list(string), [])
+  })
+```
+
+Default: `{}`
 
 ### <a name="input_kubelet_config"></a> [kubelet\_config](#input\_kubelet\_config)
 
@@ -582,6 +600,42 @@ Default: `null`
 Description: The ID for Proximity Placement Group.
 
 Type: `string`
+
+Default: `null`
+
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by this module.
+
+- `containerservice_managed_clusters_agent_pools` - Resource type and API version for the agent pool.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_agent_pools = optional(string, "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to the agent pool AzAPI resources.
+
+- `error_message_regex` - Regular expressions matching error messages that should be retried.
+- `interval_seconds` - Initial delay between retries, in seconds.
+- `max_interval_seconds` - Maximum delay between retries, in seconds.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
 
 Default: `null`
 

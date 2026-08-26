@@ -230,6 +230,21 @@ The fully qualified resource ID of the Dedicated Host Group to provision virtual
 DESCRIPTION
 }
 
+variable "ignore_body_changes" {
+  type = object({
+    containerservice_managed_clusters_agent_pools = optional(list(string), [])
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Body-relative paths to ignore on the agent pool resource, in dot notation. Changes take
+effect only after apply, and ignored configuration is not sent to Azure until the path
+is removed.
+
+- `containerservice_managed_clusters_agent_pools` - Paths ignored on the agent pool.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "kubelet_config" {
   type = object({
     allowed_unsafe_sysctls    = optional(list(string))
@@ -636,6 +651,35 @@ variable "proximity_placement_group_id" {
   default     = null
   description = <<DESCRIPTION
 The ID for Proximity Placement Group.
+DESCRIPTION
+}
+
+variable "resource_types" {
+  type = object({
+    containerservice_managed_clusters_agent_pools = optional(string, "Microsoft.ContainerService/managedClusters/agentPools@2026-01-02-preview")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+AzAPI resource types and API versions used by this module.
+
+- `containerservice_managed_clusters_agent_pools` - Resource type and API version for the agent pool.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Retry configuration applied to the agent pool AzAPI resources.
+
+- `error_message_regex` - Regular expressions matching error messages that should be retried.
+- `interval_seconds` - Initial delay between retries, in seconds.
+- `max_interval_seconds` - Maximum delay between retries, in seconds.
 DESCRIPTION
 }
 

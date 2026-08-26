@@ -9,13 +9,13 @@ resource "azapi_resource" "diagnostic_settings" {
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_null_property      = true
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  replace_triggers_refs     = []
   response_export_values    = []
+  retry                     = var.retry
   schema_validation_enabled = false
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
-    for_each = var.cluster_timeouts == null ? [] : [var.cluster_timeouts]
+    for_each = local.effective_timeouts == null ? [] : [local.effective_timeouts]
 
     content {
       create = timeouts.value.create
