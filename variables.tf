@@ -742,8 +742,26 @@ DESCRIPTION
   }
 }
 
+variable "ignore_body_changes" {
+  type = object({
+    containerservice_managed_clusters = optional(list(string), [])
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Body-relative paths to ignore for each AzAPI resource, in dot notation. Changes take
+effect only after apply, and ignored configuration is not sent to Azure until the
+path is removed.
+
+- `containerservice_managed_clusters` - Paths ignored on the managed cluster.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "ingress_profile" {
   type = object({
+    application_load_balancer = optional(object({
+      enabled = optional(bool)
+    }))
     gateway_api = optional(object({
       installation = optional(string)
     }))
@@ -764,6 +782,8 @@ variable "ingress_profile" {
   description = <<DESCRIPTION
 Ingress profile for the container service cluster.
 
+- `application_load_balancer` - Settings for the Application Gateway for Containers ALB Controller add-on.
+  - `enabled` - Whether to enable the Application Gateway for Containers ALB Controller add-on. Requires the managed Gateway API add-on, workload identity, and the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features.
 - `gateway_api` - Settings for the managed Gateway API installation.
   - `installation` - Configuration for the managed Gateway API installation. If not specified, the default is `Disabled`.
 - `web_app_routing` - Application Routing add-on settings for the ingress profile.
@@ -778,11 +798,11 @@ Ingress profile for the container service cluster.
 DESCRIPTION
 
   validation {
-    condition     = var.ingress_profile == null || contains(["", "Disabled", "Standard"], coalesce(try(var.ingress_profile.gateway_api.installation, null), ""))
+    condition     = var.ingress_profile == null || contains(["", "Disabled", "Standard"], try(coalesce(var.ingress_profile.gateway_api.installation, ""), ""))
     error_message = "ingress_profile.gateway_api.installation must be one of: [\"Disabled\", \"Standard\"]."
   }
   validation {
-    condition     = var.ingress_profile == null || contains(["", "Disabled", "Enabled"], coalesce(try(var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode, null), ""))
+    condition     = var.ingress_profile == null || contains(["", "Disabled", "Enabled"], try(coalesce(var.ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode, ""), ""))
     error_message = "ingress_profile.web_app_routing.gateway_api_implementations.app_routing_istio.mode must be one of: [\"Disabled\", \"Enabled\"]."
   }
 }
@@ -888,8 +908,9 @@ DESCRIPTION
 
 variable "lock" {
   type = object({
-    kind = string
-    name = optional(string, null)
+    kind  = string
+    name  = optional(string, null)
+    notes = optional(string, null)
   })
   default     = null
   description = <<DESCRIPTION
@@ -897,6 +918,7 @@ Controls the Resource Lock configuration for this resource. The following proper
 
 - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
 - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+- `notes` - (Optional) Notes about the lock. If not specified, a note is generated based on the `kind` value.
 DESCRIPTION
 
   validation {
@@ -1180,6 +1202,7 @@ variable "private_endpoints" {
   type = map(object({
     name = optional(string, null)
     role_assignments = optional(map(object({
+      name                                   = optional(string, null)
       role_definition_id_or_name             = string
       principal_id                           = string
       description                            = optional(string, null)
@@ -1190,11 +1213,13 @@ variable "private_endpoints" {
       principal_type                         = optional(string, null)
     })), {})
     lock = optional(object({
-      kind = string
-      name = optional(string, null)
+      kind  = string
+      name  = optional(string, null)
+      notes = optional(string, null)
     }), null)
     tags                                    = optional(map(string), null)
     subnet_resource_id                      = string
+    subresource_name                        = optional(string, null)
     private_dns_zone_group_name             = optional(string, "default")
     private_dns_zone_resource_ids           = optional(set(string), [])
     application_security_group_associations = optional(map(string), {})
@@ -1205,6 +1230,7 @@ variable "private_endpoints" {
     ip_configurations = optional(map(object({
       name               = string
       private_ip_address = string
+      member_name        = optional(string)
     })), {})
   }))
   default     = {}
@@ -1250,8 +1276,41 @@ DESCRIPTION
   }
 }
 
+variable "resource_types" {
+  type = object({
+    containerservice_managed_clusters             = optional(string, "Microsoft.ContainerService/managedClusters@2026-03-01")
+    containerservice_managed_clusters_agent_pools = optional(string, "Microsoft.ContainerService/managedClusters/agentpools@2026-01-02-preview")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+AzAPI resource types and API versions used by this module.
+
+- `containerservice_managed_clusters` - Resource type and API version for the managed cluster.
+- `containerservice_managed_clusters_agent_pools` - Resource type and API version for the default agent pool.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Retry configuration applied to every AzAPI resource declared by this module and
+cascaded to its submodules.
+
+- `error_message_regex` - Regular expressions matching error messages that should be retried.
+- `interval_seconds` - Initial delay between retries, in seconds.
+- `max_interval_seconds` - Maximum delay between retries, in seconds.
+DESCRIPTION
+}
+
 variable "role_assignments" {
   type = map(object({
+    name                                   = optional(string, null)
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
@@ -1265,6 +1324,7 @@ variable "role_assignments" {
   description = <<DESCRIPTION
   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
+  - `name` - (Optional) The name of the role assignment. Must be a GUID. If not specified, a deterministic GUID is generated.
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.
   - `description` - (Optional) The description of the role assignment.
@@ -1476,6 +1536,25 @@ variable "tags" {
   default     = null
   description = <<DESCRIPTION
 (Optional) Tags of the resource.
+DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Per-operation timeouts applied to every AzAPI resource declared by this module and
+cascaded to its submodules. Each value is a Go duration string, for example `30m`.
+
+- `create` - Timeout for create operations.
+- `read` - Timeout for read operations.
+- `update` - Timeout for update operations.
+- `delete` - Timeout for delete operations.
 DESCRIPTION
 }
 

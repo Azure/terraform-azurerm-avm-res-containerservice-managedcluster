@@ -46,6 +46,7 @@ module "nodepools" {
   pod_ip_allocation_mode        = each.value.pod_ip_allocation_mode
   pod_subnet_id                 = each.value.pod_subnet_id
   proximity_placement_group_id  = each.value.proximity_placement_group_id
+  retry                         = var.retry
   scale_down_mode               = each.value.scale_down_mode
   scale_set_eviction_policy     = each.value.scale_set_eviction_policy
   scale_set_priority            = each.value.scale_set_priority

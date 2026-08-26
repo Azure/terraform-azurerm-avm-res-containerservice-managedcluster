@@ -9,22 +9,26 @@ This example deploys Application Gateway for Containers alongside a private AKS 
 - Virtual network with three subnets: AKS nodes, Application Gateway for Containers association, and API server VNet integration
 - Private AKS cluster with Azure CNI, Workload Identity, and OIDC issuer enabled
 - Application Gateway for Containers with one frontend and one association
-- User-assigned managed identities with the required RBAC roles for AKS and the ALB Controller
+- User-assigned managed identity for AKS plus the add-on-created ALB Controller identity, with the required RBAC roles
 
-## Post-deployment steps
+## End-to-end validation
 
-After Terraform completes, enable the ALB Controller managed add-on and configure Gateway API resources:
+Terraform enables the managed Gateway API and Application Gateway for Containers ALB Controller add-ons. It also grants the add-on-created identity the roles it needs to manage the BYO traffic controller and delegated subnet.
 
 ```bash
-# 1. Enable the ALB Controller add-on on the AKS cluster
-az aks update -g <resource_group_name> -n <aks_cluster_name> --enable-alb-controller
-
-# 2. Verify ALB Controller pods are running
+# Verify the ALB Controller pods are running
 az aks command invoke -g <resource_group_name> -n <aks_cluster_name> \
-  --command "kubectl get pods -n alb-system"
+  --command "kubectl get pods -n kube-system | grep alb-controller"
 
-# 3. Apply Kubernetes Gateway API resources (GatewayClass, Gateway, HTTPRoute)
+# Apply Kubernetes Gateway API resources (GatewayClass, Gateway, HTTPRoute)
 # See: https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-create-application-gateway-for-containers-byo-deployment
+```
+
+This preview feature requires the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features before deployment:
+
+```bash
+az feature register --namespace Microsoft.ContainerService --name ManagedGatewayAPIPreview
+az feature register --namespace Microsoft.ContainerService --name ApplicationLoadBalancerPreview
 ```
 
 For a consumer with an existing hub-spoke network, replace the inline virtual network and subnet resources with references to existing subnet IDs.
@@ -38,10 +42,6 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.9"
     }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.1.1"
-    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
@@ -50,16 +50,6 @@ terraform {
 }
 
 provider "azapi" {}
-
-provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Monitor", "Microsoft.Network", "Microsoft.OperationalInsights", "Microsoft.ServiceNetworking"]
-
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
 
 locals {
   name_prefix          = "aks-sbp-${substr(data.azapi_client_config.current.subscription_id, 0, 8)}"
@@ -154,13 +144,6 @@ resource "azapi_resource" "subnet_api_server" {
   depends_on = [azapi_resource.subnet_agc]
 }
 
-resource "azapi_resource" "alb_identity" {
-  location  = local.selected_region
-  name      = "id-alb-controller"
-  parent_id = azapi_resource.resource_group.id
-  type      = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
-}
-
 resource "azapi_resource" "aks_identity" {
   location  = local.selected_region
   name      = "id-aks-cluster"
@@ -176,16 +159,18 @@ data "azapi_client_config" "current" {}
 
 resource "azapi_resource" "role_agc_config_manager" {
   name      = random_uuid.role_agc_config_manager.result
-  parent_id = azapi_resource.resource_group.id
+  parent_id = module.application_gateway_for_containers.resource_id
   type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
   body = {
     properties = {
-      principalId      = azapi_resource.alb_identity.output.properties.principalId
+      principalId      = module.aks.ingress_profile_application_load_balancer_identity.objectId
       principalType    = "ServicePrincipal"
       roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/fbc52c3f-28ad-4303-a892-8a056630b8f1"
     }
   }
   response_export_values = []
+
+  depends_on = [module.application_gateway_for_containers]
 }
 
 resource "azapi_resource" "role_alb_network_contributor" {
@@ -194,14 +179,17 @@ resource "azapi_resource" "role_alb_network_contributor" {
   type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
   body = {
     properties = {
-      principalId      = azapi_resource.alb_identity.output.properties.principalId
+      principalId      = module.aks.ingress_profile_application_load_balancer_identity.objectId
       principalType    = "ServicePrincipal"
       roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
     }
   }
   response_export_values = []
 
-  depends_on = [azapi_resource.subnet_agc]
+  depends_on = [
+    azapi_resource.subnet_agc,
+    module.aks,
+  ]
 }
 
 resource "azapi_resource" "role_aks_network_contributor" {
@@ -247,6 +235,14 @@ module "aks" {
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = [azapi_resource.aks_identity.id]
+  }
+  ingress_profile = {
+    application_load_balancer = {
+      enabled = true
+    }
+    gateway_api = {
+      installation = "Standard"
+    }
   }
   network_profile = {
     network_plugin = "azure"
@@ -322,8 +318,6 @@ module "application_gateway_for_containers" {
   }
 
   depends_on = [
-    azapi_resource.role_agc_config_manager,
-    azapi_resource.role_alb_network_contributor,
     module.aks,
   ]
 }
@@ -338,8 +332,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.46.0, < 5.1.1)
-
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
 
 ## Resources
@@ -347,7 +339,6 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.aks_identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.alb_identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.resource_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.role_agc_config_manager](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.role_aks_network_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)

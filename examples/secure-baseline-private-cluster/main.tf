@@ -6,10 +6,6 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.9"
     }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.46.0, < 5.1.1"
-    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
@@ -18,16 +14,6 @@ terraform {
 }
 
 provider "azapi" {}
-
-provider "azurerm" {
-  resource_providers_to_register = ["Microsoft.ContainerService", "Microsoft.ManagedIdentity", "Microsoft.Monitor", "Microsoft.Network", "Microsoft.OperationalInsights", "Microsoft.ServiceNetworking"]
-
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
 
 locals {
   name_prefix          = "aks-sbp-${substr(data.azapi_client_config.current.subscription_id, 0, 8)}"
@@ -122,13 +108,6 @@ resource "azapi_resource" "subnet_api_server" {
   depends_on = [azapi_resource.subnet_agc]
 }
 
-resource "azapi_resource" "alb_identity" {
-  location  = local.selected_region
-  name      = "id-alb-controller"
-  parent_id = azapi_resource.resource_group.id
-  type      = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
-}
-
 resource "azapi_resource" "aks_identity" {
   location  = local.selected_region
   name      = "id-aks-cluster"
@@ -144,16 +123,18 @@ data "azapi_client_config" "current" {}
 
 resource "azapi_resource" "role_agc_config_manager" {
   name      = random_uuid.role_agc_config_manager.result
-  parent_id = azapi_resource.resource_group.id
+  parent_id = module.application_gateway_for_containers.resource_id
   type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
   body = {
     properties = {
-      principalId      = azapi_resource.alb_identity.output.properties.principalId
+      principalId      = module.aks.ingress_profile_application_load_balancer_identity.objectId
       principalType    = "ServicePrincipal"
       roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/fbc52c3f-28ad-4303-a892-8a056630b8f1"
     }
   }
   response_export_values = []
+
+  depends_on = [module.application_gateway_for_containers]
 }
 
 resource "azapi_resource" "role_alb_network_contributor" {
@@ -162,14 +143,17 @@ resource "azapi_resource" "role_alb_network_contributor" {
   type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
   body = {
     properties = {
-      principalId      = azapi_resource.alb_identity.output.properties.principalId
+      principalId      = module.aks.ingress_profile_application_load_balancer_identity.objectId
       principalType    = "ServicePrincipal"
       roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
     }
   }
   response_export_values = []
 
-  depends_on = [azapi_resource.subnet_agc]
+  depends_on = [
+    azapi_resource.subnet_agc,
+    module.aks,
+  ]
 }
 
 resource "azapi_resource" "role_aks_network_contributor" {
@@ -215,6 +199,14 @@ module "aks" {
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = [azapi_resource.aks_identity.id]
+  }
+  ingress_profile = {
+    application_load_balancer = {
+      enabled = true
+    }
+    gateway_api = {
+      installation = "Standard"
+    }
   }
   network_profile = {
     network_plugin = "azure"
@@ -290,8 +282,6 @@ module "application_gateway_for_containers" {
   }
 
   depends_on = [
-    azapi_resource.role_agc_config_manager,
-    azapi_resource.role_alb_network_contributor,
     module.aks,
   ]
 }

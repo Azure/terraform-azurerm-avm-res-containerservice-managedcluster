@@ -9,7 +9,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.11, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 ## Resources
 
@@ -106,6 +106,24 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative paths to ignore for each AzAPI resource, in dot notation. Changes take  
+effect only after apply, and ignored configuration is not sent to Azure until the  
+path is removed.
+
+- `containerservice_managed_clusters_managed_namespaces` - Paths ignored on the managed namespace.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_managed_namespaces = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_labels"></a> [labels](#input\_labels)
 
 Description: The labels of managed namespace.
@@ -114,11 +132,69 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by this module.
+
+- `containerservice_managed_clusters_managed_namespaces` - Resource type and API version for the managed namespace.
+
+Type:
+
+```hcl
+object({
+    containerservice_managed_clusters_managed_namespaces = optional(string, "Microsoft.ContainerService/managedClusters/managedNamespaces@2026-03-01")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to the AzAPI resources in this module.
+
+- `error_message_regex` - Regular expressions matching error messages that should be retried.
+- `interval_seconds` - Initial delay between retries, in seconds.
+- `max_interval_seconds` - Maximum delay between retries, in seconds.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: A mapping of tags to assign to the resource.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Timeouts applied to the AzAPI resources in this module.
+
+- `create` - Timeout for create operations.
+- `read` - Timeout for read operations.
+- `update` - Timeout for update operations.
+- `delete` - Timeout for delete operations.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
 
 Default: `null`
 

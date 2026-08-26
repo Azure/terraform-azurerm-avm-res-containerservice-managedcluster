@@ -1,7 +1,4 @@
 locals {
-  replace_triggers_refs = [
-    "properties.vmSize",
-  ]
   resource_body = {
     properties = {
       artifactStreamingProfile = var.artifact_streaming_profile == null ? null : {

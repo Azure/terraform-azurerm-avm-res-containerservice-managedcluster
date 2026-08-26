@@ -3,12 +3,26 @@ resource "azapi_resource" "dce_msprom" {
   location  = var.location
   name      = local.msprom_data_collection_name
   parent_id = var.parent_id
-  type      = "Microsoft.Insights/dataCollectionEndpoints@2023-03-11"
+  type      = var.resource_types.insights_data_collection_endpoints
   body = {
     kind       = "Linux"
     properties = {}
   }
-  tags = var.tags
+  ignore_body_changes    = length(var.ignore_body_changes.insights_data_collection_endpoints) > 0 ? var.ignore_body_changes.insights_data_collection_endpoints : null
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = var.tags
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionrules?pivots=deployment-language-terraform
@@ -16,7 +30,7 @@ resource "azapi_resource" "dcr_msprom" {
   location  = var.location
   name      = local.msprom_data_collection_name
   parent_id = var.parent_id
-  type      = "Microsoft.Insights/dataCollectionRules@2023-03-11"
+  type      = var.resource_types.insights_data_collection_rules
   body = {
     kind = "Linux"
     properties = {
@@ -51,27 +65,69 @@ resource "azapi_resource" "dcr_msprom" {
       ]
     }
   }
-  tags = var.tags
+  ignore_body_changes    = length(var.ignore_body_changes.insights_data_collection_rules) > 0 ? var.ignore_body_changes.insights_data_collection_rules : null
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = var.tags
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionruleassociations?pivots=deployment-language-terraform
 resource "azapi_resource" "dcr_msprom_aks" {
   name      = "dcr-${basename(var.aks_cluster_id)}"
   parent_id = var.aks_cluster_id
-  type      = "Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11"
+  type      = var.resource_types.insights_data_collection_rule_associations
   body = {
     properties = {
       dataCollectionRuleId = azapi_resource.dcr_msprom.id
+    }
+  }
+  ignore_body_changes    = length(var.ignore_body_changes.insights_data_collection_rule_associations) > 0 ? var.ignore_body_changes.insights_data_collection_rule_associations : null
+  response_export_values = []
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 }
 resource "azapi_resource" "dce_msprom_aks" {
   name      = "configurationAccessEndpoint"
   parent_id = var.aks_cluster_id
-  type      = "Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11"
+  type      = var.resource_types.insights_data_collection_rule_associations
   body = {
     properties = {
       dataCollectionEndpointId = azapi_resource.dce_msprom.id
+    }
+  }
+  ignore_body_changes    = length(var.ignore_body_changes.insights_data_collection_rule_associations) > 0 ? var.ignore_body_changes.insights_data_collection_rule_associations : null
+  response_export_values = []
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 }
@@ -81,7 +137,7 @@ resource "azapi_resource" "prg_node" {
   location  = var.location
   name      = "NodeRecordingRulesRuleGroup - ${basename(var.aks_cluster_id)}"
   parent_id = var.parent_id
-  type      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
+  type      = var.resource_types.alertsmanagement_prometheus_rule_groups
   body = {
     properties = {
       clusterName = basename(var.aks_cluster_id)
@@ -138,7 +194,21 @@ resource "azapi_resource" "prg_node" {
       ]
     }
   }
-  tags = var.tags
+  ignore_body_changes    = length(var.ignore_body_changes.alertsmanagement_prometheus_rule_groups) > 0 ? var.ignore_body_changes.alertsmanagement_prometheus_rule_groups : null
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = var.tags
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 # https://learn.microsoft.com/azure/azure-monitor/containers/prometheus-metrics-scrape-default
@@ -146,7 +216,7 @@ resource "azapi_resource" "prg_ux" {
   location  = var.location
   name      = "UXRecordingRulesRuleGroup - ${basename(var.aks_cluster_id)}"
   parent_id = var.parent_id
-  type      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
+  type      = var.resource_types.alertsmanagement_prometheus_rule_groups
   body = {
     properties = {
       clusterName = basename(var.aks_cluster_id)
@@ -233,14 +303,28 @@ resource "azapi_resource" "prg_ux" {
       ]
     }
   }
-  tags = var.tags
+  ignore_body_changes    = length(var.ignore_body_changes.alertsmanagement_prometheus_rule_groups) > 0 ? var.ignore_body_changes.alertsmanagement_prometheus_rule_groups : null
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = var.tags
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 resource "azapi_resource" "prg_k8s" {
   location  = var.location
   name      = "KubernetesRecordingRulesRuleGroup - ${basename(var.aks_cluster_id)}"
   parent_id = var.parent_id
-  type      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
+  type      = var.resource_types.alertsmanagement_prometheus_rule_groups
   body = {
     properties = {
       clusterName = basename(var.aks_cluster_id)
@@ -341,7 +425,21 @@ resource "azapi_resource" "prg_k8s" {
       ]
     }
   }
-  tags = var.tags
+  ignore_body_changes    = length(var.ignore_body_changes.alertsmanagement_prometheus_rule_groups) > 0 ? var.ignore_body_changes.alertsmanagement_prometheus_rule_groups : null
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = var.tags
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionrules?pivots=deployment-language-terraform
@@ -349,7 +447,7 @@ resource "azapi_resource" "dcr_msci" {
   location  = var.location
   name      = "MSCI-${var.location}-${basename(var.aks_cluster_id)}"
   parent_id = var.parent_id
-  type      = "Microsoft.Insights/dataCollectionRules@2023-03-11"
+  type      = var.resource_types.insights_data_collection_rules
   body = {
     kind = "Linux"
     properties = {
@@ -398,17 +496,45 @@ resource "azapi_resource" "dcr_msci" {
       ]
     }
   }
-  tags = var.tags
+  ignore_body_changes    = length(var.ignore_body_changes.insights_data_collection_rules) > 0 ? var.ignore_body_changes.insights_data_collection_rules : null
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = var.tags
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 # https://learn.microsoft.com/azure/templates/microsoft.insights/datacollectionruleassociations?pivots=deployment-language-terraform
 resource "azapi_resource" "dcr_msci_aks" {
   name      = "msci-${basename(var.aks_cluster_id)}"
   parent_id = var.aks_cluster_id
-  type      = "Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11"
+  type      = var.resource_types.insights_data_collection_rule_associations
   body = {
     properties = {
       dataCollectionRuleId = azapi_resource.dcr_msci.id
+    }
+  }
+  ignore_body_changes    = length(var.ignore_body_changes.insights_data_collection_rule_associations) > 0 ? var.ignore_body_changes.insights_data_collection_rule_associations : null
+  response_export_values = []
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 }

@@ -89,7 +89,7 @@ variable "mongodb_kv_secrets" {
 
 variable "mongodb_namespace" {
   type        = string
-  default     = null
+  default     = "mongodb"
   description = "The name of the mongodb namespace to create"
 }
 
@@ -101,7 +101,7 @@ variable "resource_group_name" {
 
 variable "service_account_name" {
   type        = string
-  default     = null
+  default     = "mongodb-backup"
   description = "The name of the service account to create"
 }
 
