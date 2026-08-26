@@ -39,24 +39,24 @@ run "default_agent_pool_upgrade_settings_keep_numeric_types" {
 
   # Number equality is type-aware in HCL ("30" == 30 is false), so these fail if coerced.
   assert {
-    condition     = azapi_update_resource.default_agent_pool.body.properties.upgradeSettings.drainTimeoutInMinutes == 30
+    condition     = azapi_update_resource.default_agent_pool[0].body.properties.upgradeSettings.drainTimeoutInMinutes == 30
     error_message = "drainTimeoutInMinutes must stay an int32 in the agent pool update payload, not be coerced to a string."
   }
 
   assert {
-    condition     = azapi_update_resource.default_agent_pool.body.properties.upgradeSettings.nodeSoakDurationInMinutes == 15
+    condition     = azapi_update_resource.default_agent_pool[0].body.properties.upgradeSettings.nodeSoakDurationInMinutes == 15
     error_message = "nodeSoakDurationInMinutes must stay an int32 in the agent pool update payload, not be coerced to a string."
   }
 
   # Belt and suspenders: a number serializes as `30`, a string as `"30"`.
   assert {
-    condition     = strcontains(jsonencode(azapi_update_resource.default_agent_pool.body.properties.upgradeSettings), "\"drainTimeoutInMinutes\":30")
+    condition     = strcontains(jsonencode(azapi_update_resource.default_agent_pool[0].body.properties.upgradeSettings), "\"drainTimeoutInMinutes\":30")
     error_message = "drainTimeoutInMinutes must serialize as a JSON number, not a quoted string."
   }
 
   # String-typed sibling attribute must remain a string.
   assert {
-    condition     = azapi_update_resource.default_agent_pool.body.properties.upgradeSettings.maxSurge == "35%"
+    condition     = azapi_update_resource.default_agent_pool[0].body.properties.upgradeSettings.maxSurge == "35%"
     error_message = "maxSurge must stay a string in the agent pool update payload."
   }
 }

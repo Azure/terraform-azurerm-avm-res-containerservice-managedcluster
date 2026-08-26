@@ -857,6 +857,7 @@ Description: Configuration block for the default agent pool of the Kubernetes cl
 See `var.agent_pools` for details on the available options.
 
 Note that:
+- This value is not used for Automatic clusters because AKS manages their system node pools.
 - The `os_type` and `mode` options are not available here and are automatically set to `Linux` and `System` respectively.
 - The default node count (`count_of`) is set to `3` if not specified.
 - The default name is set to `systempool` if not specified.

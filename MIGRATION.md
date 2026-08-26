@@ -33,3 +33,11 @@ terraform import 'module.<module>.azapi_resource.private_dns_zone_groups["<pe-ke
 Repeat the ASG state removal for every association, or omit it when the endpoint has no ASG associations. For an endpoint created with `private_endpoints_manage_dns_zone_group = false`, use the corresponding `this_unmanaged_dns_zone_groups` address in the `state show` and `state rm` commands and omit the private DNS zone group import. Also omit that import when the endpoint has no `private_dns_zone_resource_ids`.
 
 Run `terraform plan` after all imports. Do not apply if Terraform proposes deleting or replacing the managed cluster, lock, role assignment, diagnostic setting, private endpoint, DNS zone group, or ASG association.
+
+## Automatic cluster system pools
+
+Automatic clusters now let AKS manage their system node pools instead of creating or updating a separate `systempool` child resource. The module moves the existing `azapi_update_resource.default_agent_pool` state address automatically. Terraform then removes that update-only object from state without deleting an Azure resource.
+
+The upgrade plan shows `azapi_update_resource.default_agent_pool[0]` as destroyed for Automatic clusters. This removes only the Terraform state entry; it does not delete the Azure agent pool. Existing `systempool` child resources are not deleted automatically. Non-Automatic clusters continue to use the same default agent pool configuration.
+
+Standard clusters see only a state address change from `azapi_update_resource.default_agent_pool` to `azapi_update_resource.default_agent_pool[0]`; the update resource remains active and Azure resources are unaffected.
