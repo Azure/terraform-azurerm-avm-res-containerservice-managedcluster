@@ -1,10 +1,36 @@
+data "azapi_resource_list" "diagnostic_settings_categories" {
+  count = local.has_named_diagnostic_log_categories ? 1 : 0
+
+  parent_id = azapi_resource.this.id
+  type      = "Microsoft.Insights/diagnosticSettingsCategories@2021-05-01-preview"
+  response_export_values = {
+    log_categories = "value[?properties.categoryType == 'Logs'].name"
+  }
+
+  depends_on = [azapi_resource.this]
+}
+
 resource "azapi_resource" "diagnostic_settings" {
   for_each = module.interfaces.diagnostic_settings_azapi_v2
 
-  name                      = coalesce(each.value.name, "diag-${var.name}")
-  parent_id                 = azapi_resource.this.id
-  type                      = each.value.type
-  body                      = each.value.body
+  name      = coalesce(each.value.name, "diag-${var.name}")
+  parent_id = azapi_resource.this.id
+  type      = each.value.type
+  body = merge(each.value.body, {
+    properties = merge(each.value.body.properties, {
+      logs = [
+        for log in local.diagnostic_setting_logs[each.key] : {
+          category      = log.category
+          categoryGroup = log.category_group
+          enabled       = log.enabled
+          retentionPolicy = {
+            days    = 0
+            enabled = false
+          }
+        }
+      ]
+    })
+  })
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_null_property      = true
