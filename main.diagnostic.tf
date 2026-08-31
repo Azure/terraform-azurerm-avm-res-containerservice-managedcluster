@@ -18,7 +18,17 @@ resource "azapi_resource" "diagnostic_settings" {
   type      = each.value.type
   body = merge(each.value.body, {
     properties = merge(each.value.body.properties, {
-      logs = local.diagnostic_setting_logs[each.key]
+      logs = [
+        for log in local.diagnostic_setting_logs[each.key] : {
+          category      = log.category
+          categoryGroup = log.category_group
+          enabled       = log.enabled
+          retentionPolicy = {
+            days    = 0
+            enabled = false
+          }
+        }
+      ]
     })
   })
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

@@ -119,6 +119,11 @@ run "legacy_diagnostics_are_adapted_to_v2" {
     condition     = azapi_resource.diagnostic_settings["primary"].body.properties.logs[0].category == "kube-audit"
     error_message = "The diagnostic setting payload must keep enabled named categories first."
   }
+
+  assert {
+    condition     = alltrue([for log in azapi_resource.diagnostic_settings["primary"].body.properties.logs : log.categoryGroup == null])
+    error_message = "The named-category resource payload must not emit category groups."
+  }
 }
 
 run "legacy_diagnostic_groups_retain_disabled_groups" {
@@ -144,6 +149,16 @@ run "legacy_diagnostic_groups_retain_disabled_groups" {
   assert {
     condition     = one([for log in module.interfaces.diagnostic_settings_azapi_v2["primary"].body.properties.logs : log.enabled if log.categoryGroup == "allLogs"]) == false
     error_message = "The adapter must retain service-normalized disabled groups when category groups are used."
+  }
+
+  assert {
+    condition     = one([for log in azapi_resource.diagnostic_settings["primary"].body.properties.logs : log.enabled if log.categoryGroup == "audit"]) == true
+    error_message = "The category-group resource payload must use Azure's `categoryGroup` property."
+  }
+
+  assert {
+    condition     = alltrue([for log in azapi_resource.diagnostic_settings["primary"].body.properties.logs : !can(log.category_group)])
+    error_message = "The category-group resource payload must not contain the adapter's snake-case property."
   }
 }
 
