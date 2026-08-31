@@ -1,4 +1,11 @@
 mock_provider "azapi" {
+  mock_data "azapi_resource_list" {
+    defaults = {
+      output = {
+        log_categories = ["kube-audit", "kube-audit-admin"]
+      }
+    }
+  }
   mock_resource "azapi_resource" {
     defaults = {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.ContainerService/managedClusters/test-aks"
@@ -66,7 +73,17 @@ variables {
 }
 
 run "legacy_diagnostics_are_adapted_to_v2" {
-  command = plan
+  command = apply
+
+  override_data {
+    target = data.azapi_resource_list.diagnostic_settings_categories[0]
+    values = {
+      output = {
+        log_categories = ["kube-audit", "kube-audit-admin"]
+      }
+    }
+    override_during = plan
+  }
 
   assert {
     condition     = module.interfaces.diagnostic_settings_azapi_v2["primary"].name == "diag-test"
@@ -84,9 +101,67 @@ run "legacy_diagnostics_are_adapted_to_v2" {
   }
 
   assert {
-    condition     = one([for log in module.interfaces.diagnostic_settings_azapi_v2["primary"].body.properties.logs : log.enabled if log.categoryGroup == "audit"]) == false
-    error_message = "The adapter must retain the service-normalized disabled audit group."
+    condition     = length(module.interfaces.diagnostic_settings_azapi_v2["primary"].body.properties.logs) == 2
+    error_message = "The adapter must emit the complete service-normalized named category list."
   }
+
+  assert {
+    condition     = alltrue([for log in module.interfaces.diagnostic_settings_azapi_v2["primary"].body.properties.logs : log.categoryGroup == null])
+    error_message = "Named log categories must not emit category group entries."
+  }
+
+  assert {
+    condition     = one([for log in module.interfaces.diagnostic_settings_azapi_v2["primary"].body.properties.logs : log.enabled if log.category == "kube-audit-admin"]) == false
+    error_message = "The adapter must disable unselected named log categories for idempotent Azure reads."
+  }
+
+  assert {
+    condition     = azapi_resource.diagnostic_settings["primary"].body.properties.logs[0].category == "kube-audit"
+    error_message = "The diagnostic setting payload must keep enabled named categories first."
+  }
+}
+
+run "legacy_diagnostic_groups_retain_disabled_groups" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      primary = {
+        name                  = "diag-test"
+        log_categories        = []
+        log_groups            = ["audit"]
+        metric_categories     = ["AllMetrics"]
+        workspace_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
+      }
+    }
+  }
+
+  assert {
+    condition     = one([for log in module.interfaces.diagnostic_settings_azapi_v2["primary"].body.properties.logs : log.enabled if log.categoryGroup == "audit"]) == true
+    error_message = "The adapter must enable explicitly selected diagnostic groups."
+  }
+
+  assert {
+    condition     = one([for log in module.interfaces.diagnostic_settings_azapi_v2["primary"].body.properties.logs : log.enabled if log.categoryGroup == "allLogs"]) == false
+    error_message = "The adapter must retain service-normalized disabled groups when category groups are used."
+  }
+}
+
+run "legacy_diagnostics_reject_mixed_categories_and_groups" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      primary = {
+        name                  = "diag-test"
+        log_categories        = ["kube-audit"]
+        log_groups            = ["allLogs"]
+        workspace_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
+      }
+    }
+  }
+
+  expect_failures = [var.diagnostic_settings]
 }
 
 run "role_assignment_name_is_preserved" {

@@ -1,30 +1,43 @@
 locals {
+  has_named_diagnostic_log_categories = anytrue([
+    for diagnostic_setting in values(var.diagnostic_settings) :
+    length(diagnostic_setting.log_categories) > 0
+  ])
+  diagnostic_setting_logs = {
+    for key, diagnostic_setting in var.diagnostic_settings : key => concat(
+      [
+        for category in diagnostic_setting.log_categories : {
+          category       = category
+          category_group = null
+          enabled        = true
+        }
+      ],
+      [
+        for category_group in diagnostic_setting.log_groups : {
+          category       = null
+          category_group = category_group
+          enabled        = true
+        }
+      ],
+      length(diagnostic_setting.log_categories) > 0 ? [
+        for category in data.azapi_resource_list.diagnostic_settings_categories[0].output.log_categories : {
+          category       = category
+          category_group = null
+          enabled        = false
+        } if !contains(diagnostic_setting.log_categories, category)
+        ] : [
+        for category_group in setsubtract(toset(["allLogs", "audit"]), diagnostic_setting.log_groups) : {
+          category       = null
+          category_group = category_group
+          enabled        = false
+        }
+      ]
+    )
+  }
   diagnostic_settings_v2 = {
     for key, diagnostic_setting in var.diagnostic_settings : key => {
       name = diagnostic_setting.name
-      logs = concat(
-        [
-          for category in diagnostic_setting.log_categories : {
-            category       = category
-            category_group = null
-            enabled        = true
-          }
-        ],
-        [
-          for category_group in diagnostic_setting.log_groups : {
-            category       = null
-            category_group = category_group
-            enabled        = true
-          }
-        ],
-        [
-          for category_group in setsubtract(toset(["allLogs", "audit"]), diagnostic_setting.log_groups) : {
-            category       = null
-            category_group = category_group
-            enabled        = false
-          }
-        ]
-      )
+      logs = local.diagnostic_setting_logs[key]
       metrics = [
         for category in diagnostic_setting.metric_categories : {
           category = category

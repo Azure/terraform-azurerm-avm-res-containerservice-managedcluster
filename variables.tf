@@ -584,6 +584,10 @@ DESCRIPTION
     error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
   }
   validation {
+    condition     = alltrue([for _, v in var.diagnostic_settings : length(v.log_categories) == 0 || length(v.log_groups) == 0])
+    error_message = "Each diagnostic setting must use either `log_categories` or `log_groups`, not both."
+  }
+  validation {
     condition = alltrue(
       [
         for _, v in var.diagnostic_settings :
