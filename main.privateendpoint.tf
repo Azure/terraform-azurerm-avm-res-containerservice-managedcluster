@@ -14,16 +14,12 @@ resource "azapi_resource" "private_endpoints" {
       customNetworkInterfaceName = var.private_endpoints[each.key].network_interface_name
     })
   })
-  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_null_property      = true
-  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs     = ["properties.subnet.id"]
   response_export_values    = []
   retry                     = local.private_endpoint_retry
   schema_validation_enabled = false
   tags                      = each.value.tags
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = local.effective_timeouts == null ? [] : [local.effective_timeouts]
@@ -58,14 +54,10 @@ resource "azapi_resource" "private_dns_zone_groups" {
       ]
     })
   })
-  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_null_property      = true
-  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values    = []
   retry                     = local.private_endpoint_retry
   schema_validation_enabled = false
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = local.effective_timeouts == null ? [] : [local.effective_timeouts]

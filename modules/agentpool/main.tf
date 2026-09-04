@@ -11,10 +11,13 @@ moved {
 resource "azapi_resource" "this" {
   count = var.output_data_only ? 0 : var.create_before_destroy ? 0 : 1
 
-  name                 = var.name
-  parent_id            = var.parent_id
-  type                 = var.resource_types.containerservice_managed_clusters_agent_pools
-  body                 = local.resource_body
+  name      = var.name
+  parent_id = var.parent_id
+  type      = var.resource_types.containerservice_managed_clusters_agent_pools
+  body      = local.resource_body
+  delete_query_parameters = var.delete_options.ignore_pod_disruption_budget ? {
+    "ignore-pod-disruption-budget" = ["true"]
+  } : null
   ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters_agent_pools) > 0 ? var.ignore_body_changes.containerservice_managed_clusters_agent_pools : null
   ignore_null_property = true
   locks = [
@@ -34,10 +37,6 @@ resource "azapi_resource" "this" {
   # AzAPI's embedded AKS schema does not include this preview API yet.
   # Azure still validates the request at apply time.
   schema_validation_enabled = false
-
-  delete_query_parameters = var.delete_options.ignore_pod_disruption_budget ? {
-    "ignore-pod-disruption-budget" = ["true"]
-  } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -54,10 +53,13 @@ resource "azapi_resource" "this" {
 resource "azapi_resource" "this_create_before_destroy" {
   count = var.output_data_only ? 0 : var.create_before_destroy ? 1 : 0
 
-  name                 = "${var.name}${substr(sha256(uuid()), 0, 4)}"
-  parent_id            = var.parent_id
-  type                 = var.resource_types.containerservice_managed_clusters_agent_pools
-  body                 = local.resource_body
+  name      = "${var.name}${substr(sha256(uuid()), 0, 4)}"
+  parent_id = var.parent_id
+  type      = var.resource_types.containerservice_managed_clusters_agent_pools
+  body      = local.resource_body
+  delete_query_parameters = var.delete_options.ignore_pod_disruption_budget ? {
+    "ignore-pod-disruption-budget" = ["true"]
+  } : null
   ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters_agent_pools) > 0 ? var.ignore_body_changes.containerservice_managed_clusters_agent_pools : null
   ignore_null_property = true
   locks = [
@@ -77,10 +79,6 @@ resource "azapi_resource" "this_create_before_destroy" {
   # AzAPI's embedded AKS schema does not include this preview API yet.
   # Azure still validates the request at apply time.
   schema_validation_enabled = false
-
-  delete_query_parameters = var.delete_options.ignore_pod_disruption_budget ? {
-    "ignore-pod-disruption-budget" = ["true"]
-  } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -107,6 +105,7 @@ resource "terraform_data" "name_keeper" {
     name = var.name
   }
 }
+
 locals {
   created_resource = try(azapi_resource.this[0], azapi_resource.this_create_before_destroy[0], null)
 }
