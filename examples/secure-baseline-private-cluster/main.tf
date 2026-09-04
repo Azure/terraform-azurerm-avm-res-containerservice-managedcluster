@@ -116,7 +116,9 @@ resource "azapi_resource" "aks_identity" {
 }
 
 resource "random_uuid" "role_agc_config_manager" {}
+
 resource "random_uuid" "role_alb_network_contributor" {}
+
 resource "random_uuid" "role_aks_network_contributor" {}
 
 data "azapi_client_config" "current" {}
@@ -196,10 +198,6 @@ module "aks" {
       max_surge = "10%"
     }
   }
-  managed_identities = {
-    system_assigned            = false
-    user_assigned_resource_ids = [azapi_resource.aks_identity.id]
-  }
   ingress_profile = {
     application_load_balancer = {
       enabled = true
@@ -207,6 +205,10 @@ module "aks" {
     gateway_api = {
       installation = "Standard"
     }
+  }
+  managed_identities = {
+    system_assigned            = false
+    user_assigned_resource_ids = [azapi_resource.aks_identity.id]
   }
   network_profile = {
     network_plugin = "azure"

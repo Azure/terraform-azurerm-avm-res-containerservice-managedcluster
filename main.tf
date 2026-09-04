@@ -5,11 +5,8 @@ resource "azapi_resource" "this" {
   # applicationLoadBalancer requires the 2025-09-02-preview API. kubeProxyConfig is not available in the stable 2026-03-01 API.
   type                 = try(var.ingress_profile.application_load_balancer, null) != null ? "Microsoft.ContainerService/managedClusters@2025-09-02-preview" : var.kube_proxy_config == null ? var.resource_types.containerservice_managed_clusters : "Microsoft.ContainerService/managedClusters@2026-03-02-preview"
   body                 = local.resource_body
-  create_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers       = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters) > 0 ? var.ignore_body_changes.containerservice_managed_clusters : null
   ignore_null_property = true
-  read_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs = [
     "properties.nodeResourceGroup",
     "properties.agentPoolProfiles[0].vnetSubnetID",
@@ -37,8 +34,7 @@ resource "azapi_resource" "this" {
   sensitive_body_version = var.windows_profile == null ? null : {
     "properties.windowsProfile.adminPassword" = var.windows_profile_password_version
   }
-  tags           = var.tags
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags = var.tags
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned_user_assigned
@@ -82,9 +78,7 @@ resource "azapi_update_resource" "kubernetes_version" {
   locks = [
     azapi_resource.this.id,
   ]
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 resource "random_string" "dns_prefix" {
@@ -115,12 +109,8 @@ resource "azapi_resource" "lock" {
       )
     })
   })
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = local.effective_timeouts == null ? [] : [local.effective_timeouts]
@@ -147,13 +137,9 @@ resource "azapi_resource" "role_assignments" {
   parent_id              = azapi_resource.this.id
   type                   = each.value.type
   body                   = each.value.body
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_null_property   = true
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = local.effective_timeouts == null ? [] : [local.effective_timeouts]

@@ -74,11 +74,10 @@ resource "azapi_resource_action" "acr_task_run" {
   }
   response_export_values = []
 
-  depends_on = [azapi_resource.role_acr_import]
-
   lifecycle {
     replace_triggered_by = [azapi_resource.acr_task[0]]
   }
+  depends_on = [azapi_resource.role_acr_import]
 }
 
 ## Section to create the Azure Key Vault secret holding the Valkey password file

@@ -107,6 +107,7 @@ resource "azapi_resource" "dcr_msprom_aks" {
     }
   }
 }
+
 resource "azapi_resource" "dce_msprom_aks" {
   name      = "configurationAccessEndpoint"
   parent_id = var.aks_cluster_id

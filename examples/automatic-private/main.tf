@@ -32,6 +32,7 @@ resource "random_integer" "region_index" {
   max = length(module.regions.regions) - 1
   min = 0
 }
+
 ## End of section to provide a random Azure region for the resource group
 
 resource "random_string" "suffix" {
@@ -175,7 +176,6 @@ resource "azapi_resource" "subnet_system" {
   lifecycle {
     ignore_changes = [body.properties.delegations]
   }
-
   depends_on = [azapi_resource.subnet_cluster]
 }
 
@@ -200,13 +200,13 @@ resource "azapi_resource" "network_contributor" {
       roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
     }
   }
+  response_export_values = []
   # The user-assigned identity may not have replicated to Entra ID yet.
   retry = {
     error_message_regex  = ["PrincipalNotFound", "does not exist in the directory"]
     interval_seconds     = 10
     max_interval_seconds = 60
   }
-  response_export_values = []
 }
 
 resource "azapi_resource" "private_dns_zone" {
@@ -249,13 +249,13 @@ resource "azapi_resource" "private_dns_zone_contributor" {
       roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/b12aa53e-6015-4669-85d0-8515ebb3ae7f"
     }
   }
+  response_export_values = []
   # The user-assigned identity may not have replicated to Entra ID yet.
   retry = {
     error_message_regex  = ["PrincipalNotFound", "does not exist in the directory"]
     interval_seconds     = 10
     max_interval_seconds = 60
   }
-  response_export_values = []
 }
 
 resource "azapi_resource" "log_analytics_workspace" {
