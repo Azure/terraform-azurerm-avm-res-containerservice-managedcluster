@@ -21,7 +21,8 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  is_recommended = true
+  enable_telemetry = false
+  is_recommended   = true
 }
 
 # This allows us to randomize the region for the resource group.
@@ -251,7 +252,8 @@ module "private" {
       max_surge = "10%"
     }
   }
-  fqdn_subdomain = random_string.dns_prefix.result
+  enable_telemetry = false
+  fqdn_subdomain   = random_string.dns_prefix.result
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = [azapi_resource.identity.id]

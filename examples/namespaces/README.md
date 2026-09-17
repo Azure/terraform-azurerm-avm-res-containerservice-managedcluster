@@ -30,8 +30,9 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  is_recommended = true
-  region_filter  = ["swedencentral"]
+  enable_telemetry = false
+  is_recommended   = true
+  region_filter    = ["swedencentral"]
 }
 
 # This allows us to randomize the region for the resource group.
@@ -105,7 +106,8 @@ module "namespaces" {
       use_aad_auth                        = true
     }
   }
-  alert_email = "test@example.com"
+  alert_email      = "test@example.com"
+  enable_telemetry = false
   maintenanceconfiguration = {
     aksManagedAutoUpgradeSchedule = {
       name = "aksManagedAutoUpgradeSchedule"

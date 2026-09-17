@@ -26,7 +26,8 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  region_filter = ["northeurope"]
+  enable_telemetry = false
+  region_filter    = ["northeurope"]
 }
 
 # This selects a known-good region for AKS and Log Analytics example testing.
@@ -110,7 +111,8 @@ module "default" {
       workspace_resource_id = azapi_resource.log_analytics_workspace.id
     }
   }
-  dns_prefix = "defaultexample"
+  dns_prefix       = "defaultexample"
+  enable_telemetry = false
   managed_identities = {
     system_assigned = true
   }

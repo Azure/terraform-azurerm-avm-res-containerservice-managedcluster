@@ -34,6 +34,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
+  enable_telemetry       = false
   is_recommended         = true
   region_name_regex      = "euap"
   region_name_regex_mode = "not_match"
@@ -161,6 +162,7 @@ module "stateful_workloads" {
   }
   disable_local_accounts = false
   dns_prefix             = "statefulworkloads"
+  enable_telemetry       = false
   managed_identities = {
     system_assigned = true
   }

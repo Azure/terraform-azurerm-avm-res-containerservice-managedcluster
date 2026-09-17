@@ -23,8 +23,9 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  is_recommended = true
-  region_filter  = ["swedencentral"]
+  enable_telemetry = false
+  is_recommended   = true
+  region_filter    = ["swedencentral"]
 }
 
 # This allows us to randomize the region for the resource group.
@@ -297,6 +298,7 @@ module "automatic" {
   default_agent_pool = {
     vnet_subnet_id = azapi_resource.subnet_cluster.id
   }
+  enable_telemetry = false
   hosted_system_profile = {
     enabled               = true
     node_subnet_id        = azapi_resource.subnet_cluster.id
