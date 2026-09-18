@@ -28,7 +28,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   is_recommended   = true
 }
 
@@ -259,7 +259,7 @@ module "private" {
       max_surge = "10%"
     }
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   fqdn_subdomain   = random_string.dns_prefix.result
   managed_identities = {
     system_assigned            = false
@@ -333,7 +333,17 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `false`
 
 ## Outputs
 

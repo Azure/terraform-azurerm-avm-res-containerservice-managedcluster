@@ -19,7 +19,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   region_filter    = ["northeurope"]
 }
 
@@ -105,7 +105,7 @@ module "default" {
     }
   }
   dns_prefix       = "defaultexample"
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   managed_identities = {
     system_assigned = true
   }

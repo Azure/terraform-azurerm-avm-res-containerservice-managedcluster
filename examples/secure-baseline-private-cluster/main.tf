@@ -198,7 +198,7 @@ module "aks" {
       max_surge = "10%"
     }
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   ingress_profile = {
     application_load_balancer = {
       enabled = true
@@ -272,7 +272,7 @@ module "application_gateway_for_containers" {
       subnet_resource_id = local.subnet_agc_id
     }
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   frontends = {
     web = {
       name = "frontend-web"

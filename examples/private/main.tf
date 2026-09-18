@@ -21,7 +21,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   is_recommended   = true
 }
 
@@ -252,7 +252,7 @@ module "private" {
       max_surge = "10%"
     }
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   fqdn_subdomain   = random_string.dns_prefix.result
   managed_identities = {
     system_assigned            = false

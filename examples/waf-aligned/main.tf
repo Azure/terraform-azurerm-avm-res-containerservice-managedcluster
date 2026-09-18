@@ -21,7 +21,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  enable_telemetry       = false
+  enable_telemetry       = var.enable_telemetry
   has_availability_zones = true
   is_recommended         = true
   region_name_regex      = "euap"
@@ -318,7 +318,7 @@ module "waf_aligned" {
     }
   }
   disable_local_accounts = true
-  enable_telemetry       = false
+  enable_telemetry       = var.enable_telemetry
   fqdn_subdomain         = random_string.dns_prefix.result
   identity_profile = {
     kubeletidentity = {
