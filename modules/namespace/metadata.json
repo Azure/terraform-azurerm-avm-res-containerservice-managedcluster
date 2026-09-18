@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "AKS Managed Namespace",
+  "moduleDescription": "Manages an AKS Kubernetes namespace with resource quotas and default ingress and egress network policies.",
+  "canonicalType": "Microsoft.ContainerService/managedClusters/managedNamespaces",
+  "telemetryIdPrefix": "46d3xtrf.res.34bb516"
+}
