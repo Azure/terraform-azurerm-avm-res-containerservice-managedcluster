@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "AKS Maintenance Configuration",
+  "moduleDescription": "Configures maintenance windows for scheduled auto-upgrades of an AKS managed cluster.",
+  "canonicalType": "Microsoft.ContainerService/managedClusters/maintenanceConfigurations",
+  "telemetryIdPrefix": "46d3xtrf.res.8811f95"
+}

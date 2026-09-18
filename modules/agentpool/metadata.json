@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "AKS Agent Pool",
+  "moduleDescription": "Manages an AKS agent pool with a configurable number of virtual machines to host containers.",
+  "canonicalType": "Microsoft.ContainerService/managedClusters/agentPools",
+  "telemetryIdPrefix": "46d3xtrf.res.898fcb3"
+}

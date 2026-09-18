@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "AKS Managed Cluster",
+  "moduleDescription": "AVM Resource Module for AKS Managed Cluster",
+  "canonicalType": "Microsoft.ContainerService/managedClusters",
+  "owners": [
+    "matt-FFFFFF",
+    "ethanjenkins1"
+  ],
+  "telemetryIdPrefix": "46d3xtrf.res.5c80fdf"
+}
