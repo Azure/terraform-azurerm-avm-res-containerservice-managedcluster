@@ -23,7 +23,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   is_recommended   = true
   region_filter    = ["swedencentral"]
 }
@@ -100,7 +100,7 @@ module "namespaces" {
     }
   }
   alert_email      = "test@example.com"
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   maintenanceconfiguration = {
     aksManagedAutoUpgradeSchedule = {
       name = "aksManagedAutoUpgradeSchedule"

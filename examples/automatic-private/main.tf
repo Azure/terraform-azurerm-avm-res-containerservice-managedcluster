@@ -23,7 +23,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   is_recommended   = true
   region_filter    = ["swedencentral"]
 }
@@ -298,7 +298,7 @@ module "automatic" {
   default_agent_pool = {
     vnet_subnet_id = azapi_resource.subnet_cluster.id
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   hosted_system_profile = {
     enabled               = true
     node_subnet_id        = azapi_resource.subnet_cluster.id
