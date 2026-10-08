@@ -233,6 +233,8 @@ Options applied only when deleting this agent pool.
 **os\_sku**  
 Specifies the OS SKU used by the agent pool. The default is Ubuntu if OSType is Linux. The default is Windows2019 when Kubernetes <= 1.24 or Windows2022 when Kubernetes >= 1.25 if OSType is Windows.
 
+For Windows Server 2025, set `os_sku = "Windows2025"`, `os_type = "Windows"`, `mode = "User"`, and `enable_fips = true`. Requires Kubernetes 1.32 or later. See [Windows OS versions](https://learn.microsoft.com/azure/aks/upgrade-windows-os).
+
 **upgrade\_settings**  
 Settings for upgrading an agentpool
 
