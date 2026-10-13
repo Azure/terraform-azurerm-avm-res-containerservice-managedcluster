@@ -1248,7 +1248,7 @@ Default: `{}`
 
 Description: Ingress profile for the container service cluster.
 
-- `application_load_balancer` - Settings for the Application Gateway for Containers ALB Controller add-on.
+- `application_load_balancer` - Settings for the Application Gateway for Containers ALB Controller add-on. When supplied (including `enabled = false`), selects the `2026-03-02-preview` cluster API to support ALB together with App Routing Gateway API implementations and kube-proxy configuration.
   - `enabled` - Whether to enable the Application Gateway for Containers ALB Controller add-on. Requires the managed Gateway API add-on, workload identity, and the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features.
 - `gateway_api` - Settings for the managed Gateway API installation.
   - `installation` - Configuration for the managed Gateway API installation. If not specified, the default is `Disabled`.
