@@ -27,6 +27,9 @@ run "advanced_networking_is_serialized" {
         observability = {
           enabled = true
         }
+        performance = {
+          acceleration_mode = "BpfVeth"
+        }
         security = {
           enabled                   = true
           advanced_network_policies = "FQDN"
@@ -46,6 +49,11 @@ run "advanced_networking_is_serialized" {
   }
 
   assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.performance.accelerationMode == "BpfVeth"
+    error_message = "Advanced Networking performance acceleration should serialize using the ARM property name."
+  }
+
+  assert {
     condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.security.enabled
     error_message = "Advanced Networking security should serialize as enabled."
   }
@@ -54,4 +62,22 @@ run "advanced_networking_is_serialized" {
     condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.security.advancedNetworkPolicies == "FQDN"
     error_message = "Advanced Networking security policies should serialize using the ARM property name."
   }
+}
+
+run "advanced_networking_rejects_invalid_acceleration_mode" {
+  command = plan
+
+  variables {
+    network_profile = {
+      advanced_networking = {
+        performance = {
+          acceleration_mode = "Invalid"
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    var.network_profile,
+  ]
 }
