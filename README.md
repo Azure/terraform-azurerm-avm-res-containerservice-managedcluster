@@ -1248,7 +1248,7 @@ Default: `{}`
 
 Description: Ingress profile for the container service cluster.
 
-- `application_load_balancer` - Settings for the Application Gateway for Containers ALB Controller add-on.
+- `application_load_balancer` - Settings for the Application Gateway for Containers ALB Controller add-on. When supplied (including `enabled = false`), selects the `2026-03-02-preview` cluster API to support ALB together with App Routing Gateway API implementations and kube-proxy configuration.
   - `enabled` - Whether to enable the Application Gateway for Containers ALB Controller add-on. Requires the managed Gateway API add-on, workload identity, and the `ManagedGatewayAPIPreview` and `ApplicationLoadBalancerPreview` subscription features.
 - `gateway_api` - Settings for the managed Gateway API installation.
   - `installation` - Configuration for the managed Gateway API installation. If not specified, the default is `Disabled`.
@@ -1581,6 +1581,8 @@ Description: Profile of network configuration.
   - `enabled` - Indicates the enablement of Advanced Networking functionalities of observability and security on AKS clusters. When this is set to true, all observability and security features will be set to enabled unless explicitly disabled. If not specified, the default is false.
   - `observability` - Observability profile to enable advanced network metrics and flow logs with historical contexts.
     - `enabled` - Indicates the enablement of Advanced Networking observability functionalities on clusters.
+  - `performance` - Performance profile for clusters that use Azure CNI powered by Cilium.
+    - `acceleration_mode` - Enables eBPF host routing when set to `BpfVeth`. Set to `None` to disable acceleration. For requirements and limitations, see https://aka.ms/acnsperformance.
   - `security` - Security profile to enable security features on cilium based cluster.
     - `advanced_network_policies` - Enable advanced network policies. This allows users to configure Layer 7 network policies (FQDN, HTTP, Kafka). Policies themselves must be configured via the Cilium Network Policy resources, see https://docs.cilium.io/en/latest/security/policy/index.html. This can be enabled only on cilium-based clusters. If not specified, the default value is FQDN if security.enabled is set to true.
     - `enabled` - This feature allows user to configure network policy based on DNS (FQDN) names. It can be enabled only on cilium based clusters. If not specified, the default is false.
@@ -1624,6 +1626,9 @@ object({
       enabled = optional(bool)
       observability = optional(object({
         enabled = optional(bool)
+      }))
+      performance = optional(object({
+        acceleration_mode = optional(string)
       }))
       security = optional(object({
         advanced_network_policies = optional(string)

@@ -25,6 +25,9 @@ locals {
       observability = var.network_profile.advanced_networking.observability == null ? null : {
         enabled = var.network_profile.advanced_networking.observability.enabled
       }
+      performance = var.network_profile.advanced_networking.performance == null ? null : {
+        accelerationMode = var.network_profile.advanced_networking.performance.acceleration_mode
+      }
       security = var.network_profile.advanced_networking.security == null ? null : {
         advancedNetworkPolicies = var.network_profile.advanced_networking.security.advanced_network_policies
         enabled                 = var.network_profile.advanced_networking.security.enabled
