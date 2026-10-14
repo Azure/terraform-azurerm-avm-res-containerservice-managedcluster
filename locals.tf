@@ -17,4 +17,5 @@ locals {
     max_interval_seconds = 60
   }
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
+  uses_preview_managed_cluster_api   = try(var.ingress_profile.application_load_balancer, null) != null || var.kube_proxy_config != null || try(var.security_profile.image_integrity, null) != null
 }
