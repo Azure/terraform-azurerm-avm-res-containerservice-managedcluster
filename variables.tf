@@ -1371,6 +1371,9 @@ variable "security_profile" {
       enabled        = optional(bool)
       interval_hours = optional(number)
     }))
+    image_integrity = optional(object({
+      enabled = optional(bool)
+    }))
     workload_identity = optional(object({
       enabled = optional(bool)
     }))
@@ -1392,6 +1395,8 @@ Security profile for the container service cluster.
 - `image_cleaner` - Image Cleaner removes unused images from nodes, freeing up disk space and helping to reduce attack surface area. Here are settings for the security profile.
   - `enabled` - Whether to enable Image Cleaner on AKS cluster.
   - `interval_hours` - Image Cleaner scanning interval in hours.
+- `image_integrity` - THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION. AKS Image Integrity validates signed images through Ratify and the Azure Policy add-on.
+  - `enabled` - Whether to enable Image Integrity on the AKS cluster.
 - `workload_identity` - Workload identity settings for the security profile.
   - `enabled` - Whether to enable workload identity.
 
@@ -1400,6 +1405,18 @@ DESCRIPTION
   validation {
     condition     = try(var.security_profile == null || var.security_profile.custom_ca_trust_certificates == null || length(var.security_profile.custom_ca_trust_certificates) <= 10, true)
     error_message = "security_profile.custom_ca_trust_certificates must have at most 10 item(s)."
+  }
+  validation {
+    condition     = try(var.security_profile == null || var.security_profile.image_integrity == null || var.security_profile.image_integrity.enabled != true || var.addon_profile_azure_policy.enabled == true, true)
+    error_message = "security_profile.image_integrity.enabled requires addon_profile_azure_policy.enabled to be true."
+  }
+  validation {
+    condition     = try(var.security_profile == null || var.security_profile.image_integrity == null || var.security_profile.image_integrity.enabled != true || (var.oidc_issuer_profile != null && var.oidc_issuer_profile.enabled == true), true)
+    error_message = "security_profile.image_integrity.enabled requires oidc_issuer_profile.enabled to be true."
+  }
+  validation {
+    condition     = try(var.security_profile == null || var.security_profile.image_integrity == null || var.security_profile.image_integrity.enabled != true || var.sku.name != "Automatic", true)
+    error_message = "security_profile.image_integrity.enabled is not supported for AKS Automatic clusters."
   }
 }
 
