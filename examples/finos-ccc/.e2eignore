@@ -1,0 +1,3 @@
+Manual existing-network example: provisions identities, DNS and encryption by
+default but still requires a resource group, approved subnets/UDR and Entra groups.
+Maintainer review is needed for required inputs and create-only key retention.
