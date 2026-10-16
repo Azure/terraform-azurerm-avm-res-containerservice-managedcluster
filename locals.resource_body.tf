@@ -188,6 +188,9 @@ locals {
           enabled       = var.security_profile.image_cleaner.enabled
           intervalHours = var.security_profile.image_cleaner.interval_hours
         }
+        imageIntegrity = var.security_profile.image_integrity == null ? null : {
+          enabled = var.security_profile.image_integrity.enabled
+        }
         workloadIdentity = var.security_profile.workload_identity == null ? null : {
           enabled = var.security_profile.workload_identity.enabled
         }

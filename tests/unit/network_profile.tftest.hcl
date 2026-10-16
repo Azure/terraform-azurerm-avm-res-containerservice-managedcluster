@@ -1,4 +1,21 @@
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_resource "azapi_resource" {
+    defaults = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.ContainerService/managedClusters/test-aks"
+    }
+  }
+  mock_resource "azapi_resource_action" {
+    defaults = {
+      output = {
+        kubeconfigs = [{
+          value = base64encode(jsonencode({
+            clusters = [{ cluster = { certificate-authority-data = "test-ca" } }]
+          }))
+        }]
+      }
+    }
+  }
+}
 mock_provider "modtm" {}
 mock_provider "random" {}
 
@@ -27,6 +44,9 @@ run "advanced_networking_is_serialized" {
         observability = {
           enabled = true
         }
+        performance = {
+          acceleration_mode = "BpfVeth"
+        }
         security = {
           enabled                   = true
           advanced_network_policies = "FQDN"
@@ -46,6 +66,11 @@ run "advanced_networking_is_serialized" {
   }
 
   assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.performance.accelerationMode == "BpfVeth"
+    error_message = "Advanced Networking performance acceleration should serialize using the ARM property name."
+  }
+
+  assert {
     condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.security.enabled
     error_message = "Advanced Networking security should serialize as enabled."
   }
@@ -53,5 +78,79 @@ run "advanced_networking_is_serialized" {
   assert {
     condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.security.advancedNetworkPolicies == "FQDN"
     error_message = "Advanced Networking security policies should serialize using the ARM property name."
+  }
+}
+
+run "advanced_networking_rejects_invalid_acceleration_mode" {
+  command = plan
+
+  variables {
+    network_profile = {
+      advanced_networking = {
+        performance = {
+          acceleration_mode = "Invalid"
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    var.network_profile,
+  ]
+}
+
+run "advanced_networking_acceleration_can_be_disabled" {
+  command = apply
+
+  variables {
+    network_profile = {
+      advanced_networking = {
+        performance = {
+          acceleration_mode = "None"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.performance.accelerationMode == "None"
+    error_message = "The supported None value must be retained rather than treated as an omitted setting."
+  }
+}
+
+run "advanced_networking_performance_can_be_omitted" {
+  command = apply
+
+  variables {
+    network_profile = {
+      advanced_networking = {
+        enabled = true
+        observability = {
+          enabled = true
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.performance == null
+    error_message = "Existing Advanced Networking configurations must not implicitly enable performance acceleration."
+  }
+}
+
+run "advanced_networking_acceleration_mode_can_be_omitted" {
+  command = apply
+
+  variables {
+    network_profile = {
+      advanced_networking = {
+        performance = {}
+      }
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.performance.accelerationMode == null
+    error_message = "An empty performance object must not impose an acceleration mode."
   }
 }

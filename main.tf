@@ -2,8 +2,8 @@ resource "azapi_resource" "this" {
   location  = var.location
   name      = var.name
   parent_id = var.parent_id
-  # applicationLoadBalancer requires the 2025-09-02-preview API. kubeProxyConfig is not available in the stable 2026-03-01 API.
-  type                 = try(var.ingress_profile.application_load_balancer, null) != null ? "Microsoft.ContainerService/managedClusters@2025-09-02-preview" : var.kube_proxy_config == null ? var.resource_types.containerservice_managed_clusters : "Microsoft.ContainerService/managedClusters@2026-03-02-preview"
+  # The preview API supports applicationLoadBalancer, kubeProxyConfig, and imageIntegrity.
+  type                 = local.uses_preview_managed_cluster_api ? "Microsoft.ContainerService/managedClusters@2026-03-02-preview" : var.resource_types.containerservice_managed_clusters
   body                 = local.resource_body
   ignore_body_changes  = length(var.ignore_body_changes.containerservice_managed_clusters) > 0 ? var.ignore_body_changes.containerservice_managed_clusters : null
   ignore_null_property = true
