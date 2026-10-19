@@ -10,6 +10,13 @@ variable "alert_email" {
   nullable    = false
 }
 
+# tflint-ignore: terraform_unused_declarations
+variable "location" {
+  type        = string
+  description = "The Azure region for this module's resources or telemetry deployment."
+  nullable    = false
+}
+
 variable "parent_id" {
   type        = string
   description = "The parent resource group ID"

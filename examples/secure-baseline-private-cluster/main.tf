@@ -6,6 +6,10 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.9"
     }
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = "~> 0.3"
+    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
@@ -28,8 +32,8 @@ locals {
 }
 
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.4"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 resource "azapi_resource" "resource_group" {
@@ -176,6 +180,9 @@ resource "azapi_resource" "role_aks_network_contributor" {
 
 module "aks" {
   source = "../.."
+  providers = {
+    azapi = azapi
+  }
 
   location  = local.selected_region
   name      = module.naming.kubernetes_cluster.name_unique
@@ -261,7 +268,8 @@ resource "azapi_resource" "waf_policy" {
 }
 
 module "application_gateway_for_containers" {
-  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-servicenetworking-trafficcontroller.git?ref=v1.0.1"
+  source    = "git::https://github.com/Azure/terraform-azurerm-avm-res-servicenetworking-trafficcontroller.git?ref=v1.0.1"
+  providers = { modtm = modtm }
 
   location  = local.selected_region
   name      = "agc-${module.naming.application_gateway.name_unique}"

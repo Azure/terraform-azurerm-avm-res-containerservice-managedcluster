@@ -1,6 +1,7 @@
 module "default_agent_pool_data" {
   source = "./modules/agentpool"
 
+  location                      = var.location
   name                          = var.default_agent_pool.name
   parent_id                     = "" # As we are outputting data only, parent_id is not required
   artifact_streaming_profile    = var.default_agent_pool.artifact_streaming_profile
@@ -13,6 +14,7 @@ module "default_agent_pool_data" {
   enable_fips                   = var.default_agent_pool.enable_fips
   enable_node_public_ip         = var.default_agent_pool.enable_node_public_ip
   enable_os_disk_full_caching   = var.default_agent_pool.enable_os_disk_full_caching
+  enable_telemetry              = var.enable_telemetry
   enable_ultra_ssd              = var.default_agent_pool.enable_ultra_ssd
   gateway_profile               = var.default_agent_pool.gateway_profile
   gpu_instance_profile          = var.default_agent_pool.gpu_instance_profile

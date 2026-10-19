@@ -2,6 +2,7 @@ module "nodepools" {
   source   = "./modules/agentpool"
   for_each = var.agent_pools
 
+  location                      = var.location
   name                          = each.value.name
   parent_id                     = azapi_resource.this.id
   artifact_streaming_profile    = each.value.artifact_streaming_profile
@@ -16,6 +17,7 @@ module "nodepools" {
   enable_fips                   = each.value.enable_fips
   enable_node_public_ip         = each.value.enable_node_public_ip
   enable_os_disk_full_caching   = each.value.enable_os_disk_full_caching
+  enable_telemetry              = var.enable_telemetry
   enable_ultra_ssd              = each.value.enable_ultra_ssd
   gateway_profile               = each.value.gateway_profile
   gpu_instance_profile          = each.value.gpu_instance_profile
