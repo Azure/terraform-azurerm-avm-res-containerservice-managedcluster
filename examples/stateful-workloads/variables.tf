@@ -57,6 +57,16 @@ variable "cluster_name" {
   description = "The name of the Kubernetes cluster"
 }
 
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+This variable controls whether or not telemetry is enabled for the module.
+For more information see <https://aka.ms/avm/telemetryinfo>.
+If it is set to false, then no telemetry will be collected.
+DESCRIPTION
+}
+
 variable "identity_name" {
   type        = string
   default     = null
@@ -115,14 +125,4 @@ variable "valkey_password" {
   type        = string
   default     = "" #generate password using openssl rand -base64 32
   description = "The password for the Valkey"
-}
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
 }

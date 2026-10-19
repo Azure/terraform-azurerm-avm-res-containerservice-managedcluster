@@ -21,6 +21,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.13.0"
 
+  location               = var.location
   enable_telemetry       = var.enable_telemetry
   has_availability_zones = true
   is_recommended         = true
@@ -42,8 +43,8 @@ locals {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.4"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 resource "azapi_resource" "this" {
@@ -254,6 +255,9 @@ resource "random_string" "dns_prefix" {
 
 module "waf_aligned" {
   source = "../.."
+  providers = {
+    azapi = azapi
+  }
 
   location  = azapi_resource.this.location
   name      = module.naming.kubernetes_cluster.name_unique
