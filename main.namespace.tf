@@ -10,6 +10,7 @@ module "namespace" {
   annotations            = each.value.annotations
   default_network_policy = each.value.default_network_policy
   delete_policy          = each.value.delete_policy
+  enable_telemetry       = var.enable_telemetry
   labels                 = each.value.labels
   retry                  = var.retry
   tags                   = each.value.tags
