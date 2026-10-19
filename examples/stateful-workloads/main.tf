@@ -25,7 +25,7 @@ module "naming" {
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.12.0"
+  version = "0.13.0"
 
   enable_telemetry       = var.enable_telemetry
   is_recommended         = true
