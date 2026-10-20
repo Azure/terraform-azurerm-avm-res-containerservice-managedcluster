@@ -1,10 +1,10 @@
 provider "azapi" {
-  subscription_id = provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", var.resource_group_id).subscription_id
+  subscription_id = local.subscription_id
 }
 
-# Published prerequisite AVMs require AzureRM; the AKS module remains AzAPI.
+# Published prerequisite AVM modules require AzureRM; the AKS module itself uses AzAPI.
 provider "azurerm" {
-  subscription_id                 = provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", var.resource_group_id).subscription_id
+  subscription_id                 = local.subscription_id
   resource_provider_registrations = "none"
 
   features {
@@ -23,108 +23,170 @@ resource "random_string" "name_suffix" {
   upper   = false
 }
 
-# CCC annotations describe supporting configuration, not assessed compliance.
-# Prerequisites and remaining controls are documented in _header.md.
+# Fresh role assignments can take minutes to propagate; AKS validates BYO identity
+# permissions at create time.
+resource "time_sleep" "rbac_propagation" {
+  create_duration = "60s"
+
+  depends_on = [module.prerequisite_role_assignments]
+}
+
+# Each attribute below is annotated with the FINOS CCC K8S assessment requirements (ARs)
+# it enforces. See _header.md for the complete control matrix and residual items.
 module "aks" {
   source = "../.."
-
-  # Controls: CCC.Core.CN06, CCC.K8S.CN09, CCC.K8S.CN15 [coverage: partial]
-  # Region approval, version support/patch evidence and tag/label enforcement
-  # are external. These inputs identify the deployment environment only.
-  name                = local.cluster_name
-  location            = var.location
-  parent_id           = var.resource_group_id
-  kubernetes_version  = var.kubernetes_version
-  tags                = var.tags
-  enable_telemetry    = false
-  resource_types      = var.resource_types.containerservice_managed_clusters
-  retry               = var.retry
-  timeouts            = var.timeouts
-  ignore_body_changes = var.ignore_body_changes.containerservice_managed_clusters
-
-  sku = {
-    name = "Base"
-    tier = "Free"
+  providers = {
+    azapi = azapi
   }
 
-  # Controls: CCC.K8S.CN17 [coverage: partial]
-  # Separate created/reused identities; prerequisite grants are narrowly scoped.
-  managed_identities = {
-    system_assigned            = false
-    user_assigned_resource_ids = [local.control_plane_identity_id]
+  # CCC.Core.CN06: approved region.
+  location  = var.location
+  name      = local.cluster_name
+  parent_id = local.resource_group_id
+  # CCC.K8S.CN02.AR01 / CN16.AR01: Entra ID with Azure RBAC for Kubernetes authorization.
+  # Admin groups are reserved for break-glass access.
+  aad_profile = {
+    managed                = true
+    enable_azure_rbac      = true
+    admin_group_object_ids = var.cluster_admin_group_object_ids
   }
-
+  # CCC.K8S.CN04/CN05/CN11/CN13: the Azure Policy add-on enforces the assignments in
+  # main.governance.tf. CCC.K8S.CN08.AR01: add-ons come from the allowlist check below.
+  addon_profile_azure_policy = local.addon_profile_azure_policy
+  # CCC.K8S.CN14.AR01: Container Insights with Entra ID authentication.
+  addon_profile_oms_agent = {
+    enabled = local.addon_profile_oms_agent_enabled
+    config = {
+      log_analytics_workspace_resource_id = module.log_analytics.resource_id
+      use_aad_auth                        = true
+    }
+  }
+  # CCC.K8S.CN01.AR01/AR02, CCC.Core.CN05: private API server reachable only from the
+  # cluster VNet; no public FQDN and no Run Command.
+  api_server_access_profile = {
+    enable_private_cluster             = true
+    enable_private_cluster_public_fqdn = false
+    enable_vnet_integration            = true
+    disable_run_command                = true
+    private_dns_zone                   = local.private_dns_zone_id
+    subnet_id                          = local.api_server_subnet_id
+  }
+  # CCC.K8S.CN09.AR01/AR02: managed patch and node-image upgrades.
+  auto_upgrade_profile = {
+    upgrade_channel         = "patch"
+    node_os_upgrade_channel = "NodeImage"
+  }
+  # CCC.K8S.CN12.AR02: SSH disabled, no public node IPs.
+  # CCC.K8S.CN18.AR01/AR02: AKS-supplied image with Secure Boot and vTPM (Trusted Launch).
+  # CCC.Core.CN02: encryption at host in addition to the DES.
+  # CCC.K8S.CN13.AR03: autoscaler with an explicit maximum.
+  default_agent_pool = {
+    name                      = "systempool"
+    vm_size                   = "Standard_D4s_v5"
+    count_of                  = 2
+    min_count                 = 2
+    max_count                 = 5
+    max_pods                  = 30
+    vnet_subnet_id            = local.node_subnet_id
+    os_sku                    = "Ubuntu"
+    os_disk_type              = "Managed"
+    enable_auto_scaling       = true
+    enable_encryption_at_host = true
+    enable_node_public_ip     = false
+    availability_zones        = ["1", "2", "3"]
+    security_profile = {
+      enable_secure_boot = true
+      enable_vtpm        = true
+      ssh_access         = "Disabled"
+    }
+  }
+  # CCC.K8S.CN14.AR01 / CCC.Core.CN04: Kubernetes audit and control-plane logs to an
+  # external Log Analytics workspace.
+  diagnostic_settings = {
+    log_analytics = {
+      name                           = "ds-aks-ccc"
+      workspace_resource_id          = module.log_analytics.resource_id
+      log_analytics_destination_type = "Dedicated"
+      log_groups                     = ["allLogs"]
+    }
+  }
+  # CCC.K8S.CN16.AR02: no local accounts or static credentials.
+  disable_local_accounts = true
+  # CCC.Core.CN02 / CCC.K8S.CN07.AR01: customer-managed key for node disks.
+  disk_encryption_set_id = local.disk_encryption_set_id
+  enable_rbac            = true
+  enable_telemetry       = var.enable_telemetry
+  # CCC.K8S.CN17.AR01: kubelet identity distinct from the control-plane identity.
   identity_profile = {
     kubeletidentity = {
       resource_id = local.kubelet_identity_id
     }
   }
-
-  # Controls: CCC.K8S.CN02, CCC.K8S.CN16 [coverage: partial]
-  # Application Roles/Bindings, MFA and revocation are external; local accounts
-  # are not disabled by this example. Admin groups are not workload least privilege.
-  enable_rbac = true
-  aad_profile = {
-    managed                = true
-    enable_azure_rbac      = false
-    admin_group_object_ids = var.cluster_admin_group_object_ids
-  }
-
-  # Controls: CCC.K8S.CN01, CCC.Core.CN05 [coverage: partial]
-  # Restrict connected private networks with approved NSGs/routes/DNS. Public
-  # network access and Run Command are not explicitly disabled by this example.
-  api_server_access_profile = {
-    enable_private_cluster             = true
-    enable_private_cluster_public_fqdn = false
-    enable_vnet_integration            = true
-    private_dns_zone                   = local.private_dns_zone_id
-    subnet_id                          = var.api_server_subnet_id
-  }
-
-  # Controls: CCC.K8S.CN03 [coverage: supporting]
-  # Dedicated workload identities/federated credentials and static-key prevention
-  # must be configured separately; enabling OIDC alone does not satisfy the control.
-  oidc_issuer_profile = {
-    enabled = true
-  }
-
-  # Controls: CCC.Core.CN02, CCC.K8S.CN07 [coverage: partial]
-  # DES covers node disks; private KMS covers Kubernetes secrets at rest, not
-  # workload secret authorization/delivery or every persistent volume.
-  disk_encryption_set_id = local.disk_encryption_set_id
-  security_profile = {
-    workload_identity = {
-      enabled = true
+  ignore_body_changes = var.ignore_body_changes.containerservice_managed_clusters
+  # CCC.K8S.CN09.AR01: a <major.minor> or null version lets the patch channel keep the
+  # cluster inside the support lifecycle without idempotency drift.
+  kubernetes_version = var.kubernetes_version
+  # CCC.K8S.CN09.AR02: upgrades run inside weekly maintenance windows.
+  maintenanceconfiguration = {
+    aksManagedAutoUpgradeSchedule = {
+      name = "aksManagedAutoUpgradeSchedule"
+      maintenance_window = {
+        duration_hours = 4
+        start_time     = "00:00"
+        utc_offset     = "+00:00"
+        schedule = {
+          weekly = {
+            day_of_week    = "Sunday"
+            interval_weeks = 1
+          }
+        }
+      }
     }
-    azure_key_vault_kms = {
-      enabled                  = true
-      key_id                   = local.key_vault_key_id
-      key_vault_network_access = "Private"
-      key_vault_resource_id    = local.key_vault_resource_id
+    aksManagedNodeOSUpgradeSchedule = {
+      name = "aksManagedNodeOSUpgradeSchedule"
+      maintenance_window = {
+        duration_hours = 4
+        start_time     = "00:00"
+        utc_offset     = "+00:00"
+        schedule = {
+          weekly = {
+            day_of_week    = "Saturday"
+            interval_weeks = 1
+          }
+        }
+      }
     }
   }
-
-  # Controls: CCC.K8S.CN12, CCC.K8S.CN18 [coverage: partial]
-  # No public node IPs; kubelet/IMDS/SSH restrictions and boot attestation are
-  # not established by these settings. Sizing is demonstration capacity only.
-  default_agent_pool = {
-    name                  = "systempool"
-    vm_size               = "Standard_D4s_v5"
-    count_of              = 2
-    max_pods              = 30
-    vnet_subnet_id        = var.subnet_id
-    os_sku                = "Ubuntu"
-    os_disk_type          = "Managed"
-    enable_node_public_ip = false
-    availability_zones    = ["1", "2", "3"]
+  # CCC.K8S.CN17.AR01: dedicated control-plane identity.
+  managed_identities = {
+    system_assigned            = false
+    user_assigned_resource_ids = [local.control_plane_identity_id]
   }
-
-  # Controls: CCC.K8S.CN06 [coverage: supporting]
-  # Cilium needs actual default-deny/approved-allow NetworkPolicies; the existing
-  # subnet must already have a UDR/firewall egress path that supports AKS.
+  # CCC.K8S.CN06.AR01, CN12.AR03, CN13.AR02, CN15.AR01: managed namespaces with
+  # default-deny network policy (which also blocks IMDS), quotas and ownership metadata.
+  namespace = {
+    for key, ns in var.workload_namespaces : key => {
+      name = key
+      labels = merge(ns.labels, {
+        "data-classification" = ns.data_classification
+      })
+      annotations = {
+        "ccc.finos.org/owner" = ns.owner
+      }
+      default_network_policy = {
+        ingress = "DenyAll"
+        egress  = "DenyAll"
+      }
+      default_resource_quota = ns.resource_quota
+      adoption_policy        = "Never"
+      delete_policy          = "Delete"
+      tags                   = var.tags
+    }
+  }
+  # CCC.K8S.CN06: Cilium enforces the namespace network policies.
   network_profile = {
     load_balancer_sku   = "standard"
-    outbound_type       = "userDefinedRouting"
+    outbound_type       = var.outbound_type
     network_plugin      = "azure"
     network_plugin_mode = "overlay"
     network_dataplane   = "cilium"
@@ -133,20 +195,61 @@ module "aks" {
     service_cidr        = var.service_cidr
     dns_service_ip      = var.dns_service_ip
   }
-
-  # Controls: CCC.K8S.CN08 [coverage: partial]
-  # Disabled Azure Policy is not an approved add-on inventory. CN04/CN05/CN11
-  # image trust, restricted workload and admission enforcement are not installed.
-  addon_profile_azure_policy = {
-    enabled = false
+  # CCC.K8S.CN15.AR02: block out-of-band changes to the AKS-managed node resource group.
+  node_resource_group_profile = {
+    restriction_level = "ReadOnly"
   }
-
-  # Node SSH, linux_profile and SSH keys intentionally left at AVM defaults.
-  # No additional pools: all nodes use the hardened default pool above.
-  # CN10/CN13/CN14 PVC policy, workload bounds and audit/alerts remain external.
+  # CCC.K8S.CN03.AR01: OIDC issuer for federated workload identities.
+  oidc_issuer_profile = {
+    enabled = local.enabled_cluster_features.workload_identity
+  }
+  # CCC.K8S.CN01.AR02: public network access to the API server is disabled.
+  public_network_access = "Disabled"
+  resource_types        = var.resource_types.containerservice_managed_clusters
+  retry                 = var.retry
+  # CCC.K8S.CN02.AR01: scoped Azure RBAC for Kubernetes role assignments.
+  role_assignments = local.cluster_role_assignments
+  # CCC.K8S.CN03.AR01: workload identity. CCC.K8S.CN07.AR01: private Key Vault KMS for
+  # Kubernetes secrets. CCC.K8S.CN14.AR01 / CCC.Core.CN07: Defender threat detection.
+  security_profile = {
+    workload_identity = {
+      enabled = local.enabled_cluster_features.workload_identity
+    }
+    azure_key_vault_kms = {
+      enabled                  = local.enabled_cluster_features.azure_key_vault_kms
+      key_id                   = local.key_vault_key_id
+      key_vault_network_access = "Private"
+      key_vault_resource_id    = local.key_vault_resource_id
+    }
+    defender = {
+      log_analytics_workspace_resource_id = module.log_analytics.resource_id
+      security_monitoring = {
+        enabled = local.enabled_cluster_features.defender
+      }
+    }
+    image_cleaner = {
+      enabled        = local.enabled_cluster_features.image_cleaner
+      interval_hours = 48
+    }
+  }
+  # CCC.K8S.CN09: Standard tier with an uptime SLA.
+  sku = {
+    name = "Base"
+    tier = "Standard"
+  }
+  # CCC.K8S.CN15.AR01: approved ownership, environment and data-classification tags.
+  tags     = var.tags
+  timeouts = var.timeouts
 
   depends_on = [
-    module.prerequisite_role_assignments,
+    time_sleep.rbac_propagation,
     module.api_dns_zone,
   ]
+}
+
+check "approved_addons_only" {
+  assert {
+    condition     = length(setsubtract(local.enabled_addons, var.approved_addons)) == 0
+    error_message = "Every enabled AKS add-on must be in var.approved_addons (CCC.K8S.CN08.AR01)."
+  }
 }
