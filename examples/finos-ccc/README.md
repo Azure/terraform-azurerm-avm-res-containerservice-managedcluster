@@ -47,7 +47,7 @@ example, **Residual** requires an operational process or is a platform limitatio
 | CN04.AR01 | Policy | Allowed images: the private registry only, pinned by `@sha256` digest. |
 | CN04.AR02 | Residual | Sign images in the build pipeline. AKS Image Integrity is preview and audit-only, so it is not enabled. |
 | CN04.AR03 | Residual | Defender for Containers reports vulnerabilities; gate releases on them in the pipeline. |
-| CN05.AR01/AR02 | Policy | Kubernetes restricted pod security standard initiative in `Deny` mode. |
+| CN05.AR01/AR02 | Policy | Kubernetes restricted pod security standard initiative in `Deny` mode, with no added capabilities allowed and `ALL` capabilities required to be dropped. |
 | CN06.AR01 | K8s | Managed namespaces with `DenyAll` ingress and egress, enforced by Cilium. |
 | CN06.AR02 | Residual | Application teams add explicit allow policies with stable selectors. |
 | CN07.AR01 | TF | Private Key Vault KMS for Kubernetes secrets, CMK disk encryption, workload identity for delivery. |
@@ -1005,19 +1005,19 @@ Version: 0.6.0
 
 Source: Azure/avm-ptn-policyassignment/azurerm
 
-Version: 0.2.1
+Version: 0.2.2
 
 ### <a name="module_policy_resource_limits"></a> [policy\_resource\_limits](#module\_policy\_resource\_limits)
 
 Source: Azure/avm-ptn-policyassignment/azurerm
 
-Version: 0.2.1
+Version: 0.2.2
 
 ### <a name="module_policy_restricted_pod_security"></a> [policy\_restricted\_pod\_security](#module\_policy\_restricted\_pod\_security)
 
 Source: Azure/avm-ptn-policyassignment/azurerm
 
-Version: 0.2.1
+Version: 0.2.2
 
 ### <a name="module_prerequisite_role_assignments"></a> [prerequisite\_role\_assignments](#module\_prerequisite\_role\_assignments)
 

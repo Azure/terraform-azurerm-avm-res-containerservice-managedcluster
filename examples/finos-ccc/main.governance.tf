@@ -56,9 +56,8 @@ module "container_registry_dns_zone" {
 
 # CCC.K8S.CN05.AR01/AR02: Kubernetes restricted pod security standard.
 module "policy_restricted_pod_security" {
-  source    = "Azure/avm-ptn-policyassignment/azurerm"
-  version   = "0.2.1"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-ptn-policyassignment/azurerm"
+  version = "0.2.2"
 
   location             = var.location
   policy_definition_id = "/providers/Microsoft.Authorization/policySetDefinitions/42b8ef37-b724-4e24-bbc8-7a7708edfe00"
@@ -66,16 +65,18 @@ module "policy_restricted_pod_security" {
   display_name         = "CCC.K8S.CN05: restricted pod security standard"
   enable_telemetry     = var.enable_telemetry
   name                 = "ccc-k8s-cn05-restricted"
+  # CN05.AR02: no capabilities may be added back and every container must drop ALL.
   parameters = {
-    effect = { value = "Deny" }
+    effect                   = { value = "Deny" }
+    allowedCapabilities      = { value = [] }
+    requiredDropCapabilities = { value = ["ALL"] }
   }
 }
 
 # CCC.K8S.CN04.AR01: images must come from the approved registry and be pinned by digest.
 module "policy_allowed_images" {
-  source    = "Azure/avm-ptn-policyassignment/azurerm"
-  version   = "0.2.1"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-ptn-policyassignment/azurerm"
+  version = "0.2.2"
 
   location             = var.location
   policy_definition_id = "/providers/Microsoft.Authorization/policyDefinitions/febd0533-8e55-448f-b837-bd0e06f16469"
@@ -91,9 +92,8 @@ module "policy_allowed_images" {
 
 # CCC.K8S.CN13.AR01: every container declares CPU and memory limits within approved bounds.
 module "policy_resource_limits" {
-  source    = "Azure/avm-ptn-policyassignment/azurerm"
-  version   = "0.2.1"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-ptn-policyassignment/azurerm"
+  version = "0.2.2"
 
   location             = var.location
   policy_definition_id = "/providers/Microsoft.Authorization/policyDefinitions/e345eecc-fa47-480f-9e88-67dcc122b164"
