@@ -17,8 +17,9 @@ provider "azapi" {}
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.12.0"
+  version = "0.13.0"
 
+  location         = var.location
   enable_telemetry = var.enable_telemetry
   region_filter    = ["northeurope"]
 }
@@ -35,8 +36,8 @@ locals {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.4"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 data "azapi_client_config" "current" {}
@@ -70,6 +71,9 @@ resource "azapi_resource" "log_analytics_workspace" {
 # Use the resource group location selected above so the module and prerequisites deploy together.
 module "default" {
   source = "../.."
+  providers = {
+    azapi = azapi
+  }
 
   location  = azapi_resource.resource_group.location
   name      = module.naming.kubernetes_cluster.name_unique

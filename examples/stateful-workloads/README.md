@@ -26,14 +26,15 @@ provider "azapi" {}
 ######################################################################################################################
 
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.4"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.12.0"
+  version = "0.13.0"
 
+  location               = var.location
   enable_telemetry       = var.enable_telemetry
   is_recommended         = true
   region_name_regex      = "euap"
@@ -135,6 +136,9 @@ resource "azapi_resource" "acr" {
 
 module "stateful_workloads" {
   source = "../.."
+  providers = {
+    azapi = azapi
+  }
 
   location  = azapi_resource.rg.location
   name      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)
@@ -486,15 +490,15 @@ The following Modules are called:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
-Source: Azure/naming/azurerm
+Source: Azure/avm-utl-naming/azure
 
-Version: 0.4.4
+Version: 0.2.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.12.0
+Version: 0.13.0
 
 ### <a name="module_stateful_workloads"></a> [stateful\_workloads](#module\_stateful\_workloads)
 

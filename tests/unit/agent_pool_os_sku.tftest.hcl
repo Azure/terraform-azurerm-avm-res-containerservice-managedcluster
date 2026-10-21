@@ -19,8 +19,13 @@ mock_provider "azapi" {
       }
     }
   }
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
 }
-mock_provider "modtm" {}
+
 mock_provider "random" {}
 
 run "root_passes_windows2025_to_agent_pool" {
@@ -75,6 +80,7 @@ run "standalone_agent_pool_supports_windows2025" {
     os_sku      = "Windows2025"
     os_type     = "Windows"
     vm_size     = "Standard_D2s_v5"
+    location    = "eastus"
   }
 
   assert {
@@ -100,6 +106,7 @@ run "windows2022_remains_supported" {
     os_sku           = "Windows2022"
     os_type          = "Windows"
     output_data_only = true
+    location         = "eastus"
   }
 
   assert {
@@ -119,6 +126,7 @@ run "omitted_os_sku_preserves_azure_default" {
     name             = "default"
     parent_id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.ContainerService/managedClusters/test-aks"
     output_data_only = true
+    location         = "eastus"
   }
 
   assert {
@@ -139,6 +147,7 @@ run "unsupported_os_sku_is_rejected" {
     parent_id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.ContainerService/managedClusters/test-aks"
     os_sku           = "Windows2099"
     output_data_only = true
+    location         = "eastus"
   }
 
   expect_failures = [var.os_sku]

@@ -23,6 +23,7 @@ module "alerting" {
 
   aks_cluster_id = local.aks_cluster_id
   alert_email    = var.alert_email
+  location       = var.location
   parent_id      = var.parent_id
   retry          = var.retry
   tags           = var.tags
