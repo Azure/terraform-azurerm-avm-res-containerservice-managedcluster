@@ -19,7 +19,7 @@ output "key_vault_resource_id" {
 }
 
 output "key_vault_key_id" {
-  description = "Versioned HTTPS URL of the created or reused KMS key."
+  description = "Versionless HTTPS URL of the created or reused KMS key, as configured on the cluster."
   value       = local.key_vault_key_id
 }
 

@@ -62,7 +62,7 @@ locals {
   kubelet_identity_id           = var.kubelet_identity_id == null ? module.cluster_identities["kubelet"].resource_id : var.kubelet_identity_id
   private_dns_zone_id           = var.private_dns_zone_id == null ? module.api_dns_zone[0].resource_id : var.private_dns_zone_id
   key_vault_resource_id         = var.key_vault_resource_id == null ? module.key_vault[0].resource_id : var.key_vault_resource_id
-  key_vault_key_id              = var.key_vault_key_id == null ? module.encryption_keys["kms"].id : var.key_vault_key_id
+  key_vault_key_id              = var.key_vault_key_id == null ? module.encryption_keys["kms"].versionless_id : var.key_vault_key_id
   kms_key_resource_id           = var.key_vault_key_id == null ? module.encryption_keys["kms"].resource_versionless_id : "${var.key_vault_resource_id}/keys/${split("/", var.key_vault_key_id)[4]}"
   disk_encryption_set_id        = var.disk_encryption_set_id == null ? module.disk_encryption_set[0].resource_id : var.disk_encryption_set_id
   control_plane_principal_id    = var.control_plane_identity_id == null ? module.cluster_identities["control-plane"].principal_id : data.azapi_resource.control_plane_identity[0].output.properties.principalId

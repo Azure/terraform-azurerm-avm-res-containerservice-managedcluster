@@ -126,11 +126,11 @@ DESCRIPTION
 variable "key_vault_key_id" {
   type        = string
   default     = null
-  description = "Existing versioned KMS key HTTPS URL, paired with key_vault_resource_id, or null to create a separate RSA KMS key in the selected vault. This is a data-plane URL, not an ARM key ID."
+  description = "Existing versionless KMS key HTTPS URL (`https://<vault>.vault.azure.net/keys/<name>`), paired with key_vault_resource_id, or null to create a separate RSA KMS key in the selected vault. AKS KMS rejects a key version in this URL on clusters with platform-managed keys enabled. This is a data-plane URL, not an ARM key ID."
 
   validation {
-    condition     = var.key_vault_key_id == null || can(regex("^https://[^/]+/keys/[a-zA-Z0-9-]+/[a-zA-Z0-9]+$", var.key_vault_key_id))
-    error_message = "key_vault_key_id must be a versioned HTTPS Key Vault key URL or null."
+    condition     = var.key_vault_key_id == null || can(regex("^https://[^/]+/keys/[a-zA-Z0-9-]+$", var.key_vault_key_id))
+    error_message = "key_vault_key_id must be a versionless HTTPS Key Vault key URL or null."
   }
   validation {
     condition     = var.key_vault_key_id == null || var.key_vault_resource_id != null

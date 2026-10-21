@@ -113,7 +113,7 @@ imported, and existing-to-existing role assignments stay with their owner.
 | `subnet_id`, `api_server_subnet_id`, `key_vault_private_endpoint_subnet_id`, `container_registry_private_endpoint_subnet_id` | Supply all four or none. When null, create the cluster and runner VNets. |
 | `control_plane_identity_id`, `kubelet_identity_id` | Create distinct user-assigned identities. |
 | `private_dns_zone_id` | Create `ccc-<suffix>.private.<location>.azmk8s.io` linked to the cluster VNet. |
-| `key_vault_resource_id`, `key_vault_key_id` | Create a private, RBAC, purge-protected vault and an RSA-3072 KMS key. `key_vault_key_id` is a versioned HTTPS key URL. |
+| `key_vault_resource_id`, `key_vault_key_id` | Create a private, RBAC, purge-protected vault and an RSA-3072 KMS key. `key_vault_key_id` is a versionless HTTPS key URL. |
 | `disk_encryption_set_id` | Create a separate disk key and a system-assigned DES. |
 | `key_vault_private_dns_zone_id`, `container_registry_private_dns_zone_id` | Create the `privatelink` zones. Do not link the vault zone to the cluster VNet; AKS private KMS links its own. |
 

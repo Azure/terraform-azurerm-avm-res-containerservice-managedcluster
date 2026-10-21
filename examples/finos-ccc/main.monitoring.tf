@@ -28,9 +28,10 @@ module "security_change_alert" {
         field  = "category"
         equals = "Administrative"
       },
+      # Activity log alerts accept operationName only as equals leaves; containsAny is
+      # rejected with ConditionFieldIsNull.
       {
-        field = "operationName"
-        contains_any = [
+        any_of = [for operation in [
           "Microsoft.ContainerService/managedClusters/write",
           "Microsoft.ContainerService/managedClusters/delete",
           "Microsoft.ContainerService/managedClusters/agentPools/write",
@@ -42,7 +43,10 @@ module "security_change_alert" {
           "Microsoft.Insights/diagnosticSettings/delete",
           "Microsoft.Network/networkSecurityGroups/securityRules/write",
           "Microsoft.Network/networkSecurityGroups/securityRules/delete",
-        ]
+          ] : {
+          field  = "operationName"
+          equals = operation
+        }]
       },
     ]
   }
