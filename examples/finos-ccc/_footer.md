@@ -1,16 +1,4 @@
-## Documentation maintenance
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
 
-Edit `_header.md`, `_footer.md` and the Terraform sources, then regenerate this
-README through PowerShell 7.4 or later with `Avm.Authoring`:
-
-```powershell
-Import-Module Avm.Authoring
-avm docs
-```
-
-Before contribution, run `avm pre-commit`, review its changes, commit the intended
-files and run `avm pr-check` on a clean worktree. These checks do not replace the
-manual Azure deployment/idempotency assessment required for this BYO example.
-
-Module telemetry is explicitly disabled by this example. For the module's
-data-collection notice, see <https://aka.ms/avm/telemetryinfo>.
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
