@@ -40,7 +40,11 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 2.9"
+      version = "~> 2.12"
+    }
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = "~> 0.3"
     }
     # tflint-ignore: terraform_unused_required_providers
     modtm = {
@@ -217,6 +221,9 @@ resource "azapi_resource" "role_aks_network_contributor" {
 
 module "aks" {
   source = "../.."
+  providers = {
+    azapi = azapi
+  }
 
   location  = local.selected_region
   name      = module.naming.kubernetes_cluster.name_unique
@@ -302,7 +309,8 @@ resource "azapi_resource" "waf_policy" {
 }
 
 module "application_gateway_for_containers" {
-  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-servicenetworking-trafficcontroller.git?ref=v1.0.1"
+  source    = "git::https://github.com/Azure/terraform-azurerm-avm-res-servicenetworking-trafficcontroller.git?ref=v1.0.1"
+  providers = { modtm = modtm }
 
   location  = local.selected_region
   name      = "agc-${module.naming.application_gateway.name_unique}"
@@ -339,7 +347,9 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.14)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.9)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
+
+- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -367,7 +377,13 @@ The following resources are used by this module:
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-No required inputs.
+The following input variables are required:
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
 
 ## Optional Inputs
 

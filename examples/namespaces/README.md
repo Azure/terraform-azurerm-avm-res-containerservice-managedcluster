@@ -96,6 +96,9 @@ resource "azapi_resource" "monitor_workspace" {
 
 module "namespaces" {
   source = "../.."
+  providers = {
+    azapi = azapi
+  }
 
   location  = local.location
   name      = module.naming.kubernetes_cluster.name_unique
