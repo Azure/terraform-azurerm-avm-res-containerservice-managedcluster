@@ -78,9 +78,6 @@ resource "azapi_resource" "log_analytics_workspace" {
 # Use the resource group location selected above so the module and prerequisites deploy together.
 module "default" {
   source = "../.."
-  providers = {
-    azapi = azapi
-  }
 
   location  = azapi_resource.resource_group.location
   name      = module.naming.kubernetes_cluster.name_unique

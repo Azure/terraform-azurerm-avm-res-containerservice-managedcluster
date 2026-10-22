@@ -58,9 +58,6 @@ resource "azapi_resource" "this" {
 
 module "create_before_destroy" {
   source = "../.."
-  providers = {
-    azapi = azapi
-  }
 
   location  = azapi_resource.this.location
   name      = module.naming.kubernetes_cluster.name_unique
