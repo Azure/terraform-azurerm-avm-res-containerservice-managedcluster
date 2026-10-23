@@ -23,11 +23,6 @@ output "resource_group_id" {
   value       = local.resource_group_id
 }
 
-output "runner_subnet_id" {
-  description = "Subnet for a self-hosted runner or jump host that can reach the Key Vault private endpoint; null when existing subnets are supplied."
-  value       = local.runner_subnet_id
-}
-
 output "log_analytics_workspace_id" {
   description = "ARM ID of the Log Analytics workspace receiving Kubernetes audit, control-plane and Defender data."
   value       = module.log_analytics.resource_id

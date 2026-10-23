@@ -9,10 +9,32 @@ variable "api_server_subnet_id" {
   }
 }
 
+variable "alert_email_addresses" {
+  type        = list(string)
+  default     = []
+  description = "Email addresses notified by the security alerts (CCC.K8S.CN14.AR03), in addition to the subscription's Owners, who are always notified."
+  nullable    = false
+
+  validation {
+    condition     = alltrue([for address in var.alert_email_addresses : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", address))])
+    error_message = "alert_email_addresses must contain email addresses."
+  }
+}
+
 variable "approved_addons" {
   type        = list(string)
-  default     = ["azure_key_vault_kms", "azure_policy", "defender", "image_cleaner", "oms_agent", "workload_identity"]
-  description = "Organization-approved allowlist of AKS add-ons and managed security features (CCC.K8S.CN08.AR01). A check fails when the example enables anything else."
+  default     = ["azure_key_vault_kms", "azure_policy", "defender", "disk_csi_driver", "extension_manager", "image_cleaner", "oms_agent", "workload_identity"]
+  description = <<DESCRIPTION
+Organization-approved allowlist of AKS add-ons and managed features (CCC.K8S.CN08.AR01). Plan fails before
+the cluster is created when the example configures anything else, and apply (and every later plan) fails
+when the deployed cluster reports anything else enabled, including features AKS turns on by default.
+`extension_manager` is AKS's control-plane extension manager, which AKS enables itself to deliver
+Container Insights (`oms_agent`) as a core extension.
+Names: add-on profiles (`azure_policy`, `oms_agent`, `extension_manager`, `key_vault_secrets_provider`,
+`ingress_application_gateway`, otherwise the lower-case AKS add-on name) and managed features (`azure_key_vault_kms`, `azure_monitor_metrics`,
+`blob_csi_driver`, `defender`, `disk_csi_driver`, `file_csi_driver`, `image_cleaner`, `image_integrity`,
+`istio`, `keda`, `snapshot_controller`, `vertical_pod_autoscaler`, `web_app_routing`, `workload_identity`).
+DESCRIPTION
   nullable    = false
 }
 
@@ -33,8 +55,8 @@ variable "cluster_role_assignments" {
   description = <<DESCRIPTION
 Azure RBAC for Kubernetes role assignments at cluster scope (CCC.K8S.CN02.AR01). Prefer groups
 and the narrowest built-in role, for example `Azure Kubernetes Service RBAC Reader` or
-`Azure Kubernetes Service RBAC Writer`. When empty, the deploying identity receives
-`Azure Kubernetes Service RBAC Cluster Admin` so the example remains operable.
+`Azure Kubernetes Service RBAC Writer`. Nothing is granted by default, including to the deploying
+identity; use this input, or `cluster_admin_group_object_ids` for break-glass, to operate the cluster.
 
 - `principal_id` - Entra object ID of the user, group or service principal.
 - `role_definition_id_or_name` - Built-in role name or role definition ID.
@@ -126,11 +148,15 @@ DESCRIPTION
 variable "key_vault_key_id" {
   type        = string
   default     = null
-  description = "Existing versionless KMS key HTTPS URL (`https://<vault>.vault.azure.net/keys/<name>`), paired with key_vault_resource_id, or null to create a separate RSA KMS key in the selected vault. AKS KMS rejects a key version in this URL on clusters with platform-managed keys enabled. This is a data-plane URL, not an ARM key ID."
+  description = "Existing KMS key HTTPS URL, paired with key_vault_resource_id, or null to create a separate RSA KMS key in the selected vault. Use the versioned form (`https://<vault>.vault.azure.net/keys/<name>/<version>`), or the versionless form when `kms_key_versionless` is true. This is a data-plane URL, not an ARM key ID."
 
   validation {
-    condition     = var.key_vault_key_id == null || can(regex("^https://[^/]+/keys/[a-zA-Z0-9-]+$", var.key_vault_key_id))
-    error_message = "key_vault_key_id must be a versionless HTTPS Key Vault key URL or null."
+    condition     = var.key_vault_key_id == null || can(regex("^https://[^/]+/keys/[a-zA-Z0-9-]+(/[a-zA-Z0-9]+)?$", var.key_vault_key_id))
+    error_message = "key_vault_key_id must be an HTTPS Key Vault key URL or null."
+  }
+  validation {
+    condition     = var.key_vault_key_id == null || var.kms_key_versionless == (length(split("/", var.key_vault_key_id)) == 5)
+    error_message = "key_vault_key_id must be versionless when kms_key_versionless is true and versioned otherwise."
   }
   validation {
     condition     = var.key_vault_key_id == null || var.key_vault_resource_id != null
@@ -169,6 +195,24 @@ variable "kubelet_identity_id" {
     condition     = var.kubelet_identity_id == null || var.control_plane_identity_id == null ? true : lower(var.kubelet_identity_id) != lower(var.control_plane_identity_id)
     error_message = "The control-plane and kubelet identities must be distinct."
   }
+}
+
+variable "kms_key_versionless" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+Configure KMS with the versionless key URL instead of the versioned one. AKS accepts one or the other
+depending on whether it runs the cluster on its newer KMS experience (platform-managed keys, "PMK";
+Kubernetes 1.33 or later):
+
+- legacy KMS (the default for most clusters) rejects a versionless URL: `Bad number of segments: 3
+  (PMK disabled, expected 4)`;
+- with PMK enabled it rejects a versioned URL: `KeyId must not include a version when PMK is enabled`.
+
+The example cannot set the PMK mode (the module does not expose it). Keep false unless AKS returns the
+second error, which has been seen on Kubernetes 1.37.
+DESCRIPTION
+  nullable    = false
 }
 
 variable "kubernetes_version" {
@@ -245,18 +289,6 @@ variable "resource_group_id" {
   }
 }
 
-variable "runner_virtual_network_address_space" {
-  type        = string
-  default     = "10.11.0.0/24"
-  description = "Address space of the created runner VNet (/26 or larger), which hosts the deployment runner and its Key Vault private endpoint."
-  nullable    = false
-
-  validation {
-    condition     = can(cidrhost(var.runner_virtual_network_address_space, 0)) && tonumber(split("/", var.runner_virtual_network_address_space)[1]) <= 26
-    error_message = "runner_virtual_network_address_space must be a CIDR block of /26 or larger."
-  }
-}
-
 variable "service_cidr" {
   type        = string
   default     = "10.20.0.0/16"
@@ -267,7 +299,7 @@ variable "service_cidr" {
 variable "subnet_id" {
   type        = string
   default     = null
-  description = "Existing AKS node subnet ARM ID, or null to create the cluster and runner VNets. Supply all existing subnet inputs together or none of them."
+  description = "Existing AKS node subnet ARM ID, or null to create the cluster VNet. Supply all existing subnet inputs together or none of them."
 
   validation {
     condition     = var.subnet_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.subnet_id))
@@ -275,10 +307,10 @@ variable "subnet_id" {
   }
   validation {
     condition = (
-      (var.subnet_id == null && var.api_server_subnet_id == null && var.key_vault_private_endpoint_subnet_id == null && var.container_registry_private_endpoint_subnet_id == null) ||
-      (var.subnet_id != null && var.api_server_subnet_id != null && var.key_vault_private_endpoint_subnet_id != null && var.container_registry_private_endpoint_subnet_id != null)
+      (var.subnet_id == null && var.api_server_subnet_id == null && var.container_registry_private_endpoint_subnet_id == null) ||
+      (var.subnet_id != null && var.api_server_subnet_id != null && var.container_registry_private_endpoint_subnet_id != null)
     )
-    error_message = "Supply subnet_id, api_server_subnet_id, key_vault_private_endpoint_subnet_id and container_registry_private_endpoint_subnet_id together, or none of them to create the network."
+    error_message = "Supply subnet_id, api_server_subnet_id and container_registry_private_endpoint_subnet_id together, or none of them to create the network."
   }
   validation {
     condition = var.subnet_id == null || var.api_server_subnet_id == null ? true : try(
@@ -286,10 +318,6 @@ variable "subnet_id" {
       false
     )
     error_message = "Node and API-server subnets must be distinct subnets in the same VNet."
-  }
-  validation {
-    condition     = var.subnet_id == null || var.key_vault_private_endpoint_subnet_id == null ? true : !contains([lower(var.subnet_id), lower(coalesce(var.api_server_subnet_id, "-"))], lower(var.key_vault_private_endpoint_subnet_id))
-    error_message = "Use a dedicated Key Vault private-endpoint subnet, distinct from the AKS node and delegated API-server subnets."
   }
 }
 

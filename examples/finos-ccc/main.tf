@@ -140,6 +140,8 @@ module "aks" {
             interval_weeks = 1
           }
         }
+        # A fixed past date: without it AKS stores today's date and every plan drifts.
+        start_date = "2026-01-04"
       }
     }
     aksManagedNodeOSUpgradeSchedule = {
@@ -154,6 +156,7 @@ module "aks" {
             interval_weeks = 1
           }
         }
+        start_date = "2026-01-03"
       }
     }
   }
@@ -207,8 +210,9 @@ module "aks" {
   public_network_access = "Disabled"
   resource_types        = var.resource_types.containerservice_managed_clusters
   retry                 = var.retry
-  # CCC.K8S.CN02.AR01: scoped Azure RBAC for Kubernetes role assignments.
-  role_assignments = local.cluster_role_assignments
+  # CCC.K8S.CN02.AR01: scoped Azure RBAC for Kubernetes role assignments. Nothing is granted
+  # by default, not even to the deployer.
+  role_assignments = var.cluster_role_assignments
   # CCC.K8S.CN03.AR01: workload identity. CCC.K8S.CN07.AR01: private Key Vault KMS for
   # Kubernetes secrets. CCC.K8S.CN14.AR01 / CCC.Core.CN07: Defender threat detection.
   security_profile = {
@@ -232,6 +236,10 @@ module "aks" {
       interval_hours = 48
     }
   }
+  # CCC.K8S.CN08.AR01: only the approved storage drivers (AKS enables more by default).
+  storage_profile = {
+    for name, enabled in local.enabled_storage_features : name => { enabled = enabled }
+  }
   # CCC.K8S.CN09: Standard tier with an uptime SLA.
   sku = {
     name = "Base"
@@ -242,14 +250,49 @@ module "aks" {
   timeouts = var.timeouts
 
   depends_on = [
+    terraform_data.approved_addons,
     time_sleep.rbac_propagation,
     module.api_dns_zone,
   ]
 }
 
-check "approved_addons_only" {
-  assert {
-    condition     = length(setsubtract(local.enabled_addons, var.approved_addons)) == 0
-    error_message = "Every enabled AKS add-on must be in var.approved_addons (CCC.K8S.CN08.AR01)."
+# CCC.K8S.CN08.AR01: plan fails before the cluster is created when the example would enable
+# an add-on or managed feature that is not in var.approved_addons.
+resource "terraform_data" "approved_addons" {
+  input = local.enabled_addons
+
+  lifecycle {
+    precondition {
+      condition     = length(setsubtract(local.enabled_addons, var.approved_addons)) == 0
+      error_message = "CCC.K8S.CN08.AR01: these configured add-ons are not in var.approved_addons: ${join(", ", setsubtract(local.enabled_addons, var.approved_addons))}."
+    }
+  }
+}
+
+# CCC.K8S.CN08.AR01: reads the deployed cluster back, so add-ons the module or AKS enable by
+# default are checked too. Apply (and every later plan) fails when AKS reports an enabled
+# add-on or managed feature outside var.approved_addons.
+data "azapi_resource" "cluster_features" {
+  resource_id = module.aks.resource_id
+  type        = coalesce(var.resource_types.containerservice_managed_clusters.containerservice_managed_clusters, "Microsoft.ContainerService/managedClusters@2026-03-01")
+  response_export_values = [
+    "properties.addonProfiles",
+    "properties.azureMonitorProfile",
+    "properties.ingressProfile",
+    "properties.securityProfile",
+    "properties.serviceMeshProfile",
+    "properties.storageProfile",
+    "properties.workloadAutoScalerProfile",
+  ]
+}
+
+resource "terraform_data" "observed_addons" {
+  input = local.observed_addons
+
+  lifecycle {
+    precondition {
+      condition     = length(setsubtract(local.observed_addons, var.approved_addons)) == 0
+      error_message = "CCC.K8S.CN08.AR01: the cluster has add-ons or managed features enabled that are not in var.approved_addons: ${join(", ", setsubtract(local.observed_addons, var.approved_addons))}."
+    }
   }
 }

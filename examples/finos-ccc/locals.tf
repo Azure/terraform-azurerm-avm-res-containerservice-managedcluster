@@ -25,19 +25,6 @@ locals {
         }
       }
     }
-    runner = {
-      address_space = var.runner_virtual_network_address_space
-      subnets = {
-        runner = {
-          address_prefix = cidrsubnet(var.runner_virtual_network_address_space, 2, 0)
-          delegation     = null
-        }
-        endpoints = {
-          address_prefix = cidrsubnet(var.runner_virtual_network_address_space, 2, 1)
-          delegation     = null
-        }
-      }
-    }
   } : {}
   created_subnets = merge({}, [
     for vnet_key, vnet in local.created_virtual_networks : {
@@ -48,27 +35,26 @@ locals {
   node_subnet_id                                = local.create_network ? module.virtual_networks["cluster"].subnets["nodes"].resource_id : var.subnet_id
   api_server_subnet_id                          = local.create_network ? module.virtual_networks["cluster"].subnets["apiserver"].resource_id : var.api_server_subnet_id
   container_registry_private_endpoint_subnet_id = local.create_network ? module.virtual_networks["cluster"].subnets["endpoints"].resource_id : var.container_registry_private_endpoint_subnet_id
-  private_endpoint_subnet_id                    = local.create_network ? module.virtual_networks["runner"].subnets["endpoints"].resource_id : var.key_vault_private_endpoint_subnet_id
-  runner_subnet_id                              = local.create_network ? module.virtual_networks["runner"].subnets["runner"].resource_id : null
   virtual_network_id                            = local.create_network ? module.virtual_networks["cluster"].resource_id : provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.subnet_id).parent_id
 
-  key_vault_dns_virtual_network_links = merge(
-    var.key_vault_dns_virtual_network_links,
-    local.create_network ? { runner-vnet = module.virtual_networks["runner"].resource_id } : {}
-  )
   container_registry_private_dns_zone_id = var.container_registry_private_dns_zone_id == null ? module.container_registry_dns_zone[0].resource_id : var.container_registry_private_dns_zone_id
 
-  control_plane_identity_id     = var.control_plane_identity_id == null ? module.cluster_identities["control-plane"].resource_id : var.control_plane_identity_id
-  kubelet_identity_id           = var.kubelet_identity_id == null ? module.cluster_identities["kubelet"].resource_id : var.kubelet_identity_id
-  private_dns_zone_id           = var.private_dns_zone_id == null ? module.api_dns_zone[0].resource_id : var.private_dns_zone_id
-  key_vault_resource_id         = var.key_vault_resource_id == null ? module.key_vault[0].resource_id : var.key_vault_resource_id
-  key_vault_key_id              = var.key_vault_key_id == null ? module.encryption_keys["kms"].versionless_id : var.key_vault_key_id
-  kms_key_resource_id           = var.key_vault_key_id == null ? module.encryption_keys["kms"].resource_versionless_id : "${var.key_vault_resource_id}/keys/${split("/", var.key_vault_key_id)[4]}"
-  disk_encryption_set_id        = var.disk_encryption_set_id == null ? module.disk_encryption_set[0].resource_id : var.disk_encryption_set_id
-  control_plane_principal_id    = var.control_plane_identity_id == null ? module.cluster_identities["control-plane"].principal_id : data.azapi_resource.control_plane_identity[0].output.properties.principalId
-  kubelet_principal_id          = var.kubelet_identity_id == null ? module.cluster_identities["kubelet"].principal_id : data.azapi_resource.kubelet_identity[0].output.properties.principalId
-  create_key_vault_endpoint     = length(local.keys_to_create) > 0
-  key_vault_private_dns_zone_id = var.key_vault_private_dns_zone_id == null ? try(module.key_vault_dns_zone[0].resource_id, null) : var.key_vault_private_dns_zone_id
+  control_plane_identity_id = var.control_plane_identity_id == null ? module.cluster_identities["control-plane"].resource_id : var.control_plane_identity_id
+  kubelet_identity_id       = var.kubelet_identity_id == null ? module.cluster_identities["kubelet"].resource_id : var.kubelet_identity_id
+  private_dns_zone_id       = var.private_dns_zone_id == null ? module.api_dns_zone[0].resource_id : var.private_dns_zone_id
+  key_vault_resource_id     = var.key_vault_resource_id == null ? module.key_vault[0].resource_id : var.key_vault_resource_id
+  # Legacy KMS needs a versioned key URL. When AKS enables its newer KMS experience
+  # (platform-managed keys, "PMK") it rejects a version, so kms_key_versionless selects
+  # the versionless URL. See the variable description.
+  key_vault_key_id = var.key_vault_key_id != null ? var.key_vault_key_id : (
+    var.kms_key_versionless
+    ? azapi_resource_action.encryption_keys["kms"].output.properties.keyUri
+    : azapi_resource_action.encryption_keys["kms"].output.properties.keyUriWithVersion
+  )
+  kms_key_resource_id        = "${local.key_vault_resource_id}/keys/${var.key_vault_key_id == null ? local.keys_to_create["kms"].name : split("/", var.key_vault_key_id)[4]}"
+  disk_encryption_set_id     = var.disk_encryption_set_id == null ? module.disk_encryption_set[0].resource_id : var.disk_encryption_set_id
+  control_plane_principal_id = var.control_plane_identity_id == null ? module.cluster_identities["control-plane"].principal_id : data.azapi_resource.control_plane_identity[0].output.properties.principalId
+  kubelet_principal_id       = var.kubelet_identity_id == null ? module.cluster_identities["kubelet"].principal_id : data.azapi_resource.kubelet_identity[0].output.properties.principalId
 
   identities_to_create = {
     for name, existing_id in {
@@ -77,23 +63,14 @@ locals {
     } : name => existing_id if existing_id == null
   }
   keys_to_create = merge(
-    var.key_vault_key_id == null ? { kms = ["encrypt", "decrypt"] } : {},
-    var.disk_encryption_set_id == null ? { disk = ["wrapKey", "unwrapKey"] } : {}
+    var.key_vault_key_id == null ? { kms = { name = "aks-kms-${random_string.name_suffix.result}", key_ops = ["encrypt", "decrypt"] } } : {},
+    var.disk_encryption_set_id == null ? { disk = { name = "aks-disk-${random_string.name_suffix.result}", key_ops = ["wrapKey", "unwrapKey"] } } : {}
   )
   inspect_existing_vault = var.key_vault_resource_id != null && (var.control_plane_identity_id == null || var.key_vault_key_id == null || var.disk_encryption_set_id == null)
 
-  # CCC.K8S.CN02.AR01: scoped Azure RBAC for Kubernetes. Without explicit assignments the
-  # deployer receives cluster admin so the example remains operable.
-  cluster_role_assignments = length(var.cluster_role_assignments) > 0 ? var.cluster_role_assignments : {
-    deployer = {
-      principal_id               = data.azapi_client_config.current.object_id
-      role_definition_id_or_name = "Azure Kubernetes Service RBAC Cluster Admin"
-      principal_type             = null
-    }
-  }
-
   # CCC.K8S.CN08.AR01: CSP-provided add-ons and managed features enabled on the cluster.
-  # These values feed the module inputs, so the allowlist check cannot drift from them.
+  # These values feed the module inputs; terraform_data.approved_addons checks them against
+  # var.approved_addons before the cluster is created.
   enabled_cluster_features = {
     azure_key_vault_kms = true
     azure_policy        = true
@@ -102,9 +79,48 @@ locals {
     oms_agent           = true
     workload_identity   = true
   }
-  enabled_addons                  = [for name, enabled in local.enabled_cluster_features : name if enabled]
+  # AKS enables the disk and file CSI drivers and the snapshot controller unless told
+  # otherwise; only the disk CSI driver is needed.
+  enabled_storage_features = {
+    blob_csi_driver     = false
+    disk_csi_driver     = true
+    file_csi_driver     = false
+    snapshot_controller = false
+  }
+  enabled_addons                  = [for name, enabled in merge(local.enabled_cluster_features, local.enabled_storage_features) : name if enabled]
   addon_profile_azure_policy      = { enabled = local.enabled_cluster_features.azure_policy }
   addon_profile_oms_agent_enabled = local.enabled_cluster_features.oms_agent
+
+  # CCC.K8S.CN08.AR01: add-ons and managed features AKS reports as enabled on the deployed
+  # cluster, including any the module or AKS turn on by default. Names match approved_addons;
+  # an add-on profile without a mapping keeps its lower-case AKS name.
+  cluster_properties = data.azapi_resource.cluster_features.output.properties
+  addon_profile_names = {
+    azurekeyvaultsecretsprovider = "key_vault_secrets_provider"
+    azurepolicy                  = "azure_policy"
+    extensionmanager             = "extension_manager"
+    ingressapplicationgateway    = "ingress_application_gateway"
+    omsagent                     = "oms_agent"
+  }
+  observed_addons = sort(distinct(concat(
+    [for name, addon in try(local.cluster_properties.addonProfiles, {}) : lookup(local.addon_profile_names, lower(name), lower(name)) if try(addon.enabled, false)],
+    [for name, enabled in {
+      azure_key_vault_kms     = try(local.cluster_properties.securityProfile.azureKeyVaultKms.enabled, false)
+      azure_monitor_metrics   = try(local.cluster_properties.azureMonitorProfile.metrics.enabled, false)
+      blob_csi_driver         = try(local.cluster_properties.storageProfile.blobCSIDriver.enabled, false)
+      defender                = try(local.cluster_properties.securityProfile.defender.securityMonitoring.enabled, false)
+      disk_csi_driver         = try(local.cluster_properties.storageProfile.diskCSIDriver.enabled, false)
+      file_csi_driver         = try(local.cluster_properties.storageProfile.fileCSIDriver.enabled, false)
+      image_cleaner           = try(local.cluster_properties.securityProfile.imageCleaner.enabled, false)
+      image_integrity         = try(local.cluster_properties.securityProfile.imageIntegrity.enabled, false)
+      istio                   = try(local.cluster_properties.serviceMeshProfile.mode, "Disabled") == "Istio"
+      keda                    = try(local.cluster_properties.workloadAutoScalerProfile.keda.enabled, false)
+      snapshot_controller     = try(local.cluster_properties.storageProfile.snapshotController.enabled, false)
+      vertical_pod_autoscaler = try(local.cluster_properties.workloadAutoScalerProfile.verticalPodAutoscaler.enabled, false)
+      web_app_routing         = try(local.cluster_properties.ingressProfile.webAppRouting.enabled, false)
+      workload_identity       = try(local.cluster_properties.securityProfile.workloadIdentity.enabled, false)
+    } : name if enabled],
+  )))
 
   # CCC.K8S.CN14.AR03: in-cluster security configuration changes by non-system identities.
   kubernetes_security_change_query = <<-KQL
@@ -164,7 +180,7 @@ locals {
       }
       disk_key_encryption_user = {
         create             = var.disk_encryption_set_id == null
-        scope              = var.disk_encryption_set_id == null ? module.encryption_keys["disk"].resource_versionless_id : null
+        scope              = var.disk_encryption_set_id == null ? "${local.key_vault_resource_id}/keys/${local.keys_to_create["disk"].name}" : null
         principal_id       = var.disk_encryption_set_id == null ? data.azapi_resource.disk_encryption_set[0].output.identity.principalId : null
         role_definition_id = "e147488a-f6f5-4113-8e2d-b22465e65bf6" # Key Vault Crypto Service Encryption User
       }

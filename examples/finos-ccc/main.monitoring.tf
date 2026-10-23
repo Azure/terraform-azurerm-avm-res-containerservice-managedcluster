@@ -15,6 +15,36 @@ module "log_analytics" {
   tags                                      = var.tags
 }
 
+# CCC.K8S.CN14.AR03: alert notifications. The subscription's Owners are always notified by
+# email (an ARM role receiver), so the alerts reach someone with no inputs; add the security
+# team's addresses through var.alert_email_addresses.
+module "action_group" {
+  source    = "Azure/avm-res-insights-actiongroup/azurerm"
+  version   = "0.1.0"
+  providers = { modtm = modtm }
+
+  location   = "global"
+  name       = "ag-ccc-security-${random_string.name_suffix.result}"
+  parent_id  = local.resource_group_id
+  short_name = "ccc-sec"
+  arm_role_receivers = {
+    owners = {
+      name                    = "subscription-owners"
+      role_id                 = "8e3af657-a8ff-443c-a75c-2fe8c4bcb635" # Owner
+      use_common_alert_schema = true
+    }
+  }
+  email_receivers = {
+    for index, address in var.alert_email_addresses : "email-${index}" => {
+      name                    = "email-${index}"
+      email_address           = address
+      use_common_alert_schema = true
+    }
+  }
+  enable_telemetry = var.enable_telemetry
+  tags             = var.tags
+}
+
 # CCC.K8S.CN14.AR03 / CN11.AR02 / CN15.AR02: alert when cluster, access, policy,
 # diagnostic or network-exposure configuration changes through Azure Resource Manager.
 module "security_change_alert" {
@@ -50,10 +80,15 @@ module "security_change_alert" {
       },
     ]
   }
-  location         = var.location
-  name             = "ala-ccc-security-changes-${random_string.name_suffix.result}"
-  parent_id        = local.resource_group_id
-  scopes           = [local.resource_group_id]
+  location  = var.location
+  name      = "ala-ccc-security-changes-${random_string.name_suffix.result}"
+  parent_id = local.resource_group_id
+  scopes    = [local.resource_group_id]
+  action_groups = {
+    security = {
+      action_group_id = module.action_group.resource_id
+    }
+  }
   description      = "CCC.K8S.CN14.AR03: changes to AKS, role or policy assignments, diagnostics or network security rules."
   enable_telemetry = var.enable_telemetry
   tags             = var.tags
@@ -79,6 +114,9 @@ resource "azapi_resource" "kubernetes_security_change_alert" {
       scopes              = [module.log_analytics.resource_id]
       autoMitigate        = false
       skipQueryValidation = true
+      actions = {
+        actionGroups = [module.action_group.resource_id]
+      }
       criteria = {
         allOf = [{
           query           = local.kubernetes_security_change_query

@@ -16,17 +16,18 @@ requirements (ARs) it enforces.
 | --- | --- | --- |
 | AKS cluster, managed namespaces and maintenance windows | this module (`../..`) | all |
 | Resource group | `Azure/avm-res-resources-resourcegroup/azurerm` | Core.CN06 |
-| Cluster and runner VNets, subnets | `Azure/avm-res-network-virtualnetwork/azurerm` | CN01, Core.CN05 |
+| Cluster VNet and subnets | `Azure/avm-res-network-virtualnetwork/azurerm` | CN01, Core.CN05 |
 | One NSG per subnet | `Azure/avm-res-network-networksecuritygroup/azurerm` | CN01, Core.CN05 |
 | Control-plane, kubelet and workload identities | `Azure/avm-res-managedidentity-userassignedidentity/azurerm` | CN03, CN17 |
-| API server, vault and registry private DNS | `Azure/avm-res-network-privatednszone/azurerm` | CN01 |
-| Private Key Vault, KMS key and disk key | `Azure/avm-res-keyvault-vault/azurerm` (+ `//modules/key`) | CN07, Core.CN02 |
-| Runner vault private endpoint | `Azure/avm-res-network-privateendpoint/azurerm` | CN07 |
+| API server and registry private DNS | `Azure/avm-res-network-privatednszone/azurerm` | CN01 |
+| Private Key Vault | `Azure/avm-res-keyvault-vault/azurerm` | CN07, Core.CN02 |
+| KMS and disk keys, created through Azure Resource Manager | `azapi_resource_action` (`Microsoft.KeyVault/vaults/keys`) | CN07, Core.CN02 |
 | Disk encryption set | `Azure/avm-res-compute-diskencryptionset/azurerm` | Core.CN02 |
 | Least-privilege infrastructure grants | `Azure/avm-res-authorization-roleassignment/azurerm` | CN17 |
 | Private approved registry | `Azure/avm-res-containerregistry-registry/azurerm` | CN04 |
 | Azure Policy for Kubernetes assignments | `Azure/avm-ptn-policyassignment/azurerm` | CN04, CN05, CN11, CN13 |
 | Log Analytics workspace | `Azure/avm-res-operationalinsights-workspace/azurerm` | CN14, Core.CN04 |
+| Action group for security alerts | `Azure/avm-res-insights-actiongroup/azurerm` | CN14 |
 | Activity log alert | `Azure/avm-res-insights-activitylogalert/azurerm` | CN14, CN11, CN15 |
 | Kubernetes audit log alert | `azapi_resource` (`avm-res-insights-scheduledqueryrule` is only Proposed) | CN14 |
 
@@ -34,25 +35,26 @@ requirements (ARs) it enforces.
 
 Legend: **TF** enforced by Terraform-managed Azure configuration, **Policy** enforced at
 admission by Azure Policy for Kubernetes, **K8s** enforced by Kubernetes objects created by the
-example, **Residual** requires an operational process or is a platform limitation.
+example, **Partial** only part of the AR is enforced (the rest is noted), **Residual** requires an
+operational process or is a platform limitation.
 
 | AR | Enforcement | How |
 | --- | --- | --- |
 | CN01.AR01 | TF | Private cluster with API-server VNet integration; NSGs on every subnet. |
 | CN01.AR02 | TF | `public_network_access = "Disabled"`, no public FQDN, Run Command disabled. |
-| CN02.AR01 | TF | Entra ID with Azure RBAC for Kubernetes; scoped `cluster_role_assignments`; admin groups only for break-glass. |
+| CN02.AR01 | TF | Entra ID with Azure RBAC for Kubernetes. No Kubernetes role is granted by default, not even to the deployer; grant scoped roles with `cluster_role_assignments`. Admin groups are break-glass only. |
 | CN02.AR02 | Residual | Only built-in AKS RBAC roles are granted. Workload `Role` definitions belong to application teams and need review in CI. |
-| CN03.AR01 | TF | OIDC issuer, workload identity and one federated identity per workload namespace service account. |
+| CN03.AR01 | TF | OIDC issuer, workload identity and one federated identity per workload namespace service account. Workloads need the DNS and HTTPS egress policy below to exchange tokens. |
 | CN03.AR02 | Residual | Scan manifests, Secrets and ConfigMaps for static credentials in CI. |
 | CN04.AR01 | Policy | Allowed images: the private registry only, pinned by `@sha256` digest. |
 | CN04.AR02 | Residual | Sign images in the build pipeline. AKS Image Integrity is preview and audit-only, so it is not enabled. |
 | CN04.AR03 | Residual | Defender for Containers reports vulnerabilities; gate releases on them in the pipeline. |
 | CN05.AR01/AR02 | Policy | Kubernetes restricted pod security standard initiative in `Deny` mode, with no added capabilities allowed and `ALL` capabilities required to be dropped. |
 | CN06.AR01 | K8s | Managed namespaces with `DenyAll` ingress and egress, enforced by Cilium. |
-| CN06.AR02 | Residual | Application teams add explicit allow policies with stable selectors. |
-| CN07.AR01 | TF | Private Key Vault KMS for Kubernetes secrets, CMK disk encryption, workload identity for delivery. |
+| CN06.AR02 | Residual | Application teams add explicit allow policies with stable selectors (see the sample below). |
+| CN07.AR01 | Partial | Kubernetes secrets are encrypted in etcd with a private Key Vault KMS key and node disks with a customer-managed key. No secret delivery path to workloads (for example the Secrets Store CSI driver) is configured. |
 | CN07.AR02 | Residual | Workload `Role` definitions must name the secrets they read. |
-| CN08.AR01 | TF | `check "approved_addons_only"` compares the enabled add-ons with `var.approved_addons`. |
+| CN08.AR01 | TF | Plan fails before the cluster is created if the example configures an add-on outside `approved_addons`. After apply, the cluster is read back and apply and later plans fail if AKS reports any other add-on or managed feature enabled, including AKS defaults. Storage drivers are set explicitly (disk CSI only). The default allowlist includes `extension_manager`, which AKS enables to run Container Insights as a core extension. |
 | CN09.AR01–AR03 | TF | Standard tier, `patch` and `NodeImage` upgrade channels, weekly maintenance windows, AKS-managed add-ons only. |
 | CN10.AR01/AR02 | Residual | Storage-class and volume re-use policy are not configured by the example. |
 | CN11.AR01 | Policy | Deny-mode assignments cover every non-system namespace; AKS manages system-namespace exclusions. |
@@ -60,17 +62,18 @@ example, **Residual** requires an operational process or is a platform limitatio
 | CN11.AR03 | Residual | Gatekeeper webhook failure behavior is managed by the Azure Policy add-on. |
 | CN12.AR01 | TF | AKS-managed kubelet authentication and authorization; anonymous access is disabled by the platform. |
 | CN12.AR02 | TF | `ssh_access = "Disabled"`, no node public IPs. |
-| CN12.AR03 | K8s | Default-deny egress blocks the instance metadata endpoint from workload namespaces. |
+| CN12.AR03 | K8s | Default-deny egress blocks the instance metadata endpoint from workload namespaces; the sample allow policy keeps it blocked. |
 | CN13.AR01 | Policy | Every container must declare limits within `container_cpu_limit` and `container_memory_limit`. |
 | CN13.AR02 | K8s | Namespace CPU and memory quotas. Storage and object-count quotas need an additional `ResourceQuota`. |
 | CN13.AR03 | TF | Cluster autoscaler with an explicit `max_count`. |
 | CN14.AR01 | TF | Diagnostic settings (all log groups), Container Insights and Defender to Log Analytics. |
 | CN14.AR02 | TF | Separate workspace; no cluster, kubelet or workload identity is granted access to it. |
-| CN14.AR03 | TF | Activity log alert for ARM changes and a KQL alert for Kubernetes RBAC, webhook and network policy changes. |
+| CN14.AR03 | TF | Activity log alert for ARM changes and a KQL alert for Kubernetes RBAC, webhook and network policy changes. Both notify an action group: the subscription's Owners by email, plus `alert_email_addresses`. |
 | CN15.AR01 | TF | Required `owner`, `environment` and `data-classification` tags; namespace labels and annotations. |
 | CN15.AR02 | TF | Node resource group `ReadOnly` lockdown; metadata changes raise the activity log alert. |
 | CN16.AR01/AR02 | TF | Managed Entra ID authentication; local accounts disabled. |
-| CN17.AR01/AR02 | TF | Distinct control-plane, kubelet and workload identities; grants scoped to subnets, zone, identity and keys. |
+| CN17.AR01 | TF | Distinct control-plane, kubelet and workload identities. |
+| CN17.AR02 | TF | Grants are scoped to the subnets, API DNS zone, kubelet identity and individual keys, with two documented exceptions AKS requires: **Key Vault Contributor on the vault** (private KMS creates its own private endpoint to the vault) and **Reader on the disk encryption set**. No human identity holds a Key Vault data-plane role. |
 | CN18.AR01/AR02 | TF | AKS-supplied Ubuntu images with Secure Boot and vTPM. |
 
 ## Prerequisites
@@ -85,24 +88,114 @@ example, **Residual** requires an operational process or is a platform limitatio
 
 ## Deploying
 
-The Key Vault keys are created through the vault's private endpoint, so Terraform must run from a
-host that can reach the runner VNet. This is the reason the example is excluded from automated E2E.
+Every input has a default, and the deployment runs from any host with Azure access. The Key Vault
+keeps public network access disabled: its keys are created through Azure Resource Manager, not the
+vault's data plane, so no runner, vault private endpoint or deployer Key Vault role is needed.
 
 ```powershell
 terraform -chdir=examples/finos-ccc init
-# 1. Create the resource group, VNets and NSGs.
-terraform -chdir=examples/finos-ccc apply -target=module.virtual_networks
-# 2. Place a self-hosted runner or jump host in the `runner_subnet_id` output (or connect to the
-#    runner VNet through VPN or peering), then run the full deployment from there.
 terraform -chdir=examples/finos-ccc apply
-# 3. Check idempotency: exit code 0 means no changes.
+# Idempotency: exit code 0 means no changes.
 terraform -chdir=examples/finos-ccc plan -detailed-exitcode
 ```
 
-Without explicit `cluster_role_assignments`, the deploying identity receives
-`Azure Kubernetes Service RBAC Cluster Admin`. Supply group-based, narrower roles for anything
-beyond a demonstration. The API server is private and Run Command is disabled, so `kubectl` access
-also requires a host in, or connected to, the cluster VNet.
+- **Idempotency and telemetry.** With `enable_telemetry = true`, each AVM module's telemetry
+  deployment records the apply time and shows as an in-place update on every plan. Deploy with
+  `-var enable_telemetry=false` to check idempotency on the example's own resources.
+- **KMS key URL.** AKS accepts a versioned key URL on legacy KMS (the default here) and only a
+  versionless one when it runs the cluster on its newer KMS experience (platform-managed keys,
+  Kubernetes 1.33 or later). If the cluster create fails with
+  `KeyId must not include a version when PMK is enabled`, set `kms_key_versionless = true`.
+- **Cluster access.** No Kubernetes role is granted by default. Add your group to
+  `cluster_role_assignments` (for example `Azure Kubernetes Service RBAC Writer`), or for
+  break-glass add it to `cluster_admin_group_object_ids`. The API server is private and Run Command
+  is disabled, so `kubectl` also requires a host in, or connected to, the cluster VNet.
+- **Alerts** go to the subscription's Owners by email; add the security team with
+  `alert_email_addresses`.
+
+## Running a workload
+
+Workload namespaces deny all ingress and egress, and Azure Policy admits only digest-pinned images
+from the private registry that meet the restricted pod security standard and the CPU and memory
+limits. Public access to the registry is disabled but trusted Azure services may write to it, so
+import an image and read its digest with:
+
+```bash
+az acr import --name <registry> --source mcr.microsoft.com/azuredocs/aks-helloworld:v1 --image aks-helloworld:v1
+az acr repository show --name <registry> --image aks-helloworld:v1 --query digest -o tsv
+```
+
+Then apply, in the workload namespace (`workload-a` by default):
+
+```yaml
+# DNS to CoreDNS and HTTPS egress (Entra ID token exchange for workload identity, Azure APIs).
+# The instance metadata endpoint stays blocked (CN12.AR03).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-and-https-egress
+  namespace: workload-a
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - { port: 53, protocol: UDP }
+        - { port: 53, protocol: TCP }
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except: ["169.254.169.254/32"]
+      ports:
+        - { port: 443, protocol: TCP }
+---
+# The service account federated to the namespace's workload identity
+# (output workload_identity_client_ids["workload-a"]).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: workload
+  namespace: workload-a
+  annotations:
+    azure.workload.identity/client-id: <workload identity client ID>
+---
+# The restricted initiative also requires pod-level fsGroup and supplementalGroups.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sample
+  namespace: workload-a
+  labels:
+    azure.workload.identity/use: "true"
+spec:
+  serviceAccountName: workload
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    supplementalGroups: [10001]
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: app
+      image: <registry>.azurecr.io/aks-helloworld@sha256:<digest>
+      resources:
+        requests: { cpu: 100m, memory: 128Mi }
+        limits: { cpu: 500m, memory: 512Mi }
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+```
 
 ## Reusing existing resources
 
@@ -112,24 +205,24 @@ imported, and existing-to-existing role assignments stay with their owner.
 | Input | Behavior when null |
 | --- | --- |
 | `resource_group_id` | Create a resource group. |
-| `subnet_id`, `api_server_subnet_id`, `key_vault_private_endpoint_subnet_id`, `container_registry_private_endpoint_subnet_id` | Supply all four or none. When null, create the cluster and runner VNets. |
+| `subnet_id`, `api_server_subnet_id`, `container_registry_private_endpoint_subnet_id` | Supply all three or none. When null, create the cluster VNet. |
 | `control_plane_identity_id`, `kubelet_identity_id` | Create distinct user-assigned identities. |
 | `private_dns_zone_id` | Create `ccc-<suffix>.private.<location>.azmk8s.io` linked to the cluster VNet. |
-| `key_vault_resource_id`, `key_vault_key_id` | Create a private, RBAC, purge-protected vault and an RSA-3072 KMS key. `key_vault_key_id` is a versioned HTTPS key URL. |
+| `key_vault_resource_id`, `key_vault_key_id` | Create a private, RBAC, purge-protected vault and an RSA-3072 KMS key. `key_vault_key_id` is an HTTPS key URL, versioned unless `kms_key_versionless` is true. |
 | `disk_encryption_set_id` | Create a separate disk key and a system-assigned DES. |
-| `key_vault_private_dns_zone_id`, `container_registry_private_dns_zone_id` | Create the `privatelink` zones. Do not link the vault zone to the cluster VNet; AKS private KMS links its own. |
+| `container_registry_private_dns_zone_id` | Create the `privatelink.azurecr.io` zone. |
 
-Grants are created only for a new principal or target. When the deployment creates the vault, the
-deployer receives Key Vault Crypto Officer on that vault so it can create the keys. On a reused vault
-the deployer must already hold that role, and the vault must use RBAC (and purge protection when a
-DES is created).
+Grants are created only for a new principal or target. Keys created in a reused vault need
+`Microsoft.KeyVault/vaults/keys/write` on it (for example Key Vault Contributor) for the deployer;
+the vault must use RBAC (and purge protection when a DES is created).
 
 ## Key lifecycle
 
 Legacy `azure_key_vault_kms` is used. Automatic key rotation and expiry are not configured; rotate
-keys with the documented legacy KMS procedure. Destroy soft-deletes keys managed by this example
-(including keys created in a reused vault). Purge-on-destroy is disabled, and a created vault is
-retained under its 90-day purge protection. Never delete a key while a cluster still needs it.
+keys with the documented legacy KMS procedure. Azure Resource Manager cannot delete keys, so destroy
+does not delete them: a created vault is deleted (soft-deleted and kept under its 90-day purge
+protection) together with its keys, and keys created in a reused vault remain there. Purge-on-destroy
+is disabled. Never delete a key while a cluster still needs it.
 
 ```hcl
 provider "azapi" {
@@ -274,6 +367,8 @@ module "aks" {
             interval_weeks = 1
           }
         }
+        # A fixed past date: without it AKS stores today's date and every plan drifts.
+        start_date = "2026-01-04"
       }
     }
     aksManagedNodeOSUpgradeSchedule = {
@@ -288,6 +383,7 @@ module "aks" {
             interval_weeks = 1
           }
         }
+        start_date = "2026-01-03"
       }
     }
   }
@@ -341,8 +437,9 @@ module "aks" {
   public_network_access = "Disabled"
   resource_types        = var.resource_types.containerservice_managed_clusters
   retry                 = var.retry
-  # CCC.K8S.CN02.AR01: scoped Azure RBAC for Kubernetes role assignments.
-  role_assignments = local.cluster_role_assignments
+  # CCC.K8S.CN02.AR01: scoped Azure RBAC for Kubernetes role assignments. Nothing is granted
+  # by default, not even to the deployer.
+  role_assignments = var.cluster_role_assignments
   # CCC.K8S.CN03.AR01: workload identity. CCC.K8S.CN07.AR01: private Key Vault KMS for
   # Kubernetes secrets. CCC.K8S.CN14.AR01 / CCC.Core.CN07: Defender threat detection.
   security_profile = {
@@ -366,6 +463,10 @@ module "aks" {
       interval_hours = 48
     }
   }
+  # CCC.K8S.CN08.AR01: only the approved storage drivers (AKS enables more by default).
+  storage_profile = {
+    for name, enabled in local.enabled_storage_features : name => { enabled = enabled }
+  }
   # CCC.K8S.CN09: Standard tier with an uptime SLA.
   sku = {
     name = "Base"
@@ -376,15 +477,50 @@ module "aks" {
   timeouts = var.timeouts
 
   depends_on = [
+    terraform_data.approved_addons,
     time_sleep.rbac_propagation,
     module.api_dns_zone,
   ]
 }
 
-check "approved_addons_only" {
-  assert {
-    condition     = length(setsubtract(local.enabled_addons, var.approved_addons)) == 0
-    error_message = "Every enabled AKS add-on must be in var.approved_addons (CCC.K8S.CN08.AR01)."
+# CCC.K8S.CN08.AR01: plan fails before the cluster is created when the example would enable
+# an add-on or managed feature that is not in var.approved_addons.
+resource "terraform_data" "approved_addons" {
+  input = local.enabled_addons
+
+  lifecycle {
+    precondition {
+      condition     = length(setsubtract(local.enabled_addons, var.approved_addons)) == 0
+      error_message = "CCC.K8S.CN08.AR01: these configured add-ons are not in var.approved_addons: ${join(", ", setsubtract(local.enabled_addons, var.approved_addons))}."
+    }
+  }
+}
+
+# CCC.K8S.CN08.AR01: reads the deployed cluster back, so add-ons the module or AKS enable by
+# default are checked too. Apply (and every later plan) fails when AKS reports an enabled
+# add-on or managed feature outside var.approved_addons.
+data "azapi_resource" "cluster_features" {
+  resource_id = module.aks.resource_id
+  type        = coalesce(var.resource_types.containerservice_managed_clusters.containerservice_managed_clusters, "Microsoft.ContainerService/managedClusters@2026-03-01")
+  response_export_values = [
+    "properties.addonProfiles",
+    "properties.azureMonitorProfile",
+    "properties.ingressProfile",
+    "properties.securityProfile",
+    "properties.serviceMeshProfile",
+    "properties.storageProfile",
+    "properties.workloadAutoScalerProfile",
+  ]
+}
+
+resource "terraform_data" "observed_addons" {
+  input = local.observed_addons
+
+  lifecycle {
+    precondition {
+      condition     = length(setsubtract(local.observed_addons, var.approved_addons)) == 0
+      error_message = "CCC.K8S.CN08.AR01: the cluster has add-ons or managed features enabled that are not in var.approved_addons: ${join(", ", setsubtract(local.observed_addons, var.approved_addons))}."
+    }
   }
 }
 ```
@@ -411,10 +547,13 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.kubernetes_security_change_alert](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource_action.encryption_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [time_sleep.key_vault_rbac](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [terraform_data.approved_addons](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [terraform_data.observed_addons](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [time_sleep.rbac_propagation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.cluster_features](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.control_plane_identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.disk_encryption_set](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.existing_key_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
@@ -429,6 +568,14 @@ No required inputs.
 
 The following input variables are optional (have default values):
 
+### <a name="input_alert_email_addresses"></a> [alert\_email\_addresses](#input\_alert\_email\_addresses)
+
+Description: Email addresses notified by the security alerts (CCC.K8S.CN14.AR03), in addition to the subscription's Owners, who are always notified.
+
+Type: `list(string)`
+
+Default: `[]`
+
 ### <a name="input_api_server_subnet_id"></a> [api\_server\_subnet\_id](#input\_api\_server\_subnet\_id)
 
 Description: Existing API-server subnet ARM ID delegated to Microsoft.ContainerService/managedClusters (/28 or larger) in the node subnet's VNet, or null when the network is created.
@@ -439,7 +586,15 @@ Default: `null`
 
 ### <a name="input_approved_addons"></a> [approved\_addons](#input\_approved\_addons)
 
-Description: Organization-approved allowlist of AKS add-ons and managed security features (CCC.K8S.CN08.AR01). A check fails when the example enables anything else.
+Description: Organization-approved allowlist of AKS add-ons and managed features (CCC.K8S.CN08.AR01). Plan fails before  
+the cluster is created when the example configures anything else, and apply (and every later plan) fails  
+when the deployed cluster reports anything else enabled, including features AKS turns on by default.
+`extension_manager` is AKS's control-plane extension manager, which AKS enables itself to deliver  
+Container Insights (`oms_agent`) as a core extension.  
+Names: add-on profiles (`azure_policy`, `oms_agent`, `extension_manager`, `key_vault_secrets_provider`,
+`ingress_application_gateway`, otherwise the lower-case AKS add-on name) and managed features (`azure_key_vault_kms`, `azure_monitor_metrics`,
+`blob_csi_driver`, `defender`, `disk_csi_driver`, `file_csi_driver`, `image_cleaner`, `image_integrity`,
+`istio`, `keda`, `snapshot_controller`, `vertical_pod_autoscaler`, `web_app_routing`, `workload_identity`).
 
 Type: `list(string)`
 
@@ -450,6 +605,8 @@ Default:
   "azure_key_vault_kms",
   "azure_policy",
   "defender",
+  "disk_csi_driver",
+  "extension_manager",
   "image_cleaner",
   "oms_agent",
   "workload_identity"
@@ -468,8 +625,8 @@ Default: `[]`
 
 Description: Azure RBAC for Kubernetes role assignments at cluster scope (CCC.K8S.CN02.AR01). Prefer groups  
 and the narrowest built-in role, for example `Azure Kubernetes Service RBAC Reader` or
-`Azure Kubernetes Service RBAC Writer`. When empty, the deploying identity receives
-`Azure Kubernetes Service RBAC Cluster Admin` so the example remains operable.
+`Azure Kubernetes Service RBAC Writer`. Nothing is granted by default, including to the deploying  
+identity; use this input, or `cluster_admin_group_object_ids` for break-glass, to operate the cluster.
 
 - `principal_id` - Entra object ID of the user, group or service principal.
 - `role_definition_id_or_name` - Built-in role name or role definition ID.
@@ -569,33 +726,9 @@ object({
 
 Default: `{}`
 
-### <a name="input_key_vault_dns_virtual_network_links"></a> [key\_vault\_dns\_virtual\_network\_links](#input\_key\_vault\_dns\_virtual\_network\_links)
-
-Description: Map of NEW DNS link names to existing VNet ARM IDs for vault resolution (runner VNet or DNS-forwarding hub). When the network is created, the created runner VNet is linked automatically. Do not link the cluster VNet: AKS private KMS links its own zone there. Existing links are never adopted.
-
-Type: `map(string)`
-
-Default: `{}`
-
 ### <a name="input_key_vault_key_id"></a> [key\_vault\_key\_id](#input\_key\_vault\_key\_id)
 
-Description: Existing versioned KMS key HTTPS URL, paired with key\_vault\_resource\_id, or null to create a separate RSA KMS key in the selected vault. This is a data-plane URL, not an ARM key ID.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_key_vault_private_dns_zone_id"></a> [key\_vault\_private\_dns\_zone\_id](#input\_key\_vault\_private\_dns\_zone\_id)
-
-Description: Existing privatelink.vaultcore.azure.net DNS zone ARM ID, or null to create it through AVM when keys are created. Existing zones are not imported. For full key/DES reuse no vault endpoint or DNS resources are created.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_key_vault_private_endpoint_subnet_id"></a> [key\_vault\_private\_endpoint\_subnet\_id](#input\_key\_vault\_private\_endpoint\_subnet\_id)
-
-Description: Existing non-delegated subnet ARM ID for the deployment runner's Key Vault private endpoint, or null when the network is created (the endpoint then goes into the created runner VNet). Runner routing, NSGs and TCP 443 access must work.
+Description: Existing KMS key HTTPS URL, paired with key\_vault\_resource\_id, or null to create a separate RSA KMS key in the selected vault. Use the versioned form (`https://<vault>.vault.azure.net/keys/<name>/<version>`), or the versionless form when `kms_key_versionless` is true. This is a data-plane URL, not an ARM key ID.
 
 Type: `string`
 
@@ -608,6 +741,23 @@ Description: Existing KMS vault ARM ID, or null to create a private, RBAC-enable
 Type: `string`
 
 Default: `null`
+
+### <a name="input_kms_key_versionless"></a> [kms\_key\_versionless](#input\_kms\_key\_versionless)
+
+Description: Configure KMS with the versionless key URL instead of the versioned one. AKS accepts one or the other  
+depending on whether it runs the cluster on its newer KMS experience (platform-managed keys, "PMK";  
+Kubernetes 1.33 or later):
+
+- legacy KMS (the default for most clusters) rejects a versionless URL: `Bad number of segments: 3
+  (PMK disabled, expected 4)`;
+- with PMK enabled it rejects a versioned URL: `KeyId must not include a version when PMK is enabled`.
+
+The example cannot set the PMK mode (the module does not expose it). Keep false unless AKS returns the  
+second error, which has been seen on Kubernetes 1.37.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_kubelet_identity_id"></a> [kubelet\_identity\_id](#input\_kubelet\_identity\_id)
 
@@ -675,13 +825,14 @@ Default: `null`
 
 ### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
 
-Description: API versions for read-only prerequisite lookups and the AKS module. Published prerequisite AVMs own their resource API versions.
+Description: API versions for the ARM key creation, read-only prerequisite lookups and the AKS module. Published prerequisite AVMs own their resource API versions.
 
 - `compute_disk_encryption_sets` - Read the new DES principal ID.
 - `keyvault_vaults` - Validate an existing vault without adopting it.
+- `keyvault_vaults_keys` - Create the KMS and disk keys through Azure Resource Manager.
 - `managedidentity_user_assigned_identities` - Read an existing control-plane principal ID.
 - `containerservice_managed_clusters` - Overrides passed to AKS unchanged.
-- `containerservice_managed_clusters.containerservice_managed_clusters` - AKS cluster API version.
+- `containerservice_managed_clusters.containerservice_managed_clusters` - AKS cluster API version, also used to read the cluster back for the CN08 add-on check.
 - `containerservice_managed_clusters.containerservice_managed_clusters_agent_pools` - Default agent pool API version.
 
 Type:
@@ -690,6 +841,7 @@ Type:
 object({
     compute_disk_encryption_sets             = optional(string, "Microsoft.Compute/diskEncryptionSets@2024-03-02")
     keyvault_vaults                          = optional(string, "Microsoft.KeyVault/vaults@2024-11-01")
+    keyvault_vaults_keys                     = optional(string, "Microsoft.KeyVault/vaults/keys@2024-11-01")
     managedidentity_user_assigned_identities = optional(string, "Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30")
     containerservice_managed_clusters = optional(object({
       containerservice_managed_clusters             = optional(string)
@@ -729,14 +881,6 @@ Default:
 }
 ```
 
-### <a name="input_runner_virtual_network_address_space"></a> [runner\_virtual\_network\_address\_space](#input\_runner\_virtual\_network\_address\_space)
-
-Description: Address space of the created runner VNet (/26 or larger), which hosts the deployment runner and its Key Vault private endpoint.
-
-Type: `string`
-
-Default: `"10.11.0.0/24"`
-
 ### <a name="input_service_cidr"></a> [service\_cidr](#input\_service\_cidr)
 
 Description: Kubernetes service CIDR. It must not overlap the VNets, connected networks or the fixed pod CIDR 172.18.0.0/16.
@@ -747,7 +891,7 @@ Default: `"10.20.0.0/16"`
 
 ### <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id)
 
-Description: Existing AKS node subnet ARM ID, or null to create the cluster and runner VNets. Supply all existing subnet inputs together or none of them.
+Description: Existing AKS node subnet ARM ID, or null to create the cluster VNet. Supply all existing subnet inputs together or none of them.
 
 Type: `string`
 
@@ -873,15 +1017,7 @@ Description: Versioned disk-key URL when a DES is created; null when reusing a D
 
 ### <a name="output_key_vault_key_id"></a> [key\_vault\_key\_id](#output\_key\_vault\_key\_id)
 
-Description: Versioned HTTPS URL of the created or reused KMS key.
-
-### <a name="output_key_vault_private_dns_zone_id"></a> [key\_vault\_private\_dns\_zone\_id](#output\_key\_vault\_private\_dns\_zone\_id)
-
-Description: Selected vault private DNS zone ARM ID; null for full key/DES reuse with an explicit null DNS input.
-
-### <a name="output_key_vault_private_endpoint_id"></a> [key\_vault\_private\_endpoint\_id](#output\_key\_vault\_private\_endpoint\_id)
-
-Description: Runner vault private endpoint ARM ID, or null when no keys are managed by this example.
+Description: HTTPS URL of the created or reused KMS key as configured on the cluster: versioned, or versionless when kms\_key\_versionless is true.
 
 ### <a name="output_key_vault_resource_id"></a> [key\_vault\_resource\_id](#output\_key\_vault\_resource\_id)
 
@@ -911,10 +1047,6 @@ Description: Private API-server FQDN; access requires connectivity and DNS resol
 
 Description: ARM ID of the created or reused resource group.
 
-### <a name="output_runner_subnet_id"></a> [runner\_subnet\_id](#output\_runner\_subnet\_id)
-
-Description: Subnet for a self-hosted runner or jump host that can reach the Key Vault private endpoint; null when existing subnets are supplied.
-
 ### <a name="output_workload_identity_client_ids"></a> [workload\_identity\_client\_ids](#output\_workload\_identity\_client\_ids)
 
 Description: Client ID of each namespace's workload identity, for the `azure.workload.identity/client-id` service account annotation.
@@ -922,6 +1054,12 @@ Description: Client ID of each namespace's workload identity, for the `azure.wor
 ## Modules
 
 The following Modules are called:
+
+### <a name="module_action_group"></a> [action\_group](#module\_action\_group)
+
+Source: Azure/avm-res-insights-actiongroup/azurerm
+
+Version: 0.1.0
 
 ### <a name="module_aks"></a> [aks](#module\_aks)
 
@@ -959,35 +1097,11 @@ Source: Azure/avm-res-compute-diskencryptionset/azurerm
 
 Version: 0.1.1
 
-### <a name="module_encryption_keys"></a> [encryption\_keys](#module\_encryption\_keys)
-
-Source: Azure/avm-res-keyvault-vault/azurerm//modules/key
-
-Version: 0.12.0
-
 ### <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
 Version: 0.12.0
-
-### <a name="module_key_vault_dns_links"></a> [key\_vault\_dns\_links](#module\_key\_vault\_dns\_links)
-
-Source: Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link
-
-Version: 0.5.0
-
-### <a name="module_key_vault_dns_zone"></a> [key\_vault\_dns\_zone](#module\_key\_vault\_dns\_zone)
-
-Source: Azure/avm-res-network-privatednszone/azurerm
-
-Version: 0.5.0
-
-### <a name="module_key_vault_endpoint"></a> [key\_vault\_endpoint](#module\_key\_vault\_endpoint)
-
-Source: Azure/avm-res-network-privateendpoint/azurerm
-
-Version: 0.2.0
 
 ### <a name="module_log_analytics"></a> [log\_analytics](#module\_log\_analytics)
 

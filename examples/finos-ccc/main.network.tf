@@ -1,10 +1,7 @@
 # Network foundation, created only when no existing subnets are supplied.
 #
-# - cluster VNet: AKS nodes, delegated API-server subnet and private endpoints
-#   (container registry) used by the cluster.
-# - runner VNet: the deployment runner and its Key Vault private endpoint. It is kept
-#   separate because AKS private KMS links its own privatelink.vaultcore.azure.net
-#   zone to the cluster VNet.
+# One cluster VNet: AKS nodes, the delegated API-server subnet and private endpoints
+# (container registry). No runner network is needed: keys are created through ARM.
 #
 # CCC.K8S.CN01.AR01 / CCC.Core.CN05: every subnet has an NSG whose default rules allow
 # inbound traffic only from virtual networks and Azure Load Balancer.

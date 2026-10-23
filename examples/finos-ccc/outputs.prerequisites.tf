@@ -19,7 +19,7 @@ output "key_vault_resource_id" {
 }
 
 output "key_vault_key_id" {
-  description = "Versionless HTTPS URL of the created or reused KMS key, as configured on the cluster."
+  description = "HTTPS URL of the created or reused KMS key as configured on the cluster: versioned, or versionless when kms_key_versionless is true."
   value       = local.key_vault_key_id
 }
 
@@ -30,15 +30,5 @@ output "disk_encryption_set_id" {
 
 output "disk_key_id" {
   description = "Versioned disk-key URL when a DES is created; null when reusing a DES, whose key remains externally managed."
-  value       = var.disk_encryption_set_id == null ? module.encryption_keys["disk"].id : null
-}
-
-output "key_vault_private_dns_zone_id" {
-  description = "Selected vault private DNS zone ARM ID; null for full key/DES reuse with an explicit null DNS input."
-  value       = local.key_vault_private_dns_zone_id
-}
-
-output "key_vault_private_endpoint_id" {
-  description = "Runner vault private endpoint ARM ID, or null when no keys are managed by this example."
-  value       = local.create_key_vault_endpoint ? module.key_vault_endpoint[0].resource_id : null
+  value       = var.disk_encryption_set_id == null ? azapi_resource_action.encryption_keys["disk"].output.properties.keyUriWithVersion : null
 }

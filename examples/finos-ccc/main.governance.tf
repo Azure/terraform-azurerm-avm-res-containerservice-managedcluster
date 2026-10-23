@@ -16,6 +16,9 @@ module "container_registry" {
       private_dns_zone_resource_ids = [local.container_registry_private_dns_zone_id]
     }
   }
+  # Public access stays off. Trusted Azure services (including `az acr import` and ACR
+  # Tasks) may still write, which is the push path for the digest-pinned images CN04 admits.
+  network_rule_bypass_option    = "AzureServices"
   public_network_access_enabled = false
   role_assignments = {
     kubelet_acr_pull = {

@@ -29,7 +29,7 @@ data "azapi_resource" "existing_key_vault" {
   lifecycle {
     postcondition {
       condition     = try(self.output.properties.enableRbacAuthorization, false) == true
-      error_message = "Creating keys or new identity grants in an existing vault requires RBAC authorization. The example will not change its access model; use an RBAC vault or reuse all preconfigured encryption/identity inputs."
+      error_message = "New identity grants on keys in an existing vault require RBAC authorization. The example will not change its access model; use an RBAC vault or reuse all preconfigured encryption/identity inputs."
     }
     postcondition {
       condition = var.disk_encryption_set_id != null || (
@@ -76,7 +76,9 @@ module "api_dns_zone" {
 }
 
 # CCC.Core.CN02 / CCC.K8S.CN07.AR01: private, purge-protected vault for KMS and disk keys.
-# AzureServices bypass permits trusted Azure Disk Storage, not runner access.
+# AzureServices bypass permits trusted Azure Disk Storage. No data-plane access is needed:
+# keys are created through Azure Resource Manager below, so no identity, including the
+# deployer, holds a Key Vault data-plane role beyond the scoped grants in locals.tf.
 module "key_vault" {
   source    = "Azure/avm-res-keyvault-vault/azurerm"
   version   = "0.12.0"
@@ -98,100 +100,39 @@ module "key_vault" {
   }
   public_network_access_enabled = false
   purge_protection_enabled      = true
-  # The deployer creates the AVM-managed keys over the private endpoint below.
-  role_assignments = {
-    deployer_crypto_officer = {
-      role_definition_id_or_name = "Key Vault Crypto Officer"
-      principal_id               = data.azapi_client_config.current.object_id
-    }
-  }
-  sku_name                   = "standard"
-  soft_delete_retention_days = 90
-  tags                       = var.tags
+  sku_name                      = "standard"
+  soft_delete_retention_days    = 90
+  tags                          = var.tags
 }
 
-resource "time_sleep" "key_vault_rbac" {
-  count = var.key_vault_resource_id == null ? 1 : 0
-
-  create_duration = "60s"
-
-  depends_on = [module.key_vault]
-}
-
-module "key_vault_dns_zone" {
-  source    = "Azure/avm-res-network-privatednszone/azurerm"
-  version   = "0.5.0"
-  providers = { modtm = modtm }
-  count     = local.create_key_vault_endpoint && var.key_vault_private_dns_zone_id == null ? 1 : 0
-
-  domain_name      = "privatelink.vaultcore.azure.net"
-  parent_id        = local.resource_group_id
-  enable_telemetry = var.enable_telemetry
-  tags             = var.tags
-  virtual_network_links = {
-    for name, id in local.key_vault_dns_virtual_network_links : name => {
-      name                 = name
-      virtual_network_id   = id
-      registration_enabled = false
-      tags                 = var.tags
-    }
-  }
-}
-
-# Only explicitly requested NEW links are managed on a reused DNS zone.
-module "key_vault_dns_links" {
-  source   = "Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link"
-  version  = "0.5.0"
-  for_each = local.create_key_vault_endpoint && var.key_vault_private_dns_zone_id != null ? var.key_vault_dns_virtual_network_links : {}
-
-  name               = each.key
-  parent_id          = var.key_vault_private_dns_zone_id
-  virtual_network_id = each.value
-  tags               = var.tags
-}
-
-# A runner endpoint is separate from the private endpoint AKS creates for KMS.
-# A standalone AVM module supports both created and reused vaults.
-module "key_vault_endpoint" {
-  source    = "Azure/avm-res-network-privateendpoint/azurerm"
-  version   = "0.2.0"
-  providers = { modtm = modtm }
-  count     = local.create_key_vault_endpoint ? 1 : 0
-
-  location                       = var.location
-  name                           = "pe-ccc-vault-${random_string.name_suffix.result}"
-  network_interface_name         = "nic-ccc-vault-${random_string.name_suffix.result}"
-  private_connection_resource_id = local.key_vault_resource_id
-  resource_group_name            = local.resource_group_name
-  subnet_resource_id             = local.private_endpoint_subnet_id
-  enable_telemetry               = var.enable_telemetry
-  private_dns_zone_group_name    = "default"
-  private_dns_zone_resource_ids  = [local.key_vault_private_dns_zone_id]
-  subresource_names              = ["vault"]
-  tags                           = var.tags
-}
-
-# Keys are created over the vault data plane from a runner with private access. A created
-# vault grants the deployer Crypto Officer; a reused vault must already grant it.
-module "encryption_keys" {
-  source   = "Azure/avm-res-keyvault-vault/azurerm//modules/key"
-  version  = "0.12.0"
+# Keys are created through the ARM control plane (Microsoft.KeyVault/vaults/keys), which
+# works while the vault's public network access is disabled, so the default apply runs
+# from any host. The AVM key submodule uses the data plane and would need a private
+# endpoint and a runner inside the network.
+# ARM PUT creates the first key version and returns an existing key unchanged. ARM does
+# not support DELETE on keys (405), so an action is used instead of azapi_resource:
+# destroying the created vault soft-deletes its keys; keys created in a reused vault are
+# left in place on destroy.
+resource "azapi_resource_action" "encryption_keys" {
   for_each = local.keys_to_create
 
-  key_vault_resource_id = local.key_vault_resource_id
-  name                  = "aks-${each.key}-${random_string.name_suffix.result}"
-  type                  = "RSA"
-  opts                  = each.value
-  size                  = 3072
-  tags                  = var.tags
+  method      = "PUT"
+  resource_id = "${local.key_vault_resource_id}/keys/${each.value.name}"
+  type        = var.resource_types.keyvault_vaults_keys
+  body = {
+    tags = var.tags
+    properties = {
+      kty     = "RSA"
+      keySize = 3072
+      keyOps  = each.value.key_ops
+      attributes = {
+        enabled = true
+      }
+    }
+  }
+  response_export_values = ["properties.keyUri", "properties.keyUriWithVersion"]
 
-  depends_on = [
-    data.azapi_resource.existing_key_vault,
-    time_sleep.key_vault_rbac,
-    module.key_vault_endpoint,
-    module.key_vault_dns_zone,
-    module.key_vault_dns_links,
-  ]
+  depends_on = [data.azapi_resource.existing_key_vault]
 }
 
 module "disk_encryption_set" {
@@ -200,7 +141,7 @@ module "disk_encryption_set" {
   providers = { modtm = modtm }
   count     = var.disk_encryption_set_id == null ? 1 : 0
 
-  key_vault_key_id                  = module.encryption_keys["disk"].id
+  key_vault_key_id                  = azapi_resource_action.encryption_keys["disk"].output.properties.keyUriWithVersion
   key_vault_resource_id             = local.key_vault_resource_id
   location                          = var.location
   name                              = "des-ccc-${random_string.name_suffix.result}"
@@ -241,5 +182,9 @@ module "prerequisite_role_assignments" {
     }
   }
 
-  depends_on = [data.azapi_resource.existing_key_vault]
+  # Key-scoped grants need the keys to exist first.
+  depends_on = [
+    data.azapi_resource.existing_key_vault,
+    azapi_resource_action.encryption_keys,
+  ]
 }
