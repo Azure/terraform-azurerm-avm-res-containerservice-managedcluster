@@ -136,9 +136,6 @@ resource "azapi_resource" "acr" {
 
 module "stateful_workloads" {
   source = "../.."
-  providers = {
-    azapi = azapi
-  }
 
   location  = azapi_resource.rg.location
   name      = coalesce(var.cluster_name, module.naming.kubernetes_cluster.name_unique)

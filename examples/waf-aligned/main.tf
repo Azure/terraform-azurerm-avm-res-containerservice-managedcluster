@@ -255,9 +255,6 @@ resource "random_string" "dns_prefix" {
 
 module "waf_aligned" {
   source = "../.."
-  providers = {
-    azapi = azapi
-  }
 
   location  = azapi_resource.this.location
   name      = module.naming.kubernetes_cluster.name_unique
