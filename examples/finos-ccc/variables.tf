@@ -1,14 +1,3 @@
-variable "api_server_subnet_id" {
-  type        = string
-  default     = null
-  description = "Existing API-server subnet ARM ID delegated to Microsoft.ContainerService/managedClusters (/28 or larger) in the node subnet's VNet, or null when the network is created."
-
-  validation {
-    condition     = var.api_server_subnet_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.api_server_subnet_id))
-    error_message = "api_server_subnet_id must be a subnet ARM ID or null."
-  }
-}
-
 variable "alert_email_addresses" {
   type        = list(string)
   default     = []
@@ -18,6 +7,17 @@ variable "alert_email_addresses" {
   validation {
     condition     = alltrue([for address in var.alert_email_addresses : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", address))])
     error_message = "alert_email_addresses must contain email addresses."
+  }
+}
+
+variable "api_server_subnet_id" {
+  type        = string
+  default     = null
+  description = "Existing API-server subnet ARM ID delegated to Microsoft.ContainerService/managedClusters (/28 or larger) in the node subnet's VNet, or null when the network is created."
+
+  validation {
+    condition     = var.api_server_subnet_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.api_server_subnet_id))
+    error_message = "api_server_subnet_id must be a subnet ARM ID or null."
   }
 }
 
@@ -182,21 +182,6 @@ variable "key_vault_resource_id" {
   }
 }
 
-variable "kubelet_identity_id" {
-  type        = string
-  default     = null
-  description = "Existing kubelet user-assigned identity ARM ID (not an object/client ID), or null to create one distinct from the control-plane identity."
-
-  validation {
-    condition     = var.kubelet_identity_id == null || can(provider::azapi::parse_resource_id("Microsoft.ManagedIdentity/userAssignedIdentities", var.kubelet_identity_id))
-    error_message = "kubelet_identity_id must be a user-assigned identity ARM ID or null."
-  }
-  validation {
-    condition     = var.kubelet_identity_id == null || var.control_plane_identity_id == null ? true : lower(var.kubelet_identity_id) != lower(var.control_plane_identity_id)
-    error_message = "The control-plane and kubelet identities must be distinct."
-  }
-}
-
 variable "kms_key_versionless" {
   type        = bool
   default     = false
@@ -213,6 +198,21 @@ The example cannot set the PMK mode (the module does not expose it). Keep false 
 second error, which has been seen on Kubernetes 1.37.
 DESCRIPTION
   nullable    = false
+}
+
+variable "kubelet_identity_id" {
+  type        = string
+  default     = null
+  description = "Existing kubelet user-assigned identity ARM ID (not an object/client ID), or null to create one distinct from the control-plane identity."
+
+  validation {
+    condition     = var.kubelet_identity_id == null || can(provider::azapi::parse_resource_id("Microsoft.ManagedIdentity/userAssignedIdentities", var.kubelet_identity_id))
+    error_message = "kubelet_identity_id must be a user-assigned identity ARM ID or null."
+  }
+  validation {
+    condition     = var.kubelet_identity_id == null || var.control_plane_identity_id == null ? true : lower(var.kubelet_identity_id) != lower(var.control_plane_identity_id)
+    error_message = "The control-plane and kubelet identities must be distinct."
+  }
 }
 
 variable "kubernetes_version" {

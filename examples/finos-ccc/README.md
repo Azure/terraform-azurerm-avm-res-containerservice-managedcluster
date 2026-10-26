@@ -95,13 +95,13 @@ vault's data plane, so no runner, vault private endpoint or deployer Key Vault r
 ```powershell
 terraform -chdir=examples/finos-ccc init
 terraform -chdir=examples/finos-ccc apply
-# Idempotency: exit code 0 means no changes.
-terraform -chdir=examples/finos-ccc plan -detailed-exitcode
 ```
 
-- **Idempotency and telemetry.** With `enable_telemetry = true`, each AVM module's telemetry
-  deployment records the apply time and shows as an in-place update on every plan. Deploy with
-  `-var enable_telemetry=false` to check idempotency on the example's own resources.
+- **Telemetry and idempotency.** AVM telemetry is enabled by default (`enable_telemetry = true`).
+  Each AVM module's telemetry deployment records the apply time, so it shows as an in-place update
+  on every plan. To check idempotency of the example's own resources, for example in a test
+  deployment, use `-var enable_telemetry=false` for both the apply and
+  `terraform plan -detailed-exitcode` (exit code 0 means no changes).
 - **KMS key URL.** AKS accepts a versioned key URL on legacy KMS (the default here) and only a
   versionless one when it runs the cluster on its newer KMS experience (platform-managed keys,
   Kubernetes 1.33 or later). If the cluster create fails with
@@ -118,12 +118,19 @@ terraform -chdir=examples/finos-ccc plan -detailed-exitcode
 Workload namespaces deny all ingress and egress, and Azure Policy admits only digest-pinned images
 from the private registry that meet the restricted pod security standard and the CPU and memory
 limits. Public access to the registry is disabled but trusted Azure services may write to it, so
-import an image and read its digest with:
+import an image by digest. Read the digest from the source registry: commands that query the private
+registry itself only work from inside the cluster VNet.
 
 ```bash
-az acr import --name <registry> --source mcr.microsoft.com/azuredocs/aks-helloworld:v1 --image aks-helloworld:v1
-az acr repository show --name <registry> --image aks-helloworld:v1 --query digest -o tsv
+digest=$(curl -sI \
+  -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json" \
+  https://mcr.microsoft.com/v2/azurelinux/busybox/manifests/1.36 \
+  | tr -d '\r' | awk 'tolower($1)=="docker-content-digest:" {print $2}')
+az acr import --name <registry> --source "mcr.microsoft.com/azurelinux/busybox@${digest}" --image busybox:1.36
+echo "$digest"
 ```
+
+Import copies the manifest unchanged, so the image keeps the same digest in the private registry.
 
 Then apply, in the workload namespace (`workload-a` by default):
 
@@ -186,7 +193,8 @@ spec:
       type: RuntimeDefault
   containers:
     - name: app
-      image: <registry>.azurecr.io/aks-helloworld@sha256:<digest>
+      image: <registry>.azurecr.io/busybox@sha256:<digest>
+      command: ["sleep", "86400"]
       resources:
         requests: { cpu: 100m, memory: 128Mi }
         limits: { cpu: 500m, memory: 512Mi }
@@ -195,6 +203,14 @@ spec:
         readOnlyRootFilesystem: true
         capabilities:
           drop: ["ALL"]
+```
+
+The sample runs as a non-root user on a read-only root filesystem. From a host that can reach the
+private API server, show that DNS works and the instance metadata endpoint stays blocked:
+
+```bash
+kubectl -n workload-a exec sample -- nslookup login.microsoftonline.com
+kubectl -n workload-a exec sample -- wget -q -T 5 -O- --header "Metadata: true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01" || echo "IMDS blocked"
 ```
 
 ## Reusing existing resources
@@ -262,9 +278,6 @@ resource "time_sleep" "rbac_propagation" {
 # it enforces. See _header.md for the complete control matrix and residual items.
 module "aks" {
   source = "../.."
-  providers = {
-    azapi = azapi
-  }
 
   # CCC.Core.CN06: approved region.
   location  = var.location
@@ -463,14 +476,14 @@ module "aks" {
       interval_hours = 48
     }
   }
-  # CCC.K8S.CN08.AR01: only the approved storage drivers (AKS enables more by default).
-  storage_profile = {
-    for name, enabled in local.enabled_storage_features : name => { enabled = enabled }
-  }
   # CCC.K8S.CN09: Standard tier with an uptime SLA.
   sku = {
     name = "Base"
     tier = "Standard"
+  }
+  # CCC.K8S.CN08.AR01: only the approved storage drivers (AKS enables more by default).
+  storage_profile = {
+    for name, enabled in local.enabled_storage_features : name => { enabled = enabled }
   }
   # CCC.K8S.CN15.AR01: approved ownership, environment and data-classification tags.
   tags     = var.tags

@@ -42,10 +42,9 @@ data "azapi_resource" "existing_key_vault" {
 
 # CCC.K8S.CN17.AR01: distinct control-plane and kubelet identities.
 module "cluster_identities" {
-  source    = "Azure/avm-res-managedidentity-userassignedidentity/azurerm"
-  version   = "0.5.3"
-  providers = { modtm = modtm }
-  for_each  = local.identities_to_create
+  source   = "Azure/avm-res-managedidentity-userassignedidentity/azurerm"
+  version  = "0.5.3"
+  for_each = local.identities_to_create
 
   location            = var.location
   name                = "id-ccc-${each.key}-${random_string.name_suffix.result}"
@@ -56,10 +55,9 @@ module "cluster_identities" {
 
 # CCC.K8S.CN01.AR02: private API-server DNS; VNet integration uses private.<region>.azmk8s.io.
 module "api_dns_zone" {
-  source    = "Azure/avm-res-network-privatednszone/azurerm"
-  version   = "0.5.0"
-  providers = { modtm = modtm }
-  count     = var.private_dns_zone_id == null ? 1 : 0
+  source  = "Azure/avm-res-network-privatednszone/azurerm"
+  version = "0.5.0"
+  count   = var.private_dns_zone_id == null ? 1 : 0
 
   domain_name      = "ccc-${random_string.name_suffix.result}.private.${var.location}.azmk8s.io"
   parent_id        = local.resource_group_id
@@ -80,10 +78,9 @@ module "api_dns_zone" {
 # keys are created through Azure Resource Manager below, so no identity, including the
 # deployer, holds a Key Vault data-plane role beyond the scoped grants in locals.tf.
 module "key_vault" {
-  source    = "Azure/avm-res-keyvault-vault/azurerm"
-  version   = "0.12.0"
-  providers = { modtm = modtm }
-  count     = var.key_vault_resource_id == null ? 1 : 0
+  source  = "Azure/avm-res-keyvault-vault/azurerm"
+  version = "0.12.0"
+  count   = var.key_vault_resource_id == null ? 1 : 0
 
   location                        = var.location
   name                            = "kv-ccc-${random_string.name_suffix.result}"
@@ -136,10 +133,9 @@ resource "azapi_resource_action" "encryption_keys" {
 }
 
 module "disk_encryption_set" {
-  source    = "Azure/avm-res-compute-diskencryptionset/azurerm"
-  version   = "0.1.1"
-  providers = { modtm = modtm }
-  count     = var.disk_encryption_set_id == null ? 1 : 0
+  source  = "Azure/avm-res-compute-diskencryptionset/azurerm"
+  version = "0.1.1"
+  count   = var.disk_encryption_set_id == null ? 1 : 0
 
   key_vault_key_id                  = azapi_resource_action.encryption_keys["disk"].output.properties.keyUriWithVersion
   key_vault_resource_id             = local.key_vault_resource_id
@@ -167,9 +163,8 @@ data "azapi_resource" "disk_encryption_set" {
 
 # CCC.K8S.CN17.AR02: least-privilege grants, created only for new relationships.
 module "prerequisite_role_assignments" {
-  source    = "Azure/avm-res-authorization-roleassignment/azurerm"
-  version   = "0.3.1"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-authorization-roleassignment/azurerm"
+  version = "0.3.1"
 
   enable_telemetry = var.enable_telemetry
   role_assignments_azure_resource_manager = {

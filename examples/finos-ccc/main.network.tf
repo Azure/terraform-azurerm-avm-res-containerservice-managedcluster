@@ -7,10 +7,9 @@
 # inbound traffic only from virtual networks and Azure Load Balancer.
 
 module "resource_group" {
-  source    = "Azure/avm-res-resources-resourcegroup/azurerm"
-  version   = "0.4.0"
-  providers = { modtm = modtm }
-  count     = var.resource_group_id == null ? 1 : 0
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+  count   = var.resource_group_id == null ? 1 : 0
 
   location         = var.location
   name             = "rg-ccc-${random_string.name_suffix.result}"
@@ -19,10 +18,9 @@ module "resource_group" {
 }
 
 module "network_security_groups" {
-  source    = "Azure/avm-res-network-networksecuritygroup/azurerm"
-  version   = "0.6.0"
-  providers = { modtm = modtm }
-  for_each  = local.created_subnets
+  source   = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version  = "0.6.0"
+  for_each = local.created_subnets
 
   location         = var.location
   name             = "nsg-ccc-${each.key}-${random_string.name_suffix.result}"
@@ -32,10 +30,9 @@ module "network_security_groups" {
 }
 
 module "virtual_networks" {
-  source    = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version   = "0.22.3"
-  providers = { modtm = modtm }
-  for_each  = local.created_virtual_networks
+  source   = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version  = "0.22.3"
+  for_each = local.created_virtual_networks
 
   location         = var.location
   parent_id        = local.resource_group_id

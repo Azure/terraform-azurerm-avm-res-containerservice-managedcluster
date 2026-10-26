@@ -35,9 +35,6 @@ resource "time_sleep" "rbac_propagation" {
 # it enforces. See _header.md for the complete control matrix and residual items.
 module "aks" {
   source = "../.."
-  providers = {
-    azapi = azapi
-  }
 
   # CCC.Core.CN06: approved region.
   location  = var.location
@@ -236,14 +233,14 @@ module "aks" {
       interval_hours = 48
     }
   }
-  # CCC.K8S.CN08.AR01: only the approved storage drivers (AKS enables more by default).
-  storage_profile = {
-    for name, enabled in local.enabled_storage_features : name => { enabled = enabled }
-  }
   # CCC.K8S.CN09: Standard tier with an uptime SLA.
   sku = {
     name = "Base"
     tier = "Standard"
+  }
+  # CCC.K8S.CN08.AR01: only the approved storage drivers (AKS enables more by default).
+  storage_profile = {
+    for name, enabled in local.enabled_storage_features : name => { enabled = enabled }
   }
   # CCC.K8S.CN15.AR01: approved ownership, environment and data-classification tags.
   tags     = var.tags

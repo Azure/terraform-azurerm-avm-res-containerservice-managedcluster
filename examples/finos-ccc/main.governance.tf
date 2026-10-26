@@ -1,14 +1,16 @@
 # CCC.K8S.CN04.AR01: the approved, private container registry. Nodes pull through a
 # private endpoint with the kubelet identity; anonymous and admin access stay disabled.
 module "container_registry" {
-  source    = "Azure/avm-res-containerregistry-registry/azurerm"
-  version   = "0.8.0"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-containerregistry-registry/azurerm"
+  version = "0.8.0"
 
   location            = var.location
   name                = "acrccc${random_string.name_suffix.result}"
   resource_group_name = local.resource_group_name
   enable_telemetry    = var.enable_telemetry
+  # Public access stays off. Trusted Azure services (including `az acr import` and ACR
+  # Tasks) may still write, which is the push path for the digest-pinned images CN04 admits.
+  network_rule_bypass_option = "AzureServices"
   private_endpoints = {
     cluster = {
       name                          = "pe-ccc-acr-${random_string.name_suffix.result}"
@@ -16,9 +18,6 @@ module "container_registry" {
       private_dns_zone_resource_ids = [local.container_registry_private_dns_zone_id]
     }
   }
-  # Public access stays off. Trusted Azure services (including `az acr import` and ACR
-  # Tasks) may still write, which is the push path for the digest-pinned images CN04 admits.
-  network_rule_bypass_option    = "AzureServices"
   public_network_access_enabled = false
   role_assignments = {
     kubelet_acr_pull = {
@@ -34,10 +33,9 @@ module "container_registry" {
 }
 
 module "container_registry_dns_zone" {
-  source    = "Azure/avm-res-network-privatednszone/azurerm"
-  version   = "0.5.0"
-  providers = { modtm = modtm }
-  count     = var.container_registry_private_dns_zone_id == null ? 1 : 0
+  source  = "Azure/avm-res-network-privatednszone/azurerm"
+  version = "0.5.0"
+  count   = var.container_registry_private_dns_zone_id == null ? 1 : 0
 
   domain_name      = "privatelink.azurecr.io"
   parent_id        = local.resource_group_id

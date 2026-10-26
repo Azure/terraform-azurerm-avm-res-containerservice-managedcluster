@@ -2,9 +2,8 @@
 # CN14.AR02: no cluster, kubelet or workload identity is granted access to the workspace;
 # grant read access to a dedicated security-operations group through Azure RBAC.
 module "log_analytics" {
-  source    = "Azure/avm-res-operationalinsights-workspace/azurerm"
-  version   = "0.5.1"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
+  version = "0.5.1"
 
   location                                  = var.location
   name                                      = "law-ccc-${random_string.name_suffix.result}"
@@ -19,9 +18,8 @@ module "log_analytics" {
 # email (an ARM role receiver), so the alerts reach someone with no inputs; add the security
 # team's addresses through var.alert_email_addresses.
 module "action_group" {
-  source    = "Azure/avm-res-insights-actiongroup/azurerm"
-  version   = "0.1.0"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-insights-actiongroup/azurerm"
+  version = "0.1.0"
 
   location   = "global"
   name       = "ag-ccc-security-${random_string.name_suffix.result}"
@@ -48,9 +46,8 @@ module "action_group" {
 # CCC.K8S.CN14.AR03 / CN11.AR02 / CN15.AR02: alert when cluster, access, policy,
 # diagnostic or network-exposure configuration changes through Azure Resource Manager.
 module "security_change_alert" {
-  source    = "Azure/avm-res-insights-activitylogalert/azurerm"
-  version   = "0.1.0"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-insights-activitylogalert/azurerm"
+  version = "0.1.0"
 
   condition = {
     all_of = [

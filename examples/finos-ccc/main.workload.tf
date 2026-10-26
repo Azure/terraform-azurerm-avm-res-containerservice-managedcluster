@@ -2,10 +2,9 @@
 # service account so the workload receives short-lived tokens instead of stored keys.
 # Grant each identity only the Azure roles its workload needs (none are granted here).
 module "workload_identities" {
-  source    = "Azure/avm-res-managedidentity-userassignedidentity/azurerm"
-  version   = "0.5.3"
-  providers = { modtm = modtm }
-  for_each  = var.workload_namespaces
+  source   = "Azure/avm-res-managedidentity-userassignedidentity/azurerm"
+  version  = "0.5.3"
+  for_each = var.workload_namespaces
 
   location            = var.location
   name                = "id-ccc-workload-${each.key}-${random_string.name_suffix.result}"
