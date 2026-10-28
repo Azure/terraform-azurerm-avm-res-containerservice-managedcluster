@@ -65,4 +65,7 @@ module "nodepools" {
   vnet_subnet_id                = each.value.vnet_subnet_id
   windows_profile               = each.value.windows_profile
   workload_runtime              = each.value.workload_runtime
+
+  # AKS rejects node pool versions newer than the control plane.
+  depends_on = [azapi_update_resource.kubernetes_version]
 }
