@@ -77,6 +77,7 @@ locals {
     }
   }
   network_profile_properties_automatic = [
+    "advancedNetworking",
     "dnsServiceIP",
     "outboundType",
     "podCidr",
