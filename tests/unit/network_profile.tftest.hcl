@@ -159,3 +159,47 @@ run "advanced_networking_acceleration_mode_can_be_omitted" {
     error_message = "An empty performance object must not impose an acceleration mode."
   }
 }
+
+run "automatic_cluster_serializes_advanced_networking" {
+  command = plan
+
+  variables {
+    sku = {
+      name = "Automatic"
+      tier = "Standard"
+    }
+    network_profile = {
+      outbound_type = "userDefinedRouting"
+      advanced_networking = {
+        enabled = true
+        observability = {
+          enabled = true
+        }
+        security = {
+          enabled                   = true
+          advanced_network_policies = "L7"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.enabled
+    error_message = "Automatic clusters should serialize networkProfile.advancedNetworking."
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.observability.enabled
+    error_message = "Automatic clusters should serialize Advanced Networking observability."
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.security.advancedNetworkPolicies == "L7"
+    error_message = "Automatic clusters should serialize Advanced Networking security policies."
+  }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.outboundType == "userDefinedRouting"
+    error_message = "Automatic clusters should keep the allowed outboundType property."
+  }
+}
