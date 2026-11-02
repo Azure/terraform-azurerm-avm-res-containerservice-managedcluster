@@ -1090,13 +1090,13 @@ Version: 0.5.0
 
 Source: Azure/avm-res-managedidentity-userassignedidentity/azurerm
 
-Version: 0.5.3
+Version: 0.6.0
 
 ### <a name="module_container_registry"></a> [container\_registry](#module\_container\_registry)
 
 Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version: 0.8.0
+Version: 0.9.0
 
 ### <a name="module_container_registry_dns_zone"></a> [container\_registry\_dns\_zone](#module\_container\_registry\_dns\_zone)
 
@@ -1162,7 +1162,7 @@ Version: 0.4.0
 
 Source: Azure/avm-res-insights-activitylogalert/azurerm
 
-Version: 0.1.0
+Version: 0.2.0
 
 ### <a name="module_virtual_networks"></a> [virtual\_networks](#module\_virtual\_networks)
 
@@ -1174,7 +1174,7 @@ Version: 0.22.3
 
 Source: Azure/avm-res-managedidentity-userassignedidentity/azurerm
 
-Version: 0.5.3
+Version: 0.6.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

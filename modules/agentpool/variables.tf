@@ -1,9 +1,3 @@
-variable "location" {
-  type        = string
-  description = "The Azure region for this module's resources or telemetry deployment."
-  nullable    = false
-}
-
 variable "name" {
   type        = string
   description = <<DESCRIPTION
@@ -439,6 +433,17 @@ DESCRIPTION
   validation {
     condition     = try(var.local_dns_profile == null || var.local_dns_profile.state == null || contains(["Disabled", "Enabled"], var.local_dns_profile.state), true)
     error_message = "local_dns_profile.state must be one of: [\"Disabled\", \"Enabled\"]."
+  }
+}
+
+variable "location" {
+  type        = string
+  default     = null
+  description = "The Azure region for this module's resources or telemetry deployment."
+
+  validation {
+    condition     = !var.enable_telemetry || var.location != null
+    error_message = "The location must not be null when telemetry is enabled."
   }
 }
 
