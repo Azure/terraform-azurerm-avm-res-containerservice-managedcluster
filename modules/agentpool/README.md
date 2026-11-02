@@ -27,12 +27,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: The Azure region for this module's resources or telemetry deployment.
-
-Type: `string`
-
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: The name of the resource. The name must be 1-12 characters long, and must begin with a lowercase letter followed by lowercase letters or numbers.  
@@ -424,6 +418,14 @@ object({
     })))
   })
 ```
+
+Default: `null`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
 
 Default: `null`
 
