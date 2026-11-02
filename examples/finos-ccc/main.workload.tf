@@ -3,7 +3,7 @@
 # Grant each identity only the Azure roles its workload needs (none are granted here).
 module "workload_identities" {
   source   = "Azure/avm-res-managedidentity-userassignedidentity/azurerm"
-  version  = "0.5.3"
+  version  = "0.6.0"
   for_each = var.workload_namespaces
 
   location            = var.location

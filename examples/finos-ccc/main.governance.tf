@@ -2,7 +2,7 @@
 # private endpoint with the kubelet identity; anonymous and admin access stay disabled.
 module "container_registry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.8.0"
+  version = "0.9.0"
 
   location            = var.location
   name                = "acrccc${random_string.name_suffix.result}"
