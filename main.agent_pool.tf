@@ -2,7 +2,6 @@ module "nodepools" {
   source   = "./modules/agentpool"
   for_each = var.agent_pools
 
-  location                      = var.location
   name                          = each.value.name
   parent_id                     = azapi_resource.this.id
   artifact_streaming_profile    = each.value.artifact_streaming_profile
@@ -27,6 +26,7 @@ module "nodepools" {
   kubelet_disk_type             = each.value.kubelet_disk_type
   linux_os_config               = each.value.linux_os_config
   local_dns_profile             = each.value.local_dns_profile
+  location                      = var.location
   max_count                     = each.value.max_count
   max_pods                      = each.value.max_pods
   message_of_the_day            = each.value.message_of_the_day

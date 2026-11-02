@@ -1,7 +1,6 @@
 module "default_agent_pool_data" {
   source = "./modules/agentpool"
 
-  location                      = var.location
   name                          = var.default_agent_pool.name
   parent_id                     = "" # As we are outputting data only, parent_id is not required
   artifact_streaming_profile    = var.default_agent_pool.artifact_streaming_profile
@@ -24,6 +23,7 @@ module "default_agent_pool_data" {
   kubelet_disk_type             = var.default_agent_pool.kubelet_disk_type
   linux_os_config               = var.default_agent_pool.linux_os_config
   local_dns_profile             = var.default_agent_pool.local_dns_profile
+  location                      = var.location
   max_count                     = var.default_agent_pool.max_count
   max_pods                      = var.default_agent_pool.max_pods
   message_of_the_day            = var.default_agent_pool.message_of_the_day
