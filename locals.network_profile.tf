@@ -31,6 +31,9 @@ locals {
       security = var.network_profile.advanced_networking.security == null ? null : {
         advancedNetworkPolicies = var.network_profile.advanced_networking.security.advanced_network_policies
         enabled                 = var.network_profile.advanced_networking.security.enabled
+        transitEncryption = var.network_profile.advanced_networking.security.transit_encryption == null ? null : {
+          type = var.network_profile.advanced_networking.security.transit_encryption.type
+        }
       }
     }
     dnsServiceIP = var.network_profile.dns_service_ip

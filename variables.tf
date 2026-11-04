@@ -978,6 +978,9 @@ variable "network_profile" {
       security = optional(object({
         advanced_network_policies = optional(string)
         enabled                   = optional(bool)
+        transit_encryption = optional(object({
+          type = optional(string)
+        }))
       }))
     }))
     dns_service_ip = optional(string)
@@ -1036,6 +1039,8 @@ Profile of network configuration.
   - `security` - Security profile to enable security features on cilium based cluster.
     - `advanced_network_policies` - Enable advanced network policies. This allows users to configure Layer 7 network policies (FQDN, HTTP, Kafka). Policies themselves must be configured via the Cilium Network Policy resources, see https://docs.cilium.io/en/latest/security/policy/index.html. This can be enabled only on cilium-based clusters. If not specified, the default value is FQDN if security.enabled is set to true.
     - `enabled` - This feature allows user to configure network policy based on DNS (FQDN) names. It can be enabled only on cilium based clusters. If not specified, the default is false.
+    - `transit_encryption` - Encryption configuration for Cilium-based clusters. When enabled, traffic between Cilium-managed pods is encrypted when it leaves the node boundary.
+      - `type` - Configures pod-to-pod encryption. Allowed values are `None` and `WireGuard`. If not specified, the default is `None`.
 - `dns_service_ip` - An IP address assigned to the Kubernetes DNS service. It must be within the Kubernetes service address range specified in serviceCidr.
 - `ip_families` - The IP families used to specify IP versions available to the cluster. IP families are used to determine single-stack or dual-stack clusters. For single-stack, the expected value is IPv4. For dual-stack, the expected values are IPv4 and IPv6.
 - `load_balancer_profile` - Profile of the managed cluster load balancer.
@@ -1073,6 +1078,10 @@ DESCRIPTION
   validation {
     condition     = try(var.network_profile == null || var.network_profile.advanced_networking == null || var.network_profile.advanced_networking.performance == null || var.network_profile.advanced_networking.performance.acceleration_mode == null || contains(["BpfVeth", "None"], var.network_profile.advanced_networking.performance.acceleration_mode), true)
     error_message = "network_profile.advanced_networking.performance.acceleration_mode must be one of: [\"BpfVeth\", \"None\"]."
+  }
+  validation {
+    condition     = try(var.network_profile == null || var.network_profile.advanced_networking == null || var.network_profile.advanced_networking.security == null || var.network_profile.advanced_networking.security.transit_encryption == null || var.network_profile.advanced_networking.security.transit_encryption.type == null || contains(["None", "WireGuard"], var.network_profile.advanced_networking.security.transit_encryption.type), true)
+    error_message = "network_profile.advanced_networking.security.transit_encryption.type must be one of: [\"None\", \"WireGuard\"]."
   }
   validation {
     condition     = try(var.network_profile == null || var.network_profile.dns_service_ip == null || can(regex("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", var.network_profile.dns_service_ip)), true)

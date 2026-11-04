@@ -55,6 +55,9 @@ run "advanced_networking_is_serialized" {
         security = {
           enabled                   = true
           advanced_network_policies = "FQDN"
+          transit_encryption = {
+            type = "WireGuard"
+          }
         }
       }
     }
@@ -84,6 +87,31 @@ run "advanced_networking_is_serialized" {
     condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.security.advancedNetworkPolicies == "FQDN"
     error_message = "Advanced Networking security policies should serialize using the ARM property name."
   }
+
+  assert {
+    condition     = azapi_resource.this.body.properties.networkProfile.advancedNetworking.security.transitEncryption.type == "WireGuard"
+    error_message = "Advanced Networking transit encryption should serialize using the ARM property name."
+  }
+}
+
+run "advanced_networking_rejects_invalid_transit_encryption_type" {
+  command = plan
+
+  variables {
+    network_profile = {
+      advanced_networking = {
+        security = {
+          transit_encryption = {
+            type = "Invalid"
+          }
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    var.network_profile,
+  ]
 }
 
 run "advanced_networking_rejects_invalid_acceleration_mode" {
