@@ -43,7 +43,7 @@ data "azapi_resource" "existing_key_vault" {
 # CCC.K8S.CN17.AR01: distinct control-plane and kubelet identities.
 module "cluster_identities" {
   source   = "Azure/avm-res-managedidentity-userassignedidentity/azurerm"
-  version  = "0.5.3"
+  version  = "0.6.0"
   for_each = local.identities_to_create
 
   location            = var.location

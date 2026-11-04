@@ -26,7 +26,7 @@ data "azapi_client_config" "current" {}
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.0"
+  version = "0.13.2"
 
   location               = var.location
   enable_telemetry       = var.enable_telemetry
@@ -51,7 +51,7 @@ locals {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 resource "azapi_resource" "this" {
@@ -476,13 +476,13 @@ The following Modules are called:
 
 Source: Azure/avm-utl-naming/azure
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.13.0
+Version: 0.13.2
 
 ### <a name="module_waf_aligned"></a> [waf\_aligned](#module\_waf\_aligned)
 

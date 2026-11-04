@@ -47,7 +47,7 @@ module "action_group" {
 # diagnostic or network-exposure configuration changes through Azure Resource Manager.
 module "security_change_alert" {
   source  = "Azure/avm-res-insights-activitylogalert/azurerm"
-  version = "0.1.0"
+  version = "0.2.0"
 
   condition = {
     all_of = [
