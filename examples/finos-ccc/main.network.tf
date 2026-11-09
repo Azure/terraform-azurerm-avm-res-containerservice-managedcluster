@@ -31,7 +31,7 @@ module "network_security_groups" {
 
 module "virtual_networks" {
   source   = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version  = "0.22.3"
+  version  = "0.23.0"
   for_each = local.created_virtual_networks
 
   location         = var.location

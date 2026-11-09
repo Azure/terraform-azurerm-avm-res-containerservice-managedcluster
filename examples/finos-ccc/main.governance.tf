@@ -34,7 +34,7 @@ module "container_registry" {
 
 module "container_registry_dns_zone" {
   source  = "Azure/avm-res-network-privatednszone/azurerm"
-  version = "0.5.0"
+  version = "0.6.0"
   count   = var.container_registry_private_dns_zone_id == null ? 1 : 0
 
   domain_name      = "privatelink.azurecr.io"

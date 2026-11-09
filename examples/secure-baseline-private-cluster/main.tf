@@ -266,7 +266,7 @@ resource "azapi_resource" "waf_policy" {
 }
 
 module "application_gateway_for_containers" {
-  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-servicenetworking-trafficcontroller.git?ref=v1.0.1"
+  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-servicenetworking-trafficcontroller.git?ref=v1.1.0"
 
   location  = local.selected_region
   name      = "agc-${module.naming.application_gateway.name_unique}"
