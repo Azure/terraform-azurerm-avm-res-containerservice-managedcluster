@@ -8,7 +8,7 @@
 
 module "resource_group" {
   source  = "Azure/avm-res-resources-resourcegroup/azurerm"
-  version = "0.4.0"
+  version = "0.5.0"
   count   = var.resource_group_id == null ? 1 : 0
 
   location         = var.location
@@ -31,7 +31,7 @@ module "network_security_groups" {
 
 module "virtual_networks" {
   source   = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version  = "0.22.3"
+  version  = "0.23.0"
   for_each = local.created_virtual_networks
 
   location         = var.location
