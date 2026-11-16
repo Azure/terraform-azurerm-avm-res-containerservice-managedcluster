@@ -62,6 +62,7 @@ module "api_dns_zone" {
   domain_name      = "ccc-${random_string.name_suffix.result}.private.${var.location}.azmk8s.io"
   parent_id        = local.resource_group_id
   enable_telemetry = var.enable_telemetry
+  location         = var.location
   tags             = var.tags
   virtual_network_links = {
     cluster = {
@@ -84,7 +85,6 @@ module "key_vault" {
 
   location                        = var.location
   name                            = "kv-ccc-${random_string.name_suffix.result}"
-  resource_group_name             = local.resource_group_name
   tenant_id                       = data.azapi_client_config.current.tenant_id
   enable_telemetry                = var.enable_telemetry
   enabled_for_deployment          = false
@@ -100,6 +100,7 @@ module "key_vault" {
   sku_name                      = "standard"
   soft_delete_retention_days    = 90
   tags                          = var.tags
+  resource_group_name           = local.resource_group_name
 }
 
 # Keys are created through the ARM control plane (Microsoft.KeyVault/vaults/keys), which
