@@ -210,6 +210,8 @@ Specifies the OS SKU used by the agent pool. The default is Ubuntu if OSType is 
 
 For Windows Server 2025, set `os_sku = "Windows2025"`, `os_type = "Windows"`, `mode = "User"`, and `enable_fips = true`. Requires Kubernetes 1.32 or later. See [Windows OS versions](https://learn.microsoft.com/azure/aks/upgrade-windows-os).
 
+For Azure Container Linux, set `os_sku = "AzureContainerLinux"` on a Linux pool with Kubernetes 1.34 or later and a Generation 2 VM size that supports Trusted Launch. See [Azure Container Linux for AKS](https://learn.microsoft.com/azure/aks/azure-container-linux-overview).
+
 **upgrade_settings**
 Settings for upgrading an agentpool
 
