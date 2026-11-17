@@ -4,6 +4,7 @@ resource "azapi_resource" "this" {
   type                   = var.resource_types.containerservice_managed_clusters_maintenance_configurations
   body                   = local.resource_body
   ignore_body_changes    = length(var.ignore_body_changes.containerservice_managed_clusters_maintenance_configurations) > 0 ? var.ignore_body_changes.containerservice_managed_clusters_maintenance_configurations : null
+  ignore_null_property   = true
   response_export_values = []
   retry                  = var.retry
   # AzAPI's embedded AKS schema does not include 2026-03-01 yet.
