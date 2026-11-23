@@ -56,7 +56,7 @@ module "cluster_identities" {
 # CCC.K8S.CN01.AR02: private API-server DNS; VNet integration uses private.<region>.azmk8s.io.
 module "api_dns_zone" {
   source  = "Azure/avm-res-network-privatednszone/azurerm"
-  version = "0.5.0"
+  version = "0.6.0"
   count   = var.private_dns_zone_id == null ? 1 : 0
 
   domain_name      = "ccc-${random_string.name_suffix.result}.private.${var.location}.azmk8s.io"
@@ -79,7 +79,7 @@ module "api_dns_zone" {
 # deployer, holds a Key Vault data-plane role beyond the scoped grants in locals.tf.
 module "key_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.12.0"
+  version = "0.13.1"
   count   = var.key_vault_resource_id == null ? 1 : 0
 
   location                        = var.location
@@ -134,7 +134,7 @@ resource "azapi_resource_action" "encryption_keys" {
 
 module "disk_encryption_set" {
   source  = "Azure/avm-res-compute-diskencryptionset/azurerm"
-  version = "0.1.1"
+  version = "0.2.0"
   count   = var.disk_encryption_set_id == null ? 1 : 0
 
   key_vault_key_id                  = azapi_resource_action.encryption_keys["disk"].output.properties.keyUriWithVersion

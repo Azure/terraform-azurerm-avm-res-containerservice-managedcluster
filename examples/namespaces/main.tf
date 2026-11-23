@@ -21,7 +21,7 @@ data "azapi_client_config" "current" {}
 # See this doc for more info: https://learn.microsoft.com/azure/aks/automatic/quick-automatic-managed-network?pivots=azure-portal#limitations
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.2"
+  version = "0.14.0"
 
   location         = var.location
   enable_telemetry = var.enable_telemetry
