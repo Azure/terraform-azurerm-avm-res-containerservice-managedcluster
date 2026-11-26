@@ -1,0 +1,19 @@
+name: PR Check Label Rerun
+
+on:
+  workflow_run:
+    workflows: ['PR Check Label Observer']
+    types: ['completed']
+
+permissions:
+  actions: write
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  rerun-pr-check:
+    uses: Azure/azure-verified-modules-tools/.github/workflows/pr-check-label-rerun.yml@4ba5ab579d2a5074236aec42bfd831102fb70ca7
+    with:
+      tools-ref: '4ba5ab579d2a5074236aec42bfd831102fb70ca7'
+      observer-workflow-path: '.github/workflows/pr-check-label-observer.yml'
