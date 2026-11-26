@@ -7,11 +7,11 @@ module "log_analytics" {
 
   location                                  = var.location
   name                                      = "law-ccc-${random_string.name_suffix.result}"
-  resource_group_name                       = local.resource_group_name
   enable_telemetry                          = var.enable_telemetry
   log_analytics_workspace_retention_in_days = var.log_analytics_retention_in_days
   log_analytics_workspace_sku               = "PerGB2018"
   tags                                      = var.tags
+  resource_group_name                       = local.resource_group_name
 }
 
 # CCC.K8S.CN14.AR03: alert notifications. The subscription's Owners are always notified by

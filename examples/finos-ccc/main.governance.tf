@@ -40,6 +40,7 @@ module "container_registry_dns_zone" {
   domain_name      = "privatelink.azurecr.io"
   parent_id        = local.resource_group_id
   enable_telemetry = var.enable_telemetry
+  location         = var.location
   tags             = var.tags
   virtual_network_links = {
     cluster = {
