@@ -30,7 +30,7 @@ jobs:
         (github.event.pull_request.base.repo.full_name == github.repository) &&
         (github.event.pull_request.head.repo.full_name == github.repository)
       )
-    uses: Azure/azure-verified-modules-tools/.github/workflows/terraform-module.yml@4ba5ab579d2a5074236aec42bfd831102fb70ca7
+    uses: Azure/azure-verified-modules-tools/.github/workflows/terraform-module.yml@23cfc981167157e2b8ef8f5a89c5ea0b0eaf5869
     name: run managed workflow
     with:
       authoringSource: ${{ inputs.authoringSource || 'gallery' }}
