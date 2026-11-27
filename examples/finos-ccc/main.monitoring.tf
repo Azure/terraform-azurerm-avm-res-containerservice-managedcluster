@@ -3,15 +3,15 @@
 # grant read access to a dedicated security-operations group through Azure RBAC.
 module "log_analytics" {
   source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
-  version = "0.5.1"
+  version = "0.7.0"
 
   location                                  = var.location
   name                                      = "law-ccc-${random_string.name_suffix.result}"
-  resource_group_name                       = local.resource_group_name
   enable_telemetry                          = var.enable_telemetry
   log_analytics_workspace_retention_in_days = var.log_analytics_retention_in_days
   log_analytics_workspace_sku               = "PerGB2018"
   tags                                      = var.tags
+  resource_group_name                       = local.resource_group_name
 }
 
 # CCC.K8S.CN14.AR03: alert notifications. The subscription's Owners are always notified by
@@ -19,7 +19,7 @@ module "log_analytics" {
 # team's addresses through var.alert_email_addresses.
 module "action_group" {
   source  = "Azure/avm-res-insights-actiongroup/azurerm"
-  version = "0.1.0"
+  version = "0.3.0"
 
   location   = "global"
   name       = "ag-ccc-security-${random_string.name_suffix.result}"

@@ -83,11 +83,11 @@ locals {
 
 module "interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.9.0"
+  version = "0.10.1"
 
-  location                                = var.location
   diagnostic_settings_v2                  = local.diagnostic_settings_v2
   enable_telemetry                        = var.enable_telemetry
+  location                                = var.location
   lock                                    = var.lock
   private_endpoints                       = local.private_endpoints
   private_endpoints_manage_dns_zone_group = var.private_endpoints_manage_dns_zone_group

@@ -56,12 +56,13 @@ module "cluster_identities" {
 # CCC.K8S.CN01.AR02: private API-server DNS; VNet integration uses private.<region>.azmk8s.io.
 module "api_dns_zone" {
   source  = "Azure/avm-res-network-privatednszone/azurerm"
-  version = "0.5.0"
+  version = "0.6.0"
   count   = var.private_dns_zone_id == null ? 1 : 0
 
   domain_name      = "ccc-${random_string.name_suffix.result}.private.${var.location}.azmk8s.io"
   parent_id        = local.resource_group_id
   enable_telemetry = var.enable_telemetry
+  location         = var.location
   tags             = var.tags
   virtual_network_links = {
     cluster = {
@@ -79,12 +80,11 @@ module "api_dns_zone" {
 # deployer, holds a Key Vault data-plane role beyond the scoped grants in locals.tf.
 module "key_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.12.0"
+  version = "0.13.2"
   count   = var.key_vault_resource_id == null ? 1 : 0
 
   location                        = var.location
   name                            = "kv-ccc-${random_string.name_suffix.result}"
-  resource_group_name             = local.resource_group_name
   tenant_id                       = data.azapi_client_config.current.tenant_id
   enable_telemetry                = var.enable_telemetry
   enabled_for_deployment          = false
@@ -100,6 +100,7 @@ module "key_vault" {
   sku_name                      = "standard"
   soft_delete_retention_days    = 90
   tags                          = var.tags
+  resource_group_name           = local.resource_group_name
 }
 
 # Keys are created through the ARM control plane (Microsoft.KeyVault/vaults/keys), which
@@ -134,7 +135,7 @@ resource "azapi_resource_action" "encryption_keys" {
 
 module "disk_encryption_set" {
   source  = "Azure/avm-res-compute-diskencryptionset/azurerm"
-  version = "0.1.1"
+  version = "0.2.0"
   count   = var.disk_encryption_set_id == null ? 1 : 0
 
   key_vault_key_id                  = azapi_resource_action.encryption_keys["disk"].output.properties.keyUriWithVersion
