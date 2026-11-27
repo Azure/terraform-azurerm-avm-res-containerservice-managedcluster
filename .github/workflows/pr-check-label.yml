@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   rerun-pr-check:
-    uses: Azure/azure-verified-modules-tools/.github/workflows/pr-check-label-rerun.yml@4ba5ab579d2a5074236aec42bfd831102fb70ca7
+    uses: Azure/azure-verified-modules-tools/.github/workflows/pr-check-label-rerun.yml@23cfc981167157e2b8ef8f5a89c5ea0b0eaf5869
     with:
-      tools-ref: '4ba5ab579d2a5074236aec42bfd831102fb70ca7'
+      tools-ref: '23cfc981167157e2b8ef8f5a89c5ea0b0eaf5869'
       observer-workflow-path: '.github/workflows/pr-check-label-observer.yml'
